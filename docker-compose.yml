@@ -1,0 +1,49 @@
+name: kynetra-local
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: kynetra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kynetra_user
+      POSTGRES_PASSWORD: kynetra_password
+      POSTGRES_DB: kynetra_world
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kynetra_user -d kynetra_world"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kynetra-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    container_name: kynetra-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686" # Jaeger Web UI
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  postgres_data:
+  redis_data:
