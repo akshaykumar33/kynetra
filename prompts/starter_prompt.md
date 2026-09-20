@@ -8,6 +8,23 @@ Your first responsibility is to establish a world-class engineering repository, 
 
 ---
 
+## READ THIS FIRST — The Three Non-Negotiables
+
+Everything else in this document is guidance you may adapt with justification. These three are gates you may not move.
+
+**1. UI/UX quality is acceptance criteria — Section 13**
+Not a polish pass. Not a follow-up ticket. Responsive, themed, accessible, five-state, keyboard-operable, 60fps. A feature that works but feels unfinished does not get a PR opened for it.
+
+**2. Functionality must be complete — Section 39**
+The full round trip: UI → validation → authz → API → persistence → response → state update → error paths → telemetry → tests → docs. No mock data, no dead buttons, no "wire it up later" in a merged happy path. Incomplete work goes behind a feature flag, defaulted off, and is described honestly.
+
+**3. The codebase is protected — Sections 16 and 17**
+Branch from `main` → commit deliberately with a clean secret scan → open a PR with the template filled and visual evidence → green CI → review → squash merge → delete branch. Every change. Including one-line docs fixes. Including when you are an AI agent working autonomously. Never commit to `main`. Never `--no-verify`. Never force-push `main`.
+
+**The stack, however, is open.** Any library, framework, language or service is available to you if it makes the experience better or the system more capable — subject to the two-tier policy in Section 6. Do not hand-roll a worse version of a solved problem to avoid a dependency, and do not add infrastructure you have no problem for. You are expected to propose better tools than the defaults listed here, not merely consume the list.
+
+---
+
 # 1. PRODUCT VISION
 
 Kynetra is an **Open Digital IT World**.
@@ -178,6 +195,19 @@ Innovation Tower may contain:
 ---
 
 # 5. LONG-TERM TECHNOLOGY DIRECTION
+
+The technology stack is **open**.
+
+The list below is the *default* — the path of least resistance, not a cage. You may adopt any library, framework, language, service or technique that measurably improves **user experience** or **functional capability**, provided it clears the justification bar in Section 6.
+
+Two non-negotiables sit above the stack:
+
+1. **UI/UX quality** (Section 13)
+2. **Functional completeness** (Section 39)
+
+If the default stack cannot deliver those two, **change the stack, not the bar**.
+
+You are expected to propose better tools, not just consume this list. If you know a library that solves a problem more elegantly than what is listed here, say so and make the case.
 
 Do not blindly install everything immediately.
 
@@ -359,36 +389,60 @@ Potential stack:
 
 ---
 
-# 6. CRITICAL ENGINEERING RULE
+# 6. CRITICAL ENGINEERING RULE — TWO-TIER DEPENDENCY POLICY
 
-Do NOT perform résumé-driven engineering.
+"Open stack" does NOT mean "install anything."
 
-Never add:
+It means the bar scales with **blast radius**. There are two tiers.
 
-Kafka,
-Kubernetes,
-Rust,
-Go,
-Neo4j,
-ClickHouse,
-Qdrant,
-OpenSearch,
-microservices,
-service mesh,
-or any other technology
+## Tier 1 — Product & Experience Libraries (LOW bar, encouraged)
 
-merely because it looks impressive.
+Things that live inside an app, are removable in an afternoon, and make the product better for a user:
 
-Every technology requires:
+UI primitives, animation, charting, data grids, form libraries, date/number handling, drag-and-drop, virtualization, command palettes, editors, 3D helpers, audio, gesture handling, icon sets, testing utilities.
 
-1. problem statement
-2. alternatives considered
+**Adopt these freely.** Do not hand-roll a worse version of a solved problem to look clever — a hand-rolled buggy modal is worse engineering than a well-chosen dependency.
+
+Requirements — all six, no exceptions:
+
+1. actively maintained (meaningful release in the last ~12 months)
+2. typed (first-party TypeScript types or reliable `@types`)
+3. accessible (if it renders UI: keyboard + screen-reader support, or you wrap it to be)
+4. tree-shakeable / bundle cost understood and stated
+5. license compatible (MIT/Apache-2.0/BSD/ISC — no AGPL, no source-available, no "free for non-commercial")
+6. one line in the PR description: what it replaces and why
+
+If a library fails any of those six, it is a Tier 2 decision, not a Tier 1 one.
+
+## Tier 2 — Platform & Infrastructure (HIGH bar, ADR required)
+
+Things that change how the system is built, run, deployed, or paid for — and that take weeks to reverse:
+
+New languages, new runtimes, new databases, new message brokers, orchestration platforms, service meshes, new cloud providers, auth providers, any split from monolith to services, anything that becomes a new production process to operate.
+
+Examples: Kafka, Kubernetes, Rust, Go, Neo4j, ClickHouse, Qdrant, OpenSearch, microservices, service mesh.
+
+Never add these merely because they look impressive.
+
+Every Tier 2 technology requires an ADR containing:
+
+1. problem statement (with evidence — a metric, a limit hit, a real failure)
+2. alternatives considered, including "do nothing" and "stretch the current stack"
 3. reason selected
-4. operational cost
+4. operational cost (who runs it, what it costs, what breaks at 3am)
 5. migration strategy
 6. rollback strategy
 
-Record important choices as ADRs.
+## The test that separates them
+
+> *If this turns out to be the wrong choice, how long to remove it?*
+
+Hours to days → Tier 1, just do it well.
+Weeks to months → Tier 2, write the ADR.
+
+Résumé-driven engineering is adding **Tier 2** technology without a problem to solve. Refusing a good **Tier 1** library and shipping a worse experience is not discipline — it is a different failure with the same cause: optimizing for how the work looks rather than how it works.
+
+Record all Tier 2 choices as ADRs. Record notable Tier 1 choices in the PR and, where they shape the codebase, in `docs/04-engineering/`.
 
 ---
 
@@ -748,7 +802,53 @@ Skills should teach agents HOW this repository works rather than repeating gener
 
 ---
 
-# 13. DESIGN SYSTEM
+# 13. DESIGN SYSTEM & UI/UX QUALITY BAR — NON-NEGOTIABLE
+
+UI/UX is not a finishing pass applied after the logic works. It is **acceptance criteria**.
+
+A feature that works but looks and feels unfinished is **not done**. Do not open a PR for it. Do not report it as complete.
+
+This section is a gate, not advice.
+
+## 13.1 The Five States Rule
+
+Every data-bound component MUST implement all five states. Shipping only the populated state is the single most common way this project will look amateur.
+
+| State | Requirement |
+|---|---|
+| **Loading** | Skeleton matching the real layout's shape. Never a bare centered spinner for full-page content. No layout shift when data lands. |
+| **Empty** | Explains *why* it is empty and gives the next action. Never a blank panel, never just "No data". |
+| **Error** | States what failed in human language, offers retry, preserves the user's input. Never a raw stack trace or a silent swallow. |
+| **Partial / stale** | Degrades honestly — show what loaded, mark what didn't, show last-updated for cached or realtime-disconnected data. |
+| **Populated** | The happy path. |
+
+Reviewers must be able to see all five. Build them behind a story, a fixture, or a dev toggle.
+
+## 13.2 Per-Screen Definition of Done
+
+No UI merges unless every line is true:
+
+* **Responsive** — verified at 360px, 768px, 1280px, 1920px. No horizontal body scroll at any width. Wide content (tables, code, diagrams) scrolls inside its own container.
+* **Themes** — light, dark, system and high-contrast all correct. Not "dark mode works, light is approximately fine."
+* **Contrast** — WCAG 2.2 AA minimum: 4.5:1 body text, 3:1 large text and meaningful UI boundaries. Verified with a tool, not by eye.
+* **Keyboard** — every interactive element reachable and operable by keyboard alone. Logical tab order. Visible `:focus-visible`. Focus trapped in modals, restored on close. `Esc` closes overlays.
+* **Screen reader** — semantic HTML first, ARIA only where semantics fall short. Real labels on every control. Live regions for async status changes.
+* **Motion** — purposeful, 150–300ms, eased. `prefers-reduced-motion: reduce` honored everywhere, including 3D camera moves.
+* **Touch** — targets ≥44×44px, no hover-only affordances, gestures have a tap equivalent.
+* **Responsiveness of feel** — any action gives feedback within 100ms (optimistic update, pending state, or disabled control). Nothing looks frozen.
+* **Frame budget** — interactions and animations hold 60fps on a mid-tier laptop. 3D holds its Section 23 budget.
+* **Copy** — real, specific, human. No lorem ipsum. No "Click here". No raw enum values or error codes shown to users.
+* **Forms** — inline validation on blur not on every keystroke, errors tied to fields via `aria-describedby`, submit disabled only while in flight, nothing typed is ever lost on failure.
+* **Zero console noise** — no errors, no React key warnings, no hydration mismatches.
+
+## 13.3 No Dead UI
+
+* Every button, link, menu item and control does something real, or it does not exist.
+* No control that opens a "coming soon" toast. If it isn't built, it isn't in the DOM — put it behind a feature flag (Section 36).
+* No placeholder/fake/mock data in any shipped path.
+* No `TODO` in a happy path.
+
+## 13.4 Visual Language
 
 Do not make the product look like generic AI SaaS.
 
@@ -779,27 +879,47 @@ The 2D interface should feel like a control surface into a living world.
 
 The 3D world should feel like a believable technology city.
 
+## 13.5 Tokens
+
+Everything visual derives from tokens. No hard-coded hex values, spacing numbers, or durations in components — a one-off value is a missing token.
+
 Create tokens for:
 
-* typography
+* typography (scale, weight, line-height, measure)
 * spacing
 * radius
 * elevation
 * surfaces
-* semantic colors
+* semantic colors (`--surface-raised`, `--text-muted`, `--status-danger` — never `--blue-500` used directly in a component)
 * world overlays
-* motion
+* motion (durations, easing curves)
 * transitions
-* responsive behavior
+* responsive breakpoints
+* z-index layers (a named scale — never an ad-hoc `z-index: 9999`)
 
-Support:
+Support light, dark, system and high contrast **from the first component**, not as a retrofit.
 
-* light
-* dark
-* system
-* high contrast
+## 13.6 Accessibility Is Scope
 
-Plan accessibility from the beginning.
+Accessibility is part of the estimate, part of the implementation, and part of the review. It is never a follow-up ticket.
+
+If a design cannot be made accessible, the design changes.
+
+## 13.7 Evidence
+
+Any PR touching UI must attach evidence (Section 15):
+
+* screenshots or a short screen recording, **before and after**
+* light and dark
+* mobile and desktop
+* the five states where applicable
+* a keyboard-only interaction pass for new interactive surfaces
+
+"It looks fine on my machine" is not evidence.
+
+## 13.8 Tooling Freedom
+
+Per Section 6 Tier 1: use whatever gets the experience right — animation libraries, a11y-tested primitives, virtualization, command palettes, charting, gesture handling. Prefer accessible-by-default primitives (Radix and equivalents) over rebuilding focus management and ARIA by hand, because hand-rolled versions of those are where accessibility bugs are born.
 
 ---
 
@@ -849,6 +969,8 @@ Create templates for:
 * performance issue
 * security concern
 
+Also create `.github/workflows/` with executable workflows (Section 19). A CI file stored anywhere else does not run.
+
 PR template should require:
 
 ## What
@@ -858,12 +980,18 @@ PR template should require:
 ## Architecture Impact
 
 ## Screenshots / Video
+<!-- Required for any UI change: before/after, light + dark, mobile + desktop, the five states -->
+
+## UI/UX Checklist
+<!-- Section 13.2 — responsive, themed, contrast, keyboard, screen reader, motion, five states -->
 
 ## Testing
+<!-- Commands actually run, with real output -->
 
 ## Performance
 
 ## Security
+<!-- Secrets scanned, .env.example updated, authz verified, inputs validated -->
 
 ## Accessibility
 
@@ -874,73 +1002,327 @@ PR template should require:
 ## Rollback
 
 ## Checklist
+- [ ] Branched from up-to-date `main`, no direct commits to `main`
+- [ ] Conventional Commit title
+- [ ] `git diff --cached` reviewed before each commit; nothing blind-staged
+- [ ] Secret scan clean; no `.env`, keys, dumps, or real user data committed
+- [ ] `.env.example` updated if new variables were introduced
+- [ ] Five states implemented for new data-bound UI
+- [ ] Visual evidence attached (light/dark, mobile/desktop)
+- [ ] Keyboard-only pass performed on new interactive surfaces
+- [ ] Lint, typecheck, tests, build all green locally AND in CI
+- [ ] Docs and `CHANGELOG.md` updated
+- [ ] Self-review performed on the PR diff page (Section 17.8)
 
 ---
 
-# 16. GIT STRATEGY
+# 16. GIT & BRANCHING STRATEGY
 
-Use trunk-based development.
+Trunk-based development. `main` is the trunk and is always releasable.
 
-Primary:
+## 16.1 The Three Absolute Rules
 
-main
+1. **Never commit directly to `main`.** Not for a typo. Not for a README line. Not "just this once." Not as an AI agent working autonomously.
+2. **Every change reaches `main` through a Pull Request.** No exceptions, including docs, chores, and hotfixes.
+3. **Never force-push to `main`.** Ever.
 
-Branches:
+If you find yourself with commits sitting on local `main`, stop and recover before doing anything else:
 
-feat/*
-fix/*
-refactor/*
-docs/*
-chore/*
-perf/*
-test/*
-infra/*
-security/*
+```bash
+git branch feat/rescue-work        # save the work on a real branch
+git reset --hard origin/main       # restore main to the remote
+git switch feat/rescue-work        # continue there
+```
 
-Avoid long-lived develop branches unless a future requirement proves otherwise.
+## 16.2 Branch Naming
+
+Format:
+
+```
+<type>/<short-kebab-description>
+```
+
+Optionally scoped when it helps: `<type>/<scope>-<short-kebab-description>`
+
+Allowed types:
+
+| Type | Use for |
+|---|---|
+| `feat/` | new capability |
+| `fix/` | bug fix |
+| `refactor/` | behavior-preserving restructure |
+| `perf/` | measured performance work |
+| `design/` | UI/UX and design-system work |
+| `docs/` | documentation only |
+| `test/` | tests only |
+| `chore/` | tooling, deps, housekeeping |
+| `infra/` | CI, Docker, Terraform, cloud |
+| `security/` | security hardening and fixes |
+| `ai/` | AI gateway, agents, prompts, evals |
+
+Good:
+
+```
+feat/world-central-plaza-loader
+fix/auth-expired-session-reuse
+design/tower-hud-five-states
+infra/ci-secret-scanning
+```
+
+Bad — reject these:
+
+```
+patch-1        my-branch      test2       akshay-work
+new-feature    temp           fix         wip
+```
+
+Branch names appear in history forever. Name them like you will read them in a year.
+
+## 16.3 Branch Lifecycle
+
+Always branch from an up-to-date trunk:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c feat/world-central-plaza-loader
+```
+
+Rules:
+
+* **One branch = one logical change.** If you cannot describe it in a single sentence without "and", split it.
+* **Short-lived.** Target under 3 days. Rebase on `main` at least daily: `git fetch origin && git rebase origin/main`.
+* **Keep it small.** Aim under ~400 changed lines. Large PRs do not get reviewed, they get rubber-stamped — which is the same as not reviewing.
+* **Never reuse a merged branch.** Delete it after merge and cut a fresh one.
+* **Never branch from another feature branch** unless there is a genuine dependency — and then say so explicitly in the PR and merge in order.
+
+## 16.4 Required GitHub Branch Protection for `main`
+
+Configure these on the repository. Enforcement that lives only in a document is not enforcement.
+
+* ✅ Require a pull request before merging
+* ✅ Require at least **1** approving review
+* ✅ Dismiss stale approvals when new commits are pushed
+* ✅ Require conversation resolution before merging
+* ✅ Require status checks to pass: `lint`, `typecheck`, `test`, `build`, `secret-scan`
+* ✅ Require branches to be up to date before merging
+* ✅ Require linear history
+* ✅ Block force pushes
+* ✅ Block branch deletion
+* ✅ Include administrators (the repository owner is not exempt)
+
+Solo-developer note: a single maintainer cannot approve their own PR. Do not solve this by disabling the review requirement — that removes the gate entirely. Either add a second reviewer/bot, or keep review off while making the **automated** checks strictly required and performing a documented self-review pass (Section 17.8) on the PR's own diff page before merging. State which mode the repository is in, in `CONTRIBUTING.md`.
 
 ---
 
-# 17. COMMIT CONVENTION
+# 17. COMMITS, CODEBASE PROTECTION & PR/MERGE PROTOCOL
 
-Use Conventional Commits.
+This section governs everything between "I wrote code" and "it is in `main`."
+
+## 17.1 Commit Convention
+
+Use Conventional Commits:
+
+```
+<type>(<scope>): <imperative summary>
+```
 
 Examples:
 
+```
 feat(world): add central plaza scene loader
-
 feat(realtime): introduce presence heartbeat
-
 fix(auth): prevent expired session reuse
-
 perf(world): reduce duplicate mesh rendering
-
 refactor(api): extract organization policy
-
+design(hud): implement empty and error states for tower panel
 docs(architecture): document world-state boundaries
-
 test(simulation): cover region handoff
-
 security(auth): rotate session after privilege change
-
 infra(aws): provision development VPC
-
 ai(agent): add mentor tool permission boundary
+```
 
-Commits should be:
+Breaking changes: `feat(api)!: ...` plus a `BREAKING CHANGE:` footer explaining the migration.
 
-* atomic
-* meaningful
-* reviewable
-* reversible
+Commits must be **atomic**, **meaningful**, **reviewable** and **reversible** — each one should leave the repository in a working state.
 
-Never produce:
+Never produce: `update`, `changes`, `fix stuff`, `final`, `working now`, `wip`, `asdf`.
 
-"update"
-"changes"
-"fix stuff"
-"final"
-"working now"
+## 17.2 Staging Discipline
+
+**Never blind-stage.** These are banned as a habit:
+
+```bash
+git add -A
+git add .
+git commit -am "..."
+```
+
+They are how `.env` files, dumps, keys and stray build artifacts enter history.
+
+Instead, every single time:
+
+```bash
+git status                  # what changed?
+git add <specific paths>    # stage deliberately
+git diff --cached           # READ what you are about to commit, line by line
+git commit                  # then commit
+```
+
+Reading `git diff --cached` in full before every commit is mandatory. If the diff is too large to read, the commit is too large.
+
+## 17.3 Pre-Commit Gate — Sensitive Data Verification
+
+Before **every** commit, this gate runs. Automate it with a `pre-commit` hook (Husky + lint-staged) and run `gitleaks` (or equivalent) over the **staged** content:
+
+1. **Secret scan** — `gitleaks protect --staged --redact --verbose`
+2. **Sensitive-path check** — reject the blocked patterns in 17.4
+3. **Large-file check** — reject any staged file over 5 MB not tracked by Git LFS
+4. **Format** — Prettier on staged files
+5. **Lint** — ESLint on staged files, zero warnings
+6. **Typecheck** — `pnpm run typecheck`
+7. **Tests** — tests for the affected packages
+
+A failing gate means fix the cause. It does not mean bypass the gate.
+
+`--no-verify` is **forbidden**. If a gate is genuinely wrong, fix the gate in its own PR. The only exception is explicit, written owner approval recorded in the PR description with a reason — and that approval never covers the secret scan.
+
+A pre-commit hook is a convenience, not a boundary. The same checks MUST run again in CI on the PR, because hooks are local, skippable, and absent on a fresh clone.
+
+## 17.4 Blocked Patterns — Never Commit
+
+Treat a match as a hard stop:
+
+**Credential files**
+
+```
+.env, .env.*            (except .env.example)
+*.pem, *.key, *.p12, *.pfx, *.jks, *.keystore
+id_rsa, id_ed25519, *.ppk
+.npmrc / .yarnrc with an auth token
+.aws/credentials, gcloud service-account *.json
+kubeconfig, *.kubeconfig
+terraform.tfstate, terraform.tfstate.backup, *.tfvars
+```
+
+**Secret values in source**
+
+```
+AWS access keys                 AKIA…, ASIA…
+Anthropic / OpenAI keys         sk-…, sk-ant-…
+GitHub tokens                   ghp_…, gho_…, ghs_…, github_pat_…
+Slack tokens                    xoxb-…, xoxp-…
+Stripe keys                     sk_live_…, rk_live_…
+Google API keys                 AIza…
+JWTs                            eyJ… (real ones, not test fixtures)
+Private key blocks              -----BEGIN … PRIVATE KEY-----
+DB connection strings with credentials
+    postgres://user:password@host/db
+Bearer tokens, session cookies, webhook signing secrets
+```
+
+**Data**
+
+* Real user data or PII in fixtures, seeds or tests — use synthetic data only
+* Database dumps
+* Production logs
+* Customer-identifying screenshots (blur or synthesize before attaching to a PR)
+
+**Weight**
+
+* Binaries, videos, textures, models over 5 MB outside Git LFS
+* `node_modules`, `dist`, `.next`, `coverage`, `.turbo`, build output
+
+Keep `.gitignore` ahead of this list. `.gitignore` prevents accidents; the scanner catches what slips past it. You need both.
+
+## 17.5 Config Handling
+
+* Secrets are read from environment variables at runtime. Never inlined, never defaulted to a real value in code.
+* `.env.example` holds every required key with a **placeholder or empty** value, plus a comment on what it is and where to get it. Update it in the same PR that introduces a new variable.
+* Local dev uses `.env` (gitignored). Deployed environments use AWS Secrets Manager / SSM Parameter Store.
+* Never log a secret. Redact tokens in logs and error messages — including in error paths, which is where they most often leak.
+* Client-side bundles: remember anything reaching the browser is public. `NEXT_PUBLIC_*` values are not secrets and must never hold one.
+
+## 17.6 If a Secret Leaks — Incident Procedure
+
+Order matters. Do the first step first.
+
+**Step 1 — ROTATE THE CREDENTIAL. Immediately.**
+
+Assume it is compromised the instant it was written to disk in a repository. Revoke and reissue it before touching git history. Scrubbing history is *not* remediation — public repositories are scraped within seconds, and the commit may already sit in a fork, a clone, a CI log, or GitHub's cache.
+
+**Step 2 — Contain, according to where it got to:**
+
+* *Staged, not committed* — `git restore --staged <file>`, add to `.gitignore`, done.
+* *Committed locally, not pushed* — `git reset --soft HEAD~1`, remove the secret, recommit.
+* *Pushed* — rotate (Step 1, already done), then scrub history with `git filter-repo` or BFG, force-push the rewritten branch, and notify anyone with a clone that they must re-clone. If the repository is public, also treat it as a disclosed-secret incident.
+
+**Step 3 — Close the hole.** Add the pattern to the scanner rules and `.gitignore` so the same class of leak cannot recur, and record it in `docs/10-runbooks/`.
+
+Never quietly delete a secret in a follow-up commit. The old commit still contains it, and silence means the credential stays live.
+
+## 17.7 Raising the Pull Request
+
+Push and open a PR — draft early is encouraged, it makes work visible:
+
+```bash
+git push -u origin feat/world-central-plaza-loader
+gh pr create --fill --base main
+```
+
+Every PR MUST have:
+
+* **Title** in Conventional Commit form — it becomes the squash commit on `main`
+* **The template fully filled** (Section 15). Delete no sections; write "N/A — reason" where a section does not apply. An unfilled template is an automatic request-for-changes.
+* **A linked issue** — `Closes #123`
+* **Scope kept to one logical change.** Unrelated drive-by fixes go in their own PR.
+* **UI evidence for any visual change** — before/after screenshots or recording, light and dark, mobile and desktop, the five states, and a note on the keyboard pass (Section 13.7)
+* **Green CI.** All required checks passing.
+* **Test evidence** — what you ran, and the actual output. Never claim a command passed without having run it.
+* **A migration and rollback note** where relevant.
+
+## 17.8 Self-Review Before Requesting Review
+
+Read your own diff on the PR page — not in your editor — before assigning a reviewer. The GitHub diff view surfaces things the editor hides.
+
+Check for: debug statements, commented-out code, stray `TODO`s in happy paths, accidental formatting churn that buries real changes, secrets, real data in fixtures, files you did not mean to include, and the `.env.example` update you forgot.
+
+Then answer honestly: *if someone else opened this PR, would I approve it?*
+
+## 17.9 Review & Merge
+
+**Review expectations:** correctness, architecture fit (does it contradict an ADR?), the Section 13 UI bar, test coverage of behavior rather than lines, security, performance, and documentation.
+
+**Never merge when:**
+
+* CI is red — never "merge anyway, it's flaky." Fix the flake; a flaky test is a bug.
+* Conversations are unresolved
+* The PR description is unfilled
+* UI changed and there is no visual evidence
+* The branch is behind `main` (rebase first)
+* You are guessing that it works
+
+**Merge method: squash and merge.**
+
+* One clean, conventional commit per PR on `main`
+* Edit the squash message before confirming — GitHub's default concatenation of every WIP message is noise
+* Keeps history linear and every commit revertable as a unit
+
+Use rebase-merge only when the individual commits are each meaningful and independently revertable. Never use a merge commit — it breaks the linear-history requirement.
+
+**After merge:**
+
+1. Delete the branch (enable auto-delete on the repository)
+2. Confirm `main` is green after the merge, not just the PR before it
+3. Update `CHANGELOG.md`, and `ROADMAP.md` / phase docs if phase status changed
+4. `git switch main && git pull --ff-only` before starting the next piece of work
+
+## 17.10 Hotfixes
+
+Production emergencies get the same process, faster — not a different process.
+
+`fix/<incident>` → PR → CI green → expedited review → squash merge. The gates that stay mandatory even at 3am are the **secret scan** and the **test suite**, because that is precisely when a bad commit does the most damage.
 
 ---
 
@@ -960,16 +1342,23 @@ Automate release notes where practical.
 
 Create progressive CI.
 
-Initial pipeline:
+Workflows MUST live in `.github/workflows/`. GitHub executes nothing stored anywhere else — a YAML file parked elsewhere in the repository is documentation, not a gate. Verify workflows actually ran on a real PR before treating any check as enforcement.
 
+Initial pipeline (every one of these a **required** status check on `main`):
+
+```
 install
+→ secret scan (gitleaks, full history on PR)
 → formatting
 → lint
 → typecheck
 → unit tests
 → integration tests
 → build
-→ security checks
+→ dependency audit
+```
+
+Secret scanning runs in CI even though a pre-commit hook exists, because hooks are local, skippable with `--no-verify`, and missing on any fresh clone or agent workspace. The CI check is the real boundary.
 
 Later:
 
@@ -977,13 +1366,15 @@ Later:
 → SBOM
 → image scanning
 → signing
+→ accessibility checks (axe on key routes)
+→ visual regression
 → staging
 → E2E
-→ performance checks
+→ performance checks / bundle budgets
 → deployment approval
 → production
 
-Do not create fake CI steps that cannot currently execute.
+Do not create fake CI steps that cannot currently execute. A step that always passes is worse than no step — it manufactures false confidence.
 
 ---
 
@@ -1065,6 +1456,8 @@ Provide:
 .env.example
 
 but no real credentials.
+
+Operational rules for secrets — blocked patterns, the pre-commit gate, config handling, and the leak-response procedure (**rotate first, scrub second**) — are defined in Sections 17.3 through 17.6. Those are the enforceable version of this section.
 
 ---
 
@@ -1636,7 +2029,9 @@ Performance must be measured rather than guessed.
 
 ---
 
-# 39. UX RULE
+# 39. UX RULES & FUNCTIONAL COMPLETENESS — NON-NEGOTIABLE
+
+## 39.1 2D Is The Floor, Not The Fallback
 
 The platform must work without 3D.
 
@@ -1653,6 +2048,56 @@ A user who wants efficiency should be able to accomplish core tasks through 2D.
 
 Never force users to walk for five minutes to perform an operation that should require one click.
 
+## 39.2 Definition of Functionally Complete
+
+A feature is complete only when the **entire round trip** works for a real user:
+
+```
+UI interaction
+  → client validation
+  → authenticated, authorized request
+  → server validation
+  → persistence
+  → response
+  → UI state update
+  → error path exercised
+  → telemetry emitted
+  → tests covering the behavior
+  → documentation updated
+```
+
+Every one of those. A UI wired to a stub is not a feature. An endpoint with no UI is not a feature. Either one may be a legitimate *increment* — but call it what it is and do not report it as done.
+
+## 39.3 Banned in Shipped Paths
+
+* Hardcoded or mocked data standing in for a real call
+* An endpoint that returns a fixed literal instead of real state
+* A form that validates but does not persist
+* A control that logs to console instead of acting
+* `catch {}` that swallows an error silently
+* "Wire this up later" left in a merged happy path
+* A success toast shown before the operation actually succeeded
+
+If something genuinely cannot be finished in this PR: put it behind a feature flag (Section 36), default it **off**, and state the gap explicitly in the PR. A hidden half-feature is honest. A visible half-feature is a bug you shipped on purpose.
+
+## 39.4 Error Handling Is A Feature
+
+Every failure mode gets designed, not discovered:
+
+* network failure and timeout
+* 401/403 — session expired, permission denied (these are different, and the UI must say which)
+* 404 — the thing is gone
+* 409 — concurrent edit conflict
+* 422 — validation, mapped to the specific field
+* 5xx — our fault; apologize, offer retry, log with a correlation ID the user can quote
+* realtime disconnect — show degraded state, attempt reconnect with backoff, never pretend the data is live
+
+## 39.5 Never Lose User Work
+
+Input survives errors, navigation, disconnection and reload. Drafts persist. Destructive actions confirm and, where practical, undo. Long operations report progress and are cancellable.
+
+This is the one rule where "we'll add it later" causes damage you cannot apologize your way out of.
+
 ---
 
 # 40. CURRENT EXECUTION REQUEST
@@ -1660,6 +2105,17 @@ Never force users to walk for five minutes to perform an operation that should r
 Do NOT attempt to build all phases.
 
 Perform the following sequence.
+
+### STEP 0 — Cut a Branch
+
+Before writing a single file, create a branch (Section 16). This applies to you as an AI agent exactly as it applies to a human. Work is delivered by PR, never by committing to `main`.
+
+```bash
+git switch main && git pull --ff-only
+git switch -c <type>/<description>
+```
+
+If governance (hooks, CI, branch protection) is not yet in place, **establishing it is itself the first PR** — see STEP 4.
 
 ### STEP 1 — Repository Audit
 
@@ -1682,17 +2138,29 @@ Create the documentation structure above with meaningful initial content.
 
 ### STEP 4 — Engineering Governance
 
+This step is not paperwork. Until it exists, nothing downstream is actually protected.
+
 Create:
 
 * AGENTS.md
 * contribution rules
-* Git conventions
-* PR templates
-* issue templates
-* CODEOWNERS placeholder
+* Git conventions (Section 16)
+* PR template (Section 15) and issue templates
+* CODEOWNERS
 * coding standards
 * testing standards
 * AI skills
+
+And make the protection **executable**:
+
+* Husky + lint-staged pre-commit hook running the Section 17.3 gate
+* `commitlint` enforcing Conventional Commits on `commit-msg`
+* `gitleaks` config + baseline, wired into both the hook and CI
+* `.gitignore` covering every pattern in Section 17.4
+* `.env.example` complete and placeholder-only
+* GitHub branch protection on `main` per Section 16.4, verified by attempting a direct push and confirming it is rejected
+
+Verify the hooks actually fire on a real commit and the protection actually blocks a real push. Configuration that was written but never exercised is not governance.
 
 ### STEP 5 — Monorepo Foundation
 
@@ -1734,30 +2202,71 @@ Browser
 
 with health/telemetry and development setup functioning.
 
+Every screen in this demo meets the Section 13 bar. "It's only a skeleton" is not an exemption — the skeleton sets the standard everything after it is measured against.
+
 Do NOT attempt the 3D world yet unless Phase 0 is demonstrably complete.
+
+### STEP 11 — Ship It Properly
+
+Deliver the work through the full Section 17 protocol:
+
+1. Review `git diff --cached` and commit in atomic, conventional commits
+2. Confirm the secret scan is clean
+3. Push the branch and open a PR with the template filled and visual evidence attached
+4. Confirm CI is green — all required checks
+5. Self-review on the PR diff page
+6. Squash merge with a clean conventional title
+7. Delete the branch, confirm `main` is green, pull
+
+Report the PR URL. Work that is not merged is not delivered.
 
 ---
 
 # 41. VALIDATION
 
-Before declaring Phase 0 complete, verify:
+Before declaring Phase 0 complete, verify — by actually running each one:
 
-* repository installs from scratch
+**Build & code**
+
+* repository installs from scratch (delete `node_modules`, fresh `pnpm install`)
 * development environment starts
-* lint passes
 * formatting passes
+* lint passes with zero warnings
 * typecheck passes
 * tests pass
 * builds pass
-* documentation links work
-* environment variables documented
-* no secrets committed
 * health endpoint works
-* DB migration works
-* CI configuration is valid
-* architecture documentation matches code
+* DB migration works (and rolls back)
 
-Do not claim commands were tested unless they were actually executed.
+**UI/UX (Section 13)**
+
+* every screen verified at 360 / 768 / 1280 / 1920 px
+* light, dark and high-contrast themes all correct
+* contrast ratios verified with a tool
+* full keyboard-only pass completes every core task
+* five states implemented and demonstrable for every data-bound component
+* `prefers-reduced-motion` honored
+* zero console errors or warnings in normal use
+
+**Functionality (Section 39)**
+
+* every visible control does something real
+* no mock data in any shipped path
+* error paths exercised, not just the happy path
+
+**Governance (Sections 16–17)**
+
+* pre-commit hook fires and blocks a deliberately planted test secret
+* `gitleaks` reports clean over the full history
+* no `.env`, keys, dumps or real user data anywhere in the repository or its history
+* `.env.example` lists every required variable, placeholders only
+* workflows live in `.github/workflows/` and have demonstrably run on a real PR
+* branch protection on `main` verified by a rejected direct push
+* all work reached `main` through merged PRs
+* documentation links resolve
+* architecture documentation matches the code
+
+Do not claim commands were tested unless they were actually executed. Paste real output. If something fails, report the failure — a fabricated green checklist is the most expensive thing you can produce here, because every later decision is made on top of it.
 
 ---
 
@@ -1783,11 +2292,24 @@ At the end provide:
 
 ## Architecture Decisions
 
+## Dependencies Added
+<!-- Tier 1 and Tier 2 per Section 6, with the reason for each -->
+
 ## Repository Structure
 
 ## Commands
 
 ## Tests Executed
+<!-- With real output. Anything not run is listed as not run. -->
+
+## UI/UX Verification
+<!-- Section 13.2 results per screen, and where the bar is not yet met -->
+
+## Security & Secrets Check
+<!-- Scan results, .env.example status, anything flagged -->
+
+## Branches & PRs
+<!-- Branch names, PR URLs, merge status -->
 
 ## Known Limitations
 
@@ -1801,11 +2323,21 @@ Do not hide failures.
 
 Do not fabricate completion.
 
+State plainly what was skipped and why. Partial work reported honestly is useful. Complete work reported dishonestly is worse than no work, because it removes the chance to fix it.
+
 ---
 
 # 43. MOST IMPORTANT INSTRUCTION
 
 This project is intended to grow for years.
+
+Three things are **not negotiable**, at any phase, in any PR:
+
+1. **UI/UX quality** — Section 13. A feature that works but feels unfinished is unfinished.
+2. **Functional completeness** — Section 39. A feature that looks finished but is wired to nothing is a lie told in pixels.
+3. **Codebase protection** — Sections 16–17. Branch, scan, PR, review, merge. Every time, including for one-line changes, including when working autonomously.
+
+Everything else — libraries, frameworks, patterns, even languages — is open, and you are expected to propose better options rather than defer to the defaults listed here.
 
 Optimize for:
 
