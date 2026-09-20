@@ -1,6 +1,7 @@
 # World Experience Specification
 
 The world is organized into hierarchical spatial units:
+
 ```
 District (e.g., Kynetra Central, AI District, Cyber Range)
   └── Building (e.g., Innovation Tower, Open Source Hall)
@@ -9,6 +10,7 @@ District (e.g., Kynetra Central, AI District, Cyber Range)
 ```
 
 Each spatial unit defines:
+
 - **Capacity**: Max simultaneous users.
 - **Environment Audio**: Background soundscape.
 - **Permissions**: Public, organization-only, invite-only.

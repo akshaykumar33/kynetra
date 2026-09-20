@@ -8,7 +8,8 @@ const DISTRICTS_DATA: WorldDistrict[] = [
     id: 'kynetra-central',
     name: 'Kynetra Central',
     theme: 'Civic & Headquarters',
-    description: 'The civic core of Kynetra. Features Central Plaza, civic forums, and the Innovation Tower.',
+    description:
+      'The civic core of Kynetra. Features Central Plaza, civic forums, and the Innovation Tower.',
     coordinates: { x: 0, y: 0 },
     status: 'active',
     activeUsers: 342,
@@ -108,7 +109,8 @@ const DISTRICTS_DATA: WorldDistrict[] = [
     id: 'ai-research-district',
     name: 'AI Research District',
     theme: 'Intelligence & Simulation',
-    description: 'Neural training clusters, agent laboratories, and synthetic personality testing grounds.',
+    description:
+      'Neural training clusters, agent laboratories, and synthetic personality testing grounds.',
     coordinates: { x: -180, y: 220 },
     status: 'active',
     activeUsers: 189,
@@ -118,7 +120,8 @@ const DISTRICTS_DATA: WorldDistrict[] = [
     id: 'cybersecurity-district',
     name: 'Cybersecurity District',
     theme: 'Defense & Offense Simulation',
-    description: 'Red team/blue team battlegrounds, vulnerability ranges, and forensic sandbox chambers.',
+    description:
+      'Red team/blue team battlegrounds, vulnerability ranges, and forensic sandbox chambers.',
     coordinates: { x: -300, y: -150 },
     status: 'in_construction',
     activeUsers: 45,
@@ -129,12 +132,12 @@ const DISTRICTS_DATA: WorldDistrict[] = [
 export default function HomePage() {
   const [selectedDistrict, setSelectedDistrict] = useState<WorldDistrict>(DISTRICTS_DATA[0]);
   const [selectedFloor, setSelectedFloor] = useState<InnovationTowerFloor | null>(
-    DISTRICTS_DATA[0].floors ? DISTRICTS_DATA[0].floors[0] : null
+    DISTRICTS_DATA[0].floors ? DISTRICTS_DATA[0].floors[0] : null,
   );
   const [selectedNode, setSelectedNode] = useState<InteractiveNode | null>(
     DISTRICTS_DATA[0].floors && DISTRICTS_DATA[0].floors[0].nodes[0]
       ? DISTRICTS_DATA[0].floors[0].nodes[0]
-      : null
+      : null,
   );
   const [activeActionNotice, setActiveActionNotice] = useState<string | null>(null);
 
@@ -155,7 +158,9 @@ export default function HomePage() {
   };
 
   const triggerNodeAction = (node: InteractiveNode) => {
-    setActiveActionNotice(`Connected to [${node.name}] — session initialized at coordinates (${node.position.x}, ${node.position.y}, ${node.position.z})`);
+    setActiveActionNotice(
+      `Connected to [${node.name}] — session initialized at coordinates (${node.position.x}, ${node.position.y}, ${node.position.z})`,
+    );
     setTimeout(() => setActiveActionNotice(null), 4000);
   };
 
@@ -165,7 +170,8 @@ export default function HomePage() {
       <section style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 800 }}>Kynetra World Operations Console</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '750px' }}>
-          Explore the persistent digital IT metropolis. Select districts, inspect building floors, interact with AI entities, and monitor real-time infrastructure simulations.
+          Explore the persistent digital IT metropolis. Select districts, inspect building floors,
+          interact with AI entities, and monitor real-time infrastructure simulations.
         </p>
       </section>
 
@@ -188,7 +194,9 @@ export default function HomePage() {
         </div>
         <div className="glass-panel metric-card">
           <span className="label">Core Availability</span>
-          <span className="value mono" style={{ color: 'var(--accent-emerald)' }}>99.98%</span>
+          <span className="value mono" style={{ color: 'var(--accent-emerald)' }}>
+            99.98%
+          </span>
           <span className="sub">Zero active alerts</span>
         </div>
       </section>
@@ -212,7 +220,13 @@ export default function HomePage() {
           <span>{activeActionNotice}</span>
           <button
             onClick={() => setActiveActionNotice(null)}
-            style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '14px' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
           >
             ✕
           </button>
@@ -223,7 +237,14 @@ export default function HomePage() {
       <section className="main-grid">
         {/* District Selector List */}
         <div className="glass-panel district-list">
-          <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+          <h2
+            style={{
+              fontSize: '14px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: 'var(--text-muted)',
+            }}
+          >
             Districts of Kynetra
           </h2>
 
@@ -250,7 +271,9 @@ export default function HomePage() {
         <div className="glass-panel viewport-panel">
           <div className="viewport-header">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}
+              >
                 <h2 className="viewport-title">{selectedDistrict.name}</h2>
                 <span className={`status-badge ${selectedDistrict.status}`}>
                   {selectedDistrict.status === 'active' ? '● Operational' : '◌ Under Construction'}
@@ -260,8 +283,14 @@ export default function HomePage() {
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Landmark</span>
-              <div style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{selectedDistrict.keyLandmark}</div>
+              <span
+                style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}
+              >
+                Landmark
+              </span>
+              <div style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                {selectedDistrict.keyLandmark}
+              </div>
             </div>
           </div>
 
@@ -269,7 +298,14 @@ export default function HomePage() {
           {selectedDistrict.floors && selectedDistrict.floors.length > 0 && selectedFloor && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div>
-                <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '10px' }}>
+                <h3
+                  style={{
+                    fontSize: '14px',
+                    textTransform: 'uppercase',
+                    color: 'var(--text-muted)',
+                    marginBottom: '10px',
+                  }}
+                >
                   Innovation Tower — Floor Deck
                 </h3>
                 <div className="floor-selector">
@@ -303,12 +339,19 @@ export default function HomePage() {
                 }}
               >
                 <div>
-                  <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '2px' }}>{selectedFloor.name}</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{selectedFloor.description}</p>
+                  <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '2px' }}>
+                    {selectedFloor.name}
+                  </h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {selectedFloor.description}
+                  </p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Occupancy</span>
-                  <div className="mono" style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-highlight)' }}>
+                  <div
+                    className="mono"
+                    style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-highlight)' }}
+                  >
                     {selectedFloor.currentOccupancy} / {selectedFloor.capacity}
                   </div>
                 </div>
@@ -316,7 +359,14 @@ export default function HomePage() {
 
               {/* Interactive Nodes in this floor */}
               <div>
-                <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                <h3
+                  style={{
+                    fontSize: '14px',
+                    textTransform: 'uppercase',
+                    color: 'var(--text-muted)',
+                    marginBottom: '12px',
+                  }}
+                >
                   Interactive Workstations & Nodes
                 </h3>
                 <div className="nodes-grid">
@@ -329,7 +379,9 @@ export default function HomePage() {
                         className="node-card"
                         style={{
                           borderColor: isNodeActive ? 'var(--accent-cyan)' : 'var(--border-subtle)',
-                          background: isNodeActive ? 'rgba(6, 182, 212, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                          background: isNodeActive
+                            ? 'rgba(6, 182, 212, 0.08)'
+                            : 'rgba(255, 255, 255, 0.02)',
                         }}
                         onClick={() => setSelectedNode(node)}
                       >
@@ -339,7 +391,9 @@ export default function HomePage() {
                         </div>
                         <p className="node-desc">{node.description}</p>
                         <div className="node-footer">
-                          <span className="mono">({node.position.x}, {node.position.y}, {node.position.z})</span>
+                          <span className="mono">
+                            ({node.position.x}, {node.position.y}, {node.position.z})
+                          </span>
                           <button
                             id={`action-btn-${node.id}`}
                             className="btn-primary"
@@ -373,8 +427,16 @@ export default function HomePage() {
               <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
                 Spatial Construction in Progress
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '500px', margin: '0 auto 20px' }}>
-                This district is currently undergoing terraforming and structural layout in the World Engine. Full floorplans and workstations unlock in Phase 01.
+              <p
+                style={{
+                  color: 'var(--text-secondary)',
+                  fontSize: '14px',
+                  maxWidth: '500px',
+                  margin: '0 auto 20px',
+                }}
+              >
+                This district is currently undergoing terraforming and structural layout in the
+                World Engine. Full floorplans and workstations unlock in Phase 01.
               </p>
               <button
                 className="btn-secondary"
@@ -389,7 +451,14 @@ export default function HomePage() {
 
       {/* Diagnostics / Platform HUD Section */}
       <section id="diagnostics" className="glass-panel" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}
+        >
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Platform Diagnostics & System HUD</h3>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
@@ -401,37 +470,87 @@ export default function HomePage() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          <div style={{ padding: '14px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              padding: '14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>API Service (@kynetra/api)</span>
-              <span style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontWeight: 700 }}>200 OK</span>
+              <span style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
+                200 OK
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Health Check: /health/ready</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Health Check: /health/ready
+            </span>
           </div>
 
-          <div style={{ padding: '14px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <div
+            style={{
+              padding: '14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>World State Engine</span>
-              <span style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontWeight: 700 }}>Authoritative</span>
+              <span style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontWeight: 700 }}>
+                Authoritative
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Synchronized with 4 Districts</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Synchronized with 4 Districts
+            </span>
           </div>
 
-          <div style={{ padding: '14px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <div
+            style={{
+              padding: '14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>AI Gateway Runtime</span>
-              <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 700 }}>Ready</span>
+              <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 700 }}>
+                Ready
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aria Receptionist agent bound</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Aria Receptionist agent bound
+            </span>
           </div>
 
-          <div style={{ padding: '14px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+          <div
+            style={{
+              padding: '14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>Realtime Gateway (Go)</span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Phase 03 Target</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Phase 03 Target
+              </span>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Criteria per ADR-0008</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              Criteria per ADR-0008
+            </span>
           </div>
         </div>
       </section>

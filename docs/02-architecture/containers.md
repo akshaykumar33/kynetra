@@ -1,6 +1,7 @@
 # C4 Model: Container Architecture
 
 Details the executable containers across the system:
+
 1. `apps/web`: Frontend console and 3D canvas.
 2. `services/api`: REST/JSON core platform API.
 3. `services/realtime`: WebSocket presence and state broadcaster (Phase 3).

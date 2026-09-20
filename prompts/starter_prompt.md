@@ -33,29 +33,29 @@ It is a persistent virtual technology city that mirrors meaningful processes of 
 
 Humans and AI agents can:
 
-* work
-* learn
-* socialize
-* collaborate
-* attend meetings
-* join companies
-* interview
-* build software
-* operate infrastructure
-* solve incidents
-* participate in hackathons
-* learn technologies
-* prove skills
-* create startups
-* hire people
-* create teams
-* attend conferences
-* use cloud labs
-* enter cybersecurity ranges
-* participate in simulations
-* communicate through text/voice/video
-* navigate virtual offices and campuses
-* participate in a persistent technology economy
+- work
+- learn
+- socialize
+- collaborate
+- attend meetings
+- join companies
+- interview
+- build software
+- operate infrastructure
+- solve incidents
+- participate in hackathons
+- learn technologies
+- prove skills
+- create startups
+- hire people
+- create teams
+- attend conferences
+- use cloud labs
+- enter cybersecurity ranges
+- participate in simulations
+- communicate through text/voice/video
+- navigate virtual offices and campuses
+- participate in a persistent technology economy
 
 The world should eventually be accessible through:
 
@@ -123,11 +123,11 @@ Architect the platform around a shared World Platform.
 
 Clients:
 
-* 2D Web
-* 3D Web
-* Mobile
-* XR
-* future native/high-fidelity clients
+- 2D Web
+- 3D Web
+- Mobile
+- XR
+- future native/high-fidelity clients
 
 Conceptually:
 
@@ -180,17 +180,17 @@ First playable target:
 
 Innovation Tower may contain:
 
-* lobby
-* AI receptionist
-* company office
-* personal workstation
-* meeting room
-* coding arena
-* cloud lab
-* cyber lab
-* learning area
-* café/social space
-* auditorium
+- lobby
+- AI receptionist
+- company office
+- personal workstation
+- meeting room
+- coding arena
+- cloud lab
+- cyber lab
+- learning area
+- café/social space
+- auditorium
 
 ---
 
@@ -198,7 +198,7 @@ Innovation Tower may contain:
 
 The technology stack is **open**.
 
-The list below is the *default* — the path of least resistance, not a cage. You may adopt any library, framework, language, service or technique that measurably improves **user experience** or **functional capability**, provided it clears the justification bar in Section 6.
+The list below is the _default_ — the path of least resistance, not a cage. You may adopt any library, framework, language, service or technique that measurably improves **user experience** or **functional capability**, provided it clears the justification bar in Section 6.
 
 Two non-negotiables sit above the stack:
 
@@ -215,106 +215,106 @@ The architecture must allow progressive adoption.
 
 ## Web
 
-* TypeScript
-* React
-* Next.js App Router
-* Tailwind CSS
-* shadcn/ui
-* Radix primitives
-* Motion
-* GSAP where justified
-* TanStack Query
-* Zustand
-* React Hook Form
-* Zod
+- TypeScript
+- React
+- Next.js App Router
+- Tailwind CSS
+- shadcn/ui
+- Radix primitives
+- Motion
+- GSAP where justified
+- TanStack Query
+- Zustand
+- React Hook Form
+- Zod
 
 ## 3D
 
-* Three.js
-* React Three Fiber
-* Drei
-* Rapier
-* WebGPU
-* WebGL fallback
-* WebXR
-* Web Audio
-* glTF/GLB
-* Draco/Meshopt
-* KTX2/Basis
-* LOD systems
+- Three.js
+- React Three Fiber
+- Drei
+- Rapier
+- WebGPU
+- WebGL fallback
+- WebXR
+- Web Audio
+- glTF/GLB
+- Draco/Meshopt
+- KTX2/Basis
+- LOD systems
 
 ## Mobile
 
-* React Native
-* Expo initially
-* native Swift/Kotlin modules where necessary
+- React Native
+- Expo initially
+- native Swift/Kotlin modules where necessary
 
 ## Business backend
 
-* TypeScript
-* NestJS
+- TypeScript
+- NestJS
 
 ## Realtime
 
-* Go
+- Go
 
 Potential responsibilities:
 
-* WebSocket gateway
-* presence
-* world sessions
-* matchmaking
-* realtime state distribution
-* telemetry ingestion
+- WebSocket gateway
+- presence
+- world sessions
+- matchmaking
+- realtime state distribution
+- telemetry ingestion
 
 ## Simulation
 
-* Rust
+- Rust
 
 Potential responsibilities:
 
-* simulation core
-* spatial indexing
-* AOI
-* pathfinding
-* state compression
-* networking algorithms
-* deterministic simulation
-* WASM modules
+- simulation core
+- spatial indexing
+- AOI
+- pathfinding
+- state compression
+- networking algorithms
+- deterministic simulation
+- WASM modules
 
 ## AI/ML
 
-* Python
-* FastAPI
-* Pydantic
-* PyTorch
-* Transformers
-* ONNX Runtime
-* OpenCV
-* MediaPipe
-* appropriate CV models
-* agent orchestration framework only when justified
+- Python
+- FastAPI
+- Pydantic
+- PyTorch
+- Transformers
+- ONNX Runtime
+- OpenCV
+- MediaPipe
+- appropriate CV models
+- agent orchestration framework only when justified
 
 ## Data
 
 Primary:
 
-* PostgreSQL
+- PostgreSQL
 
 Hot state/cache:
 
-* Redis
+- Redis
 
 Initially:
 
-* pgvector
+- pgvector
 
 Later when justified:
 
-* graph database
-* ClickHouse
-* OpenSearch
-* dedicated vector DB
+- graph database
+- ClickHouse
+- OpenSearch
+- dedicated vector DB
 
 DO NOT introduce additional databases simply to demonstrate technologies.
 
@@ -324,57 +324,57 @@ Every dependency must have an architectural justification.
 
 Initial:
 
-* Kafka when event-driven requirements justify it
+- Kafka when event-driven requirements justify it
 
 Potential later:
 
-* NATS for low-latency ephemeral messaging
+- NATS for low-latency ephemeral messaging
 
 ## Realtime Media
 
-* WebRTC
-* LiveKit or equivalent SFU platform
+- WebRTC
+- LiveKit or equivalent SFU platform
 
 ## IoT / Digital Twin
 
-* MQTT
-* event streaming
-* digital twin state model
+- MQTT
+- event streaming
+- digital twin state model
 
 ## Cloud
 
 Primary target:
 
-* AWS
+- AWS
 
 Potential services:
 
-* Route53
-* CloudFront
-* WAF
-* ALB
-* ECS initially
-* EKS when justified
-* RDS PostgreSQL
-* ElastiCache
-* S3
-* ECR
-* MSK when Kafka is productionized
-* OpenSearch where justified
-* Secrets Manager
-* KMS
-* CloudWatch
-* IAM
+- Route53
+- CloudFront
+- WAF
+- ALB
+- ECS initially
+- EKS when justified
+- RDS PostgreSQL
+- ElastiCache
+- S3
+- ECR
+- MSK when Kafka is productionized
+- OpenSearch where justified
+- Secrets Manager
+- KMS
+- CloudWatch
+- IAM
 
 ## Infrastructure
 
-* Docker
-* Docker Compose
-* Terraform
-* GitHub Actions
-* Kubernetes later
-* Helm later
-* Argo CD later
+- Docker
+- Docker Compose
+- Terraform
+- GitHub Actions
+- Kubernetes later
+- Helm later
+- Argo CD later
 
 ## Observability
 
@@ -382,10 +382,10 @@ OpenTelemetry first.
 
 Potential stack:
 
-* Prometheus
-* Grafana
-* Loki
-* Tempo
+- Prometheus
+- Grafana
+- Loki
+- Tempo
 
 ---
 
@@ -435,7 +435,7 @@ Every Tier 2 technology requires an ADR containing:
 
 ## The test that separates them
 
-> *If this turns out to be the wrong choice, how long to remove it?*
+> _If this turns out to be the wrong choice, how long to remove it?_
 
 Hours to days → Tier 1, just do it well.
 Weeks to months → Tier 2, write the ADR.
@@ -461,24 +461,24 @@ Three.js
 
 ## V1
 
-* Go realtime
-* S3
-* realtime communications
-* event backbone where justified
+- Go realtime
+- S3
+- realtime communications
+- event backbone where justified
 
 ## V2
 
-* Rust simulation
-* advanced analytics
-* search
-* context/knowledge graph
+- Rust simulation
+- advanced analytics
+- search
+- context/knowledge graph
 
 ## V3
 
-* Kubernetes where justified
-* digital twin
-* IoT
-* GPU inference
+- Kubernetes where justified
+- digital twin
+- IoT
+- GPU inference
 
 ## V4
 
@@ -496,43 +496,43 @@ Target structure should resemble:
 
 /
 ├── apps/
-│   ├── web/
-│   ├── admin/
-│   ├── mobile/
-│   └── ...
+│ ├── web/
+│ ├── admin/
+│ ├── mobile/
+│ └── ...
 │
 ├── services/
-│   ├── api/
-│   ├── realtime/
-│   ├── ai/
-│   └── ...
+│ ├── api/
+│ ├── realtime/
+│ ├── ai/
+│ └── ...
 │
 ├── engines/
-│   ├── simulation/
-│   ├── spatial/
-│   └── networking/
+│ ├── simulation/
+│ ├── spatial/
+│ └── networking/
 │
 ├── packages/
-│   ├── ui/
-│   ├── config/
-│   ├── contracts/
-│   ├── auth/
-│   ├── events/
-│   ├── telemetry/
-│   └── sdk/
+│ ├── ui/
+│ ├── config/
+│ ├── contracts/
+│ ├── auth/
+│ ├── events/
+│ ├── telemetry/
+│ └── sdk/
 │
 ├── ai/
-│   ├── agents/
-│   ├── prompts/
-│   ├── evals/
-│   ├── retrieval/
-│   └── datasets/
+│ ├── agents/
+│ ├── prompts/
+│ ├── evals/
+│ ├── retrieval/
+│ └── datasets/
 │
 ├── infrastructure/
-│   ├── docker/
-│   ├── terraform/
-│   ├── kubernetes/
-│   └── helm/
+│ ├── docker/
+│ ├── terraform/
+│ ├── kubernetes/
+│ └── helm/
 │
 ├── docs/
 ├── scripts/
@@ -556,114 +556,114 @@ docs/
 ├── README.md
 │
 ├── 00-vision/
-│   ├── product-vision.md
-│   ├── principles.md
-│   ├── personas.md
-│   ├── terminology.md
-│   └── non-goals.md
+│ ├── product-vision.md
+│ ├── principles.md
+│ ├── personas.md
+│ ├── terminology.md
+│ └── non-goals.md
 │
 ├── 01-product/
-│   ├── product-requirements.md
-│   ├── user-journeys.md
-│   ├── world-experience.md
-│   ├── 2d-experience.md
-│   ├── 3d-experience.md
-│   ├── xr-experience.md
-│   ├── social-system.md
-│   ├── career-system.md
-│   ├── company-system.md
-│   ├── gamification.md
-│   └── simulation-system.md
+│ ├── product-requirements.md
+│ ├── user-journeys.md
+│ ├── world-experience.md
+│ ├── 2d-experience.md
+│ ├── 3d-experience.md
+│ ├── xr-experience.md
+│ ├── social-system.md
+│ ├── career-system.md
+│ ├── company-system.md
+│ ├── gamification.md
+│ └── simulation-system.md
 │
 ├── 02-architecture/
-│   ├── overview.md
-│   ├── system-context.md
-│   ├── containers.md
-│   ├── components.md
-│   ├── world-engine.md
-│   ├── realtime.md
-│   ├── ai-platform.md
-│   ├── data.md
-│   ├── events.md
-│   ├── security.md
-│   └── networking.md
+│ ├── overview.md
+│ ├── system-context.md
+│ ├── containers.md
+│ ├── components.md
+│ ├── world-engine.md
+│ ├── realtime.md
+│ ├── ai-platform.md
+│ ├── data.md
+│ ├── events.md
+│ ├── security.md
+│ └── networking.md
 │
 ├── 03-design/
-│   ├── design-philosophy.md
-│   ├── design-system.md
-│   ├── typography.md
-│   ├── motion.md
-│   ├── accessibility.md
-│   ├── responsive-design.md
-│   ├── 3d-art-direction.md
-│   ├── environment-design.md
-│   └── interaction-design.md
+│ ├── design-philosophy.md
+│ ├── design-system.md
+│ ├── typography.md
+│ ├── motion.md
+│ ├── accessibility.md
+│ ├── responsive-design.md
+│ ├── 3d-art-direction.md
+│ ├── environment-design.md
+│ └── interaction-design.md
 │
 ├── 04-engineering/
-│   ├── coding-standards.md
-│   ├── typescript.md
-│   ├── react-next.md
-│   ├── node-nest.md
-│   ├── golang.md
-│   ├── rust.md
-│   ├── python.md
-│   ├── api-guidelines.md
-│   ├── database-guidelines.md
-│   ├── testing.md
-│   └── performance.md
+│ ├── coding-standards.md
+│ ├── typescript.md
+│ ├── react-next.md
+│ ├── node-nest.md
+│ ├── golang.md
+│ ├── rust.md
+│ ├── python.md
+│ ├── api-guidelines.md
+│ ├── database-guidelines.md
+│ ├── testing.md
+│ └── performance.md
 │
 ├── 05-ai/
-│   ├── ai-architecture.md
-│   ├── model-routing.md
-│   ├── agents.md
-│   ├── context-engine.md
-│   ├── rag.md
-│   ├── memory.md
-│   ├── evaluations.md
-│   ├── prompt-management.md
-│   └── ai-safety.md
+│ ├── ai-architecture.md
+│ ├── model-routing.md
+│ ├── agents.md
+│ ├── context-engine.md
+│ ├── rag.md
+│ ├── memory.md
+│ ├── evaluations.md
+│ ├── prompt-management.md
+│ └── ai-safety.md
 │
 ├── 06-devops/
-│   ├── environments.md
-│   ├── local-development.md
-│   ├── ci-cd.md
-│   ├── aws.md
-│   ├── terraform.md
-│   ├── observability.md
-│   ├── disaster-recovery.md
-│   └── deployment.md
+│ ├── environments.md
+│ ├── local-development.md
+│ ├── ci-cd.md
+│ ├── aws.md
+│ ├── terraform.md
+│ ├── observability.md
+│ ├── disaster-recovery.md
+│ └── deployment.md
 │
 ├── 07-security/
-│   ├── threat-model.md
-│   ├── authentication.md
-│   ├── authorization.md
-│   ├── secrets.md
-│   ├── supply-chain.md
-│   └── privacy.md
+│ ├── threat-model.md
+│ ├── authentication.md
+│ ├── authorization.md
+│ ├── secrets.md
+│ ├── supply-chain.md
+│ └── privacy.md
 │
 ├── 08-decisions/
-│   ├── README.md
-│   └── ADR-0001-*.md
+│ ├── README.md
+│ └── ADR-0001-*.md
 │
 ├── 09-phases/
-│   ├── roadmap.md
-│   ├── phase-00-foundation.md
-│   ├── phase-01-platform-core.md
-│   ├── phase-02-first-3d-world.md
-│   ├── phase-03-multiplayer.md
-│   ├── phase-04-social.md
-│   ├── phase-05-gamification.md
-│   ├── phase-06-simulation.md
-│   ├── phase-07-ai-world.md
-│   ├── phase-08-digital-twin.md
-│   ├── phase-09-xr-cv.md
-│   └── phase-10-scale.md
+│ ├── roadmap.md
+│ ├── phase-00-foundation.md
+│ ├── phase-01-platform-core.md
+│ ├── phase-02-first-3d-world.md
+│ ├── phase-03-multiplayer.md
+│ ├── phase-04-social.md
+│ ├── phase-05-gamification.md
+│ ├── phase-06-simulation.md
+│ ├── phase-07-ai-world.md
+│ ├── phase-08-digital-twin.md
+│ ├── phase-09-xr-cv.md
+│ └── phase-10-scale.md
 │
 ├── 10-runbooks/
-│   ├── incident-response.md
-│   ├── rollback.md
-│   ├── database-recovery.md
-│   └── deployment-failure.md
+│ ├── incident-response.md
+│ ├── rollback.md
+│ ├── database-recovery.md
+│ └── deployment-failure.md
 │
 └── 11-research/
 ├── competitors.md
@@ -712,20 +712,20 @@ Owners:
 
 Initial ADRs should cover decisions such as:
 
-* monorepo
-* modular monolith before microservices
-* Next.js
-* NestJS
-* PostgreSQL
-* Redis
-* 3D browser architecture
-* shared world state
-* Go realtime introduction criteria
-* Rust simulation introduction criteria
-* AI provider abstraction
-* AWS deployment strategy
-* ECS before EKS
-* observability strategy
+- monorepo
+- modular monolith before microservices
+- Next.js
+- NestJS
+- PostgreSQL
+- Redis
+- 3D browser architecture
+- shared world state
+- Go realtime introduction criteria
+- Rust simulation introduction criteria
+- AI provider abstraction
+- AWS deployment strategy
+- ECS before EKS
+- observability strategy
 
 ---
 
@@ -791,12 +791,12 @@ incident-debugging/
 
 Each SKILL.md should explain:
 
-* when the skill applies
-* required context
-* steps
-* prohibited shortcuts
-* validation
-* expected output
+- when the skill applies
+- required context
+- steps
+- prohibited shortcuts
+- validation
+- expected output
 
 Skills should teach agents HOW this repository works rather than repeating generic programming advice.
 
@@ -814,13 +814,13 @@ This section is a gate, not advice.
 
 Every data-bound component MUST implement all five states. Shipping only the populated state is the single most common way this project will look amateur.
 
-| State | Requirement |
-|---|---|
-| **Loading** | Skeleton matching the real layout's shape. Never a bare centered spinner for full-page content. No layout shift when data lands. |
-| **Empty** | Explains *why* it is empty and gives the next action. Never a blank panel, never just "No data". |
-| **Error** | States what failed in human language, offers retry, preserves the user's input. Never a raw stack trace or a silent swallow. |
-| **Partial / stale** | Degrades honestly — show what loaded, mark what didn't, show last-updated for cached or realtime-disconnected data. |
-| **Populated** | The happy path. |
+| State               | Requirement                                                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Loading**         | Skeleton matching the real layout's shape. Never a bare centered spinner for full-page content. No layout shift when data lands. |
+| **Empty**           | Explains _why_ it is empty and gives the next action. Never a blank panel, never just "No data".                                 |
+| **Error**           | States what failed in human language, offers retry, preserves the user's input. Never a raw stack trace or a silent swallow.     |
+| **Partial / stale** | Degrades honestly — show what loaded, mark what didn't, show last-updated for cached or realtime-disconnected data.              |
+| **Populated**       | The happy path.                                                                                                                  |
 
 Reviewers must be able to see all five. Build them behind a story, a fixture, or a dev toggle.
 
@@ -828,25 +828,25 @@ Reviewers must be able to see all five. Build them behind a story, a fixture, or
 
 No UI merges unless every line is true:
 
-* **Responsive** — verified at 360px, 768px, 1280px, 1920px. No horizontal body scroll at any width. Wide content (tables, code, diagrams) scrolls inside its own container.
-* **Themes** — light, dark, system and high-contrast all correct. Not "dark mode works, light is approximately fine."
-* **Contrast** — WCAG 2.2 AA minimum: 4.5:1 body text, 3:1 large text and meaningful UI boundaries. Verified with a tool, not by eye.
-* **Keyboard** — every interactive element reachable and operable by keyboard alone. Logical tab order. Visible `:focus-visible`. Focus trapped in modals, restored on close. `Esc` closes overlays.
-* **Screen reader** — semantic HTML first, ARIA only where semantics fall short. Real labels on every control. Live regions for async status changes.
-* **Motion** — purposeful, 150–300ms, eased. `prefers-reduced-motion: reduce` honored everywhere, including 3D camera moves.
-* **Touch** — targets ≥44×44px, no hover-only affordances, gestures have a tap equivalent.
-* **Responsiveness of feel** — any action gives feedback within 100ms (optimistic update, pending state, or disabled control). Nothing looks frozen.
-* **Frame budget** — interactions and animations hold 60fps on a mid-tier laptop. 3D holds its Section 23 budget.
-* **Copy** — real, specific, human. No lorem ipsum. No "Click here". No raw enum values or error codes shown to users.
-* **Forms** — inline validation on blur not on every keystroke, errors tied to fields via `aria-describedby`, submit disabled only while in flight, nothing typed is ever lost on failure.
-* **Zero console noise** — no errors, no React key warnings, no hydration mismatches.
+- **Responsive** — verified at 360px, 768px, 1280px, 1920px. No horizontal body scroll at any width. Wide content (tables, code, diagrams) scrolls inside its own container.
+- **Themes** — light, dark, system and high-contrast all correct. Not "dark mode works, light is approximately fine."
+- **Contrast** — WCAG 2.2 AA minimum: 4.5:1 body text, 3:1 large text and meaningful UI boundaries. Verified with a tool, not by eye.
+- **Keyboard** — every interactive element reachable and operable by keyboard alone. Logical tab order. Visible `:focus-visible`. Focus trapped in modals, restored on close. `Esc` closes overlays.
+- **Screen reader** — semantic HTML first, ARIA only where semantics fall short. Real labels on every control. Live regions for async status changes.
+- **Motion** — purposeful, 150–300ms, eased. `prefers-reduced-motion: reduce` honored everywhere, including 3D camera moves.
+- **Touch** — targets ≥44×44px, no hover-only affordances, gestures have a tap equivalent.
+- **Responsiveness of feel** — any action gives feedback within 100ms (optimistic update, pending state, or disabled control). Nothing looks frozen.
+- **Frame budget** — interactions and animations hold 60fps on a mid-tier laptop. 3D holds its Section 23 budget.
+- **Copy** — real, specific, human. No lorem ipsum. No "Click here". No raw enum values or error codes shown to users.
+- **Forms** — inline validation on blur not on every keystroke, errors tied to fields via `aria-describedby`, submit disabled only while in flight, nothing typed is ever lost on failure.
+- **Zero console noise** — no errors, no React key warnings, no hydration mismatches.
 
 ## 13.3 No Dead UI
 
-* Every button, link, menu item and control does something real, or it does not exist.
-* No control that opens a "coming soon" toast. If it isn't built, it isn't in the DOM — put it behind a feature flag (Section 36).
-* No placeholder/fake/mock data in any shipped path.
-* No `TODO` in a happy path.
+- Every button, link, menu item and control does something real, or it does not exist.
+- No control that opens a "coming soon" toast. If it isn't built, it isn't in the DOM — put it behind a feature flag (Section 36).
+- No placeholder/fake/mock data in any shipped path.
+- No `TODO` in a happy path.
 
 ## 13.4 Visual Language
 
@@ -854,24 +854,24 @@ Do not make the product look like generic AI SaaS.
 
 Avoid:
 
-* excessive purple gradients
-* generic glowing cards
-* random glassmorphism
-* excessive rounded rectangles
-* generic generated illustrations
-* dashboard-only thinking
-* cyberpunk everywhere
+- excessive purple gradients
+- generic glowing cards
+- random glassmorphism
+- excessive rounded rectangles
+- generic generated illustrations
+- dashboard-only thinking
+- cyberpunk everywhere
 
 The visual world should feel believable.
 
 Inspiration may come from:
 
-* modern technology campuses
-* premium operating systems
-* high-end games
-* architecture visualization
-* simulation interfaces
-* professional developer tooling
+- modern technology campuses
+- premium operating systems
+- high-end games
+- architecture visualization
+- simulation interfaces
+- professional developer tooling
 
 Create a coherent visual language.
 
@@ -885,17 +885,17 @@ Everything visual derives from tokens. No hard-coded hex values, spacing numbers
 
 Create tokens for:
 
-* typography (scale, weight, line-height, measure)
-* spacing
-* radius
-* elevation
-* surfaces
-* semantic colors (`--surface-raised`, `--text-muted`, `--status-danger` — never `--blue-500` used directly in a component)
-* world overlays
-* motion (durations, easing curves)
-* transitions
-* responsive breakpoints
-* z-index layers (a named scale — never an ad-hoc `z-index: 9999`)
+- typography (scale, weight, line-height, measure)
+- spacing
+- radius
+- elevation
+- surfaces
+- semantic colors (`--surface-raised`, `--text-muted`, `--status-danger` — never `--blue-500` used directly in a component)
+- world overlays
+- motion (durations, easing curves)
+- transitions
+- responsive breakpoints
+- z-index layers (a named scale — never an ad-hoc `z-index: 9999`)
 
 Support light, dark, system and high contrast **from the first component**, not as a retrofit.
 
@@ -909,11 +909,11 @@ If a design cannot be made accessible, the design changes.
 
 Any PR touching UI must attach evidence (Section 15):
 
-* screenshots or a short screen recording, **before and after**
-* light and dark
-* mobile and desktop
-* the five states where applicable
-* a keyboard-only interaction pass for new interactive surfaces
+- screenshots or a short screen recording, **before and after**
+- light and dark
+- mobile and desktop
+- the five states where applicable
+- a keyboard-only interaction pass for new interactive surfaces
 
 "It looks fine on my machine" is not evidence.
 
@@ -963,11 +963,11 @@ Create professional GitHub repository configuration.
 
 Create templates for:
 
-* feature
-* bug
-* architecture proposal
-* performance issue
-* security concern
+- feature
+- bug
+- architecture proposal
+- performance issue
+- security concern
 
 Also create `.github/workflows/` with executable workflows (Section 19). A CI file stored anywhere else does not run.
 
@@ -980,17 +980,21 @@ PR template should require:
 ## Architecture Impact
 
 ## Screenshots / Video
+
 <!-- Required for any UI change: before/after, light + dark, mobile + desktop, the five states -->
 
 ## UI/UX Checklist
+
 <!-- Section 13.2 — responsive, themed, contrast, keyboard, screen reader, motion, five states -->
 
 ## Testing
+
 <!-- Commands actually run, with real output -->
 
 ## Performance
 
 ## Security
+
 <!-- Secrets scanned, .env.example updated, authz verified, inputs validated -->
 
 ## Accessibility
@@ -1002,6 +1006,7 @@ PR template should require:
 ## Rollback
 
 ## Checklist
+
 - [ ] Branched from up-to-date `main`, no direct commits to `main`
 - [ ] Conventional Commit title
 - [ ] `git diff --cached` reviewed before each commit; nothing blind-staged
@@ -1046,19 +1051,19 @@ Optionally scoped when it helps: `<type>/<scope>-<short-kebab-description>`
 
 Allowed types:
 
-| Type | Use for |
-|---|---|
-| `feat/` | new capability |
-| `fix/` | bug fix |
-| `refactor/` | behavior-preserving restructure |
-| `perf/` | measured performance work |
-| `design/` | UI/UX and design-system work |
-| `docs/` | documentation only |
-| `test/` | tests only |
-| `chore/` | tooling, deps, housekeeping |
-| `infra/` | CI, Docker, Terraform, cloud |
-| `security/` | security hardening and fixes |
-| `ai/` | AI gateway, agents, prompts, evals |
+| Type        | Use for                            |
+| ----------- | ---------------------------------- |
+| `feat/`     | new capability                     |
+| `fix/`      | bug fix                            |
+| `refactor/` | behavior-preserving restructure    |
+| `perf/`     | measured performance work          |
+| `design/`   | UI/UX and design-system work       |
+| `docs/`     | documentation only                 |
+| `test/`     | tests only                         |
+| `chore/`    | tooling, deps, housekeeping        |
+| `infra/`    | CI, Docker, Terraform, cloud       |
+| `security/` | security hardening and fixes       |
+| `ai/`       | AI gateway, agents, prompts, evals |
 
 Good:
 
@@ -1090,26 +1095,26 @@ git switch -c feat/world-central-plaza-loader
 
 Rules:
 
-* **One branch = one logical change.** If you cannot describe it in a single sentence without "and", split it.
-* **Short-lived.** Target under 3 days. Rebase on `main` at least daily: `git fetch origin && git rebase origin/main`.
-* **Keep it small.** Aim under ~400 changed lines. Large PRs do not get reviewed, they get rubber-stamped — which is the same as not reviewing.
-* **Never reuse a merged branch.** Delete it after merge and cut a fresh one.
-* **Never branch from another feature branch** unless there is a genuine dependency — and then say so explicitly in the PR and merge in order.
+- **One branch = one logical change.** If you cannot describe it in a single sentence without "and", split it.
+- **Short-lived.** Target under 3 days. Rebase on `main` at least daily: `git fetch origin && git rebase origin/main`.
+- **Keep it small.** Aim under ~400 changed lines. Large PRs do not get reviewed, they get rubber-stamped — which is the same as not reviewing.
+- **Never reuse a merged branch.** Delete it after merge and cut a fresh one.
+- **Never branch from another feature branch** unless there is a genuine dependency — and then say so explicitly in the PR and merge in order.
 
 ## 16.4 Required GitHub Branch Protection for `main`
 
 Configure these on the repository. Enforcement that lives only in a document is not enforcement.
 
-* ✅ Require a pull request before merging
-* ✅ Require at least **1** approving review
-* ✅ Dismiss stale approvals when new commits are pushed
-* ✅ Require conversation resolution before merging
-* ✅ Require status checks to pass: `lint`, `typecheck`, `test`, `build`, `secret-scan`
-* ✅ Require branches to be up to date before merging
-* ✅ Require linear history
-* ✅ Block force pushes
-* ✅ Block branch deletion
-* ✅ Include administrators (the repository owner is not exempt)
+- ✅ Require a pull request before merging
+- ✅ Require at least **1** approving review
+- ✅ Dismiss stale approvals when new commits are pushed
+- ✅ Require conversation resolution before merging
+- ✅ Require status checks to pass: `lint`, `typecheck`, `test`, `build`, `secret-scan`
+- ✅ Require branches to be up to date before merging
+- ✅ Require linear history
+- ✅ Block force pushes
+- ✅ Block branch deletion
+- ✅ Include administrators (the repository owner is not exempt)
 
 Solo-developer note: a single maintainer cannot approve their own PR. Do not solve this by disabling the review requirement — that removes the gate entirely. Either add a second reviewer/bot, or keep review off while making the **automated** checks strictly required and performing a documented self-review pass (Section 17.8) on the PR's own diff page before merging. State which mode the repository is in, in `CONTRIBUTING.md`.
 
@@ -1224,25 +1229,25 @@ Bearer tokens, session cookies, webhook signing secrets
 
 **Data**
 
-* Real user data or PII in fixtures, seeds or tests — use synthetic data only
-* Database dumps
-* Production logs
-* Customer-identifying screenshots (blur or synthesize before attaching to a PR)
+- Real user data or PII in fixtures, seeds or tests — use synthetic data only
+- Database dumps
+- Production logs
+- Customer-identifying screenshots (blur or synthesize before attaching to a PR)
 
 **Weight**
 
-* Binaries, videos, textures, models over 5 MB outside Git LFS
-* `node_modules`, `dist`, `.next`, `coverage`, `.turbo`, build output
+- Binaries, videos, textures, models over 5 MB outside Git LFS
+- `node_modules`, `dist`, `.next`, `coverage`, `.turbo`, build output
 
 Keep `.gitignore` ahead of this list. `.gitignore` prevents accidents; the scanner catches what slips past it. You need both.
 
 ## 17.5 Config Handling
 
-* Secrets are read from environment variables at runtime. Never inlined, never defaulted to a real value in code.
-* `.env.example` holds every required key with a **placeholder or empty** value, plus a comment on what it is and where to get it. Update it in the same PR that introduces a new variable.
-* Local dev uses `.env` (gitignored). Deployed environments use AWS Secrets Manager / SSM Parameter Store.
-* Never log a secret. Redact tokens in logs and error messages — including in error paths, which is where they most often leak.
-* Client-side bundles: remember anything reaching the browser is public. `NEXT_PUBLIC_*` values are not secrets and must never hold one.
+- Secrets are read from environment variables at runtime. Never inlined, never defaulted to a real value in code.
+- `.env.example` holds every required key with a **placeholder or empty** value, plus a comment on what it is and where to get it. Update it in the same PR that introduces a new variable.
+- Local dev uses `.env` (gitignored). Deployed environments use AWS Secrets Manager / SSM Parameter Store.
+- Never log a secret. Redact tokens in logs and error messages — including in error paths, which is where they most often leak.
+- Client-side bundles: remember anything reaching the browser is public. `NEXT_PUBLIC_*` values are not secrets and must never hold one.
 
 ## 17.6 If a Secret Leaks — Incident Procedure
 
@@ -1250,13 +1255,13 @@ Order matters. Do the first step first.
 
 **Step 1 — ROTATE THE CREDENTIAL. Immediately.**
 
-Assume it is compromised the instant it was written to disk in a repository. Revoke and reissue it before touching git history. Scrubbing history is *not* remediation — public repositories are scraped within seconds, and the commit may already sit in a fork, a clone, a CI log, or GitHub's cache.
+Assume it is compromised the instant it was written to disk in a repository. Revoke and reissue it before touching git history. Scrubbing history is _not_ remediation — public repositories are scraped within seconds, and the commit may already sit in a fork, a clone, a CI log, or GitHub's cache.
 
 **Step 2 — Contain, according to where it got to:**
 
-* *Staged, not committed* — `git restore --staged <file>`, add to `.gitignore`, done.
-* *Committed locally, not pushed* — `git reset --soft HEAD~1`, remove the secret, recommit.
-* *Pushed* — rotate (Step 1, already done), then scrub history with `git filter-repo` or BFG, force-push the rewritten branch, and notify anyone with a clone that they must re-clone. If the repository is public, also treat it as a disclosed-secret incident.
+- _Staged, not committed_ — `git restore --staged <file>`, add to `.gitignore`, done.
+- _Committed locally, not pushed_ — `git reset --soft HEAD~1`, remove the secret, recommit.
+- _Pushed_ — rotate (Step 1, already done), then scrub history with `git filter-repo` or BFG, force-push the rewritten branch, and notify anyone with a clone that they must re-clone. If the repository is public, also treat it as a disclosed-secret incident.
 
 **Step 3 — Close the hole.** Add the pattern to the scanner rules and `.gitignore` so the same class of leak cannot recur, and record it in `docs/10-runbooks/`.
 
@@ -1273,14 +1278,14 @@ gh pr create --fill --base main
 
 Every PR MUST have:
 
-* **Title** in Conventional Commit form — it becomes the squash commit on `main`
-* **The template fully filled** (Section 15). Delete no sections; write "N/A — reason" where a section does not apply. An unfilled template is an automatic request-for-changes.
-* **A linked issue** — `Closes #123`
-* **Scope kept to one logical change.** Unrelated drive-by fixes go in their own PR.
-* **UI evidence for any visual change** — before/after screenshots or recording, light and dark, mobile and desktop, the five states, and a note on the keyboard pass (Section 13.7)
-* **Green CI.** All required checks passing.
-* **Test evidence** — what you ran, and the actual output. Never claim a command passed without having run it.
-* **A migration and rollback note** where relevant.
+- **Title** in Conventional Commit form — it becomes the squash commit on `main`
+- **The template fully filled** (Section 15). Delete no sections; write "N/A — reason" where a section does not apply. An unfilled template is an automatic request-for-changes.
+- **A linked issue** — `Closes #123`
+- **Scope kept to one logical change.** Unrelated drive-by fixes go in their own PR.
+- **UI evidence for any visual change** — before/after screenshots or recording, light and dark, mobile and desktop, the five states, and a note on the keyboard pass (Section 13.7)
+- **Green CI.** All required checks passing.
+- **Test evidence** — what you ran, and the actual output. Never claim a command passed without having run it.
+- **A migration and rollback note** where relevant.
 
 ## 17.8 Self-Review Before Requesting Review
 
@@ -1288,7 +1293,7 @@ Read your own diff on the PR page — not in your editor — before assigning a 
 
 Check for: debug statements, commented-out code, stray `TODO`s in happy paths, accidental formatting churn that buries real changes, secrets, real data in fixtures, files you did not mean to include, and the `.env.example` update you forgot.
 
-Then answer honestly: *if someone else opened this PR, would I approve it?*
+Then answer honestly: _if someone else opened this PR, would I approve it?_
 
 ## 17.9 Review & Merge
 
@@ -1296,18 +1301,18 @@ Then answer honestly: *if someone else opened this PR, would I approve it?*
 
 **Never merge when:**
 
-* CI is red — never "merge anyway, it's flaky." Fix the flake; a flaky test is a bug.
-* Conversations are unresolved
-* The PR description is unfilled
-* UI changed and there is no visual evidence
-* The branch is behind `main` (rebase first)
-* You are guessing that it works
+- CI is red — never "merge anyway, it's flaky." Fix the flake; a flaky test is a bug.
+- Conversations are unresolved
+- The PR description is unfilled
+- UI changed and there is no visual evidence
+- The branch is behind `main` (rebase first)
+- You are guessing that it works
 
 **Merge method: squash and merge.**
 
-* One clean, conventional commit per PR on `main`
-* Edit the squash message before confirming — GitHub's default concatenation of every WIP message is noise
-* Keeps history linear and every commit revertable as a unit
+- One clean, conventional commit per PR on `main`
+- Edit the squash message before confirming — GitHub's default concatenation of every WIP message is noise
+- Keeps history linear and every commit revertable as a unit
 
 Use rebase-merge only when the individual commits are each meaningful and independently revertable. Never use a merge commit — it breaks the linear-history requirement.
 
@@ -1384,42 +1389,42 @@ Tests are part of implementation.
 
 Use appropriate layers:
 
-* unit
-* component
-* integration
-* contract
-* E2E
-* load
-* simulation
-* security
+- unit
+- component
+- integration
+- contract
+- E2E
+- load
+- simulation
+- security
 
 Potential tools:
 
-* Vitest
-* Playwright
-* Supertest
-* Testcontainers
-* k6
-* Go testing
-* cargo test
-* pytest
+- Vitest
+- Playwright
+- Supertest
+- Testcontainers
+- k6
+- Go testing
+- cargo test
+- pytest
 
 3D tests should include:
 
-* scene loading
-* interactions
-* world-state synchronization
-* performance budgets
-* asset failures
+- scene loading
+- interactions
+- world-state synchronization
+- performance budgets
+- asset failures
 
 Realtime tests eventually include:
 
-* disconnect
-* reconnect
-* packet loss
-* latency
-* concurrent sessions
-* region transitions
+- disconnect
+- reconnect
+- packet loss
+- latency
+- concurrent sessions
+- region transitions
 
 ---
 
@@ -1429,25 +1434,25 @@ Adopt secure-by-default architecture.
 
 Eventually support:
 
-* OIDC
-* OAuth
-* PKCE
-* passkeys
-* MFA
-* RBAC
-* ABAC
-* ReBAC where justified
+- OIDC
+- OAuth
+- PKCE
+- passkeys
+- MFA
+- RBAC
+- ABAC
+- ReBAC where justified
 
 Implement:
 
-* secure cookies
-* CSRF protections where applicable
-* CSP
-* validation
-* rate limiting
-* audit logging
-* secret management
-* least privilege
+- secure cookies
+- CSRF protections where applicable
+- CSP
+- validation
+- rate limiting
+- audit logging
+- secret management
+- least privilege
 
 Never commit secrets.
 
@@ -1467,9 +1472,9 @@ Use OpenTelemetry as the vendor-neutral instrumentation foundation.
 
 Every service should eventually expose:
 
-* logs
-* metrics
-* traces
+- logs
+- metrics
+- traces
 
 Use correlation IDs.
 
@@ -1479,39 +1484,39 @@ Examples:
 
 API:
 
-* latency
-* errors
-* throughput
+- latency
+- errors
+- throughput
 
 Realtime:
 
-* connections
-* reconnects
-* RTT
-* message rate
+- connections
+- reconnects
+- RTT
+- message rate
 
 3D:
 
-* FPS
-* frame time
-* memory
-* draw calls
-* asset load time
+- FPS
+- frame time
+- memory
+- draw calls
+- asset load time
 
 AI:
 
-* latency
-* cost
-* model
-* tool success
-* retrieval quality
+- latency
+- cost
+- model
+- tool success
+- retrieval quality
 
 Simulation:
 
-* tick time
-* entities
-* region load
-* state synchronization
+- tick time
+- entities
+- region load
+- state synchronization
 
 ---
 
@@ -1521,29 +1526,29 @@ Define measurable budgets.
 
 For web:
 
-* Core Web Vitals
-* JS bundle sizes
-* image sizes
+- Core Web Vitals
+- JS bundle sizes
+- image sizes
 
 For 3D:
 
-* first meaningful scene
-* initial asset payload
-* FPS targets
-* draw-call targets
-* triangle budgets
-* memory budgets
-* texture budgets
+- first meaningful scene
+- initial asset payload
+- FPS targets
+- draw-call targets
+- triangle budgets
+- memory budgets
+- texture budgets
 
 Support:
 
-* LOD
-* lazy loading
-* asset streaming
-* instancing
-* occlusion strategies
-* texture compression
-* spatial loading
+- LOD
+- lazy loading
+- asset streaming
+- instancing
+- occlusion strategies
+- texture compression
+- spatial loading
 
 Do not load the entire city at startup.
 
@@ -1583,18 +1588,18 @@ The application must not depend directly on one provider.
 
 Potential future agents:
 
-* receptionist
-* mentor
-* interviewer
-* recruiter
-* developer
-* tech lead
-* product manager
-* SRE
-* security analyst
-* instructor
-* event host
-* world director
+- receptionist
+- mentor
+- interviewer
+- recruiter
+- developer
+- tech lead
+- product manager
+- SRE
+- security analyst
+- instructor
+- event host
+- world director
 
 Agents must operate through explicit tools and permissions.
 
@@ -1629,16 +1634,16 @@ Authorization must occur BEFORE sensitive context reaches the model.
 
 Long-term concepts:
 
-* authoritative server state
-* client prediction
-* interpolation
-* reconciliation
-* world partitioning
-* AOI
-* spatial indexing
-* region handoff
-* snapshot compression
-* deterministic simulation where useful
+- authoritative server state
+- client prediction
+- interpolation
+- reconciliation
+- world partitioning
+- AOI
+- spatial indexing
+- region handoff
+- snapshot compression
+- deterministic simulation where useful
 
 Do not implement MMO-scale complexity during Phase 0.
 
@@ -1858,12 +1863,12 @@ task infra-down
 
 Use:
 
-* pnpm
-* Turborepo where appropriate
-* Go workspace
-* Cargo workspace
-* uv for Python
-* Taskfile or Makefile
+- pnpm
+- Turborepo where appropriate
+- Go workspace
+- Cargo workspace
+- uv for Python
+- Taskfile or Makefile
 
 Keep onboarding simple.
 
@@ -1889,16 +1894,16 @@ LICENSE placeholder/decision
 
 README should contain:
 
-* what Kynetra is
-* product vision
-* screenshots placeholder
-* architecture overview
-* current status
-* quick start
-* repository map
-* documentation links
-* roadmap
-* contribution instructions
+- what Kynetra is
+- product vision
+- screenshots placeholder
+- architecture overview
+- current status
+- quick start
+- repository map
+- documentation links
+- roadmap
+- contribution instructions
 
 Do not make README marketing-only.
 
@@ -1910,17 +1915,17 @@ Use Mermaid in Markdown for diagrams where practical.
 
 Create:
 
-* system context
-* container architecture
-* request flow
-* authentication
-* world-state flow
-* realtime flow
-* AI flow
-* deployment
-* CI/CD
-* event architecture
-* 2D/3D/XR relationship
+- system context
+- container architecture
+- request flow
+- authentication
+- world-state flow
+- realtime flow
+- AI flow
+- deployment
+- CI/CD
+- event architecture
+- 2D/3D/XR relationship
 
 Diagrams must match actual architecture.
 
@@ -1932,10 +1937,10 @@ Prefer explicit contracts.
 
 Use:
 
-* OpenAPI for HTTP
-* Protobuf when gRPC arrives
-* AsyncAPI/event schemas when event backbone arrives
-* JSON Schema where useful
+- OpenAPI for HTTP
+- Protobuf when gRPC arrives
+- AsyncAPI/event schemas when event backbone arrives
+- JSON Schema where useful
 
 Version externally consumed APIs.
 
@@ -1951,13 +1956,13 @@ Never rely on ORM auto-sync in production.
 
 Document:
 
-* schema
-* indexes
-* constraints
-* ownership
-* retention
-* backup
-* restore
+- schema
+- indexes
+- constraints
+- ownership
+- retention
+- backup
+- restore
 
 Avoid premature database fragmentation.
 
@@ -1971,13 +1976,13 @@ Design for feature flags.
 
 Potential:
 
-* 3d-world
-* multiplayer
-* webgpu
-* ai-npc
-* voice
-* xr
-* experimental-simulation
+- 3d-world
+- multiplayer
+- webgpu
+- ai-npc
+- voice
+- xr
+- experimental-simulation
 
 Experimental systems must be disableable.
 
@@ -1987,24 +1992,24 @@ Experimental systems must be disableable.
 
 Follow:
 
-* SOLID where useful
-* composition over inheritance
-* explicit boundaries
-* dependency inversion
-* domain-oriented modules
-* clear naming
-* small APIs
-* strong typing
+- SOLID where useful
+- composition over inheritance
+- explicit boundaries
+- dependency inversion
+- domain-oriented modules
+- clear naming
+- small APIs
+- strong typing
 
 Avoid:
 
-* god classes
-* giant components
-* giant services
-* circular dependencies
-* hidden side effects
-* unnecessary abstractions
-* premature generic frameworks
+- god classes
+- giant components
+- giant services
+- circular dependencies
+- hidden side effects
+- unnecessary abstractions
+- premature generic frameworks
 
 ---
 
@@ -2018,12 +2023,12 @@ Do not ban useState/useEffect artificially; use the correct React primitive for 
 
 Separate:
 
-* server state
-* client state
-* URL state
-* form state
-* realtime state
-* world state
+- server state
+- client state
+- URL state
+- form state
+- realtime state
+- world state
 
 Performance must be measured rather than guessed.
 
@@ -2039,12 +2044,12 @@ A user who wants efficiency should be able to accomplish core tasks through 2D.
 
 3D adds:
 
-* presence
-* spatial discovery
-* immersion
-* social interaction
-* simulation
-* exploration
+- presence
+- spatial discovery
+- immersion
+- social interaction
+- simulation
+- exploration
 
 Never force users to walk for five minutes to perform an operation that should require one click.
 
@@ -2066,17 +2071,17 @@ UI interaction
   → documentation updated
 ```
 
-Every one of those. A UI wired to a stub is not a feature. An endpoint with no UI is not a feature. Either one may be a legitimate *increment* — but call it what it is and do not report it as done.
+Every one of those. A UI wired to a stub is not a feature. An endpoint with no UI is not a feature. Either one may be a legitimate _increment_ — but call it what it is and do not report it as done.
 
 ## 39.3 Banned in Shipped Paths
 
-* Hardcoded or mocked data standing in for a real call
-* An endpoint that returns a fixed literal instead of real state
-* A form that validates but does not persist
-* A control that logs to console instead of acting
-* `catch {}` that swallows an error silently
-* "Wire this up later" left in a merged happy path
-* A success toast shown before the operation actually succeeded
+- Hardcoded or mocked data standing in for a real call
+- An endpoint that returns a fixed literal instead of real state
+- A form that validates but does not persist
+- A control that logs to console instead of acting
+- `catch {}` that swallows an error silently
+- "Wire this up later" left in a merged happy path
+- A success toast shown before the operation actually succeeded
 
 If something genuinely cannot be finished in this PR: put it behind a feature flag (Section 36), default it **off**, and state the gap explicitly in the PR. A hidden half-feature is honest. A visible half-feature is a bug you shipped on purpose.
 
@@ -2084,13 +2089,13 @@ If something genuinely cannot be finished in this PR: put it behind a feature fl
 
 Every failure mode gets designed, not discovered:
 
-* network failure and timeout
-* 401/403 — session expired, permission denied (these are different, and the UI must say which)
-* 404 — the thing is gone
-* 409 — concurrent edit conflict
-* 422 — validation, mapped to the specific field
-* 5xx — our fault; apologize, offer retry, log with a correlation ID the user can quote
-* realtime disconnect — show degraded state, attempt reconnect with backoff, never pretend the data is live
+- network failure and timeout
+- 401/403 — session expired, permission denied (these are different, and the UI must say which)
+- 404 — the thing is gone
+- 409 — concurrent edit conflict
+- 422 — validation, mapped to the specific field
+- 5xx — our fault; apologize, offer retry, log with a correlation ID the user can quote
+- realtime disconnect — show degraded state, attempt reconnect with backoff, never pretend the data is live
 
 ## 39.5 Never Lose User Work
 
@@ -2121,10 +2126,10 @@ If governance (hooks, CI, branch protection) is not yet in place, **establishing
 
 If repository already contains files:
 
-* inspect everything
-* preserve useful work
-* identify conflicts
-* report findings
+- inspect everything
+- preserve useful work
+- identify conflicts
+- report findings
 
 Never wipe existing work blindly.
 
@@ -2142,23 +2147,23 @@ This step is not paperwork. Until it exists, nothing downstream is actually prot
 
 Create:
 
-* AGENTS.md
-* contribution rules
-* Git conventions (Section 16)
-* PR template (Section 15) and issue templates
-* CODEOWNERS
-* coding standards
-* testing standards
-* AI skills
+- AGENTS.md
+- contribution rules
+- Git conventions (Section 16)
+- PR template (Section 15) and issue templates
+- CODEOWNERS
+- coding standards
+- testing standards
+- AI skills
 
 And make the protection **executable**:
 
-* Husky + lint-staged pre-commit hook running the Section 17.3 gate
-* `commitlint` enforcing Conventional Commits on `commit-msg`
-* `gitleaks` config + baseline, wired into both the hook and CI
-* `.gitignore` covering every pattern in Section 17.4
-* `.env.example` complete and placeholder-only
-* GitHub branch protection on `main` per Section 16.4, verified by attempting a direct push and confirming it is rejected
+- Husky + lint-staged pre-commit hook running the Section 17.3 gate
+- `commitlint` enforcing Conventional Commits on `commit-msg`
+- `gitleaks` config + baseline, wired into both the hook and CI
+- `.gitignore` covering every pattern in Section 17.4
+- `.env.example` complete and placeholder-only
+- GitHub branch protection on `main` per Section 16.4, verified by attempting a direct push and confirming it is rejected
 
 Verify the hooks actually fire on a real commit and the protection actually blocks a real push. Configuration that was written but never exercised is not governance.
 
@@ -2184,12 +2189,12 @@ Create initial design tokens and application shell.
 
 Create minimal:
 
-* web app
-* API
-* PostgreSQL integration
-* Redis integration only if immediately needed
-* health endpoints
-* telemetry foundation
+- web app
+- API
+- PostgreSQL integration
+- Redis integration only if immediately needed
+- health endpoints
+- telemetry foundation
 
 ### STEP 10 — Demo
 
@@ -2228,43 +2233,43 @@ Before declaring Phase 0 complete, verify — by actually running each one:
 
 **Build & code**
 
-* repository installs from scratch (delete `node_modules`, fresh `pnpm install`)
-* development environment starts
-* formatting passes
-* lint passes with zero warnings
-* typecheck passes
-* tests pass
-* builds pass
-* health endpoint works
-* DB migration works (and rolls back)
+- repository installs from scratch (delete `node_modules`, fresh `pnpm install`)
+- development environment starts
+- formatting passes
+- lint passes with zero warnings
+- typecheck passes
+- tests pass
+- builds pass
+- health endpoint works
+- DB migration works (and rolls back)
 
 **UI/UX (Section 13)**
 
-* every screen verified at 360 / 768 / 1280 / 1920 px
-* light, dark and high-contrast themes all correct
-* contrast ratios verified with a tool
-* full keyboard-only pass completes every core task
-* five states implemented and demonstrable for every data-bound component
-* `prefers-reduced-motion` honored
-* zero console errors or warnings in normal use
+- every screen verified at 360 / 768 / 1280 / 1920 px
+- light, dark and high-contrast themes all correct
+- contrast ratios verified with a tool
+- full keyboard-only pass completes every core task
+- five states implemented and demonstrable for every data-bound component
+- `prefers-reduced-motion` honored
+- zero console errors or warnings in normal use
 
 **Functionality (Section 39)**
 
-* every visible control does something real
-* no mock data in any shipped path
-* error paths exercised, not just the happy path
+- every visible control does something real
+- no mock data in any shipped path
+- error paths exercised, not just the happy path
 
 **Governance (Sections 16–17)**
 
-* pre-commit hook fires and blocks a deliberately planted test secret
-* `gitleaks` reports clean over the full history
-* no `.env`, keys, dumps or real user data anywhere in the repository or its history
-* `.env.example` lists every required variable, placeholders only
-* workflows live in `.github/workflows/` and have demonstrably run on a real PR
-* branch protection on `main` verified by a rejected direct push
-* all work reached `main` through merged PRs
-* documentation links resolve
-* architecture documentation matches the code
+- pre-commit hook fires and blocks a deliberately planted test secret
+- `gitleaks` reports clean over the full history
+- no `.env`, keys, dumps or real user data anywhere in the repository or its history
+- `.env.example` lists every required variable, placeholders only
+- workflows live in `.github/workflows/` and have demonstrably run on a real PR
+- branch protection on `main` verified by a rejected direct push
+- all work reached `main` through merged PRs
+- documentation links resolve
+- architecture documentation matches the code
 
 Do not claim commands were tested unless they were actually executed. Paste real output. If something fails, report the failure — a fabricated green checklist is the most expensive thing you can produce here, because every later decision is made on top of it.
 
@@ -2293,6 +2298,7 @@ At the end provide:
 ## Architecture Decisions
 
 ## Dependencies Added
+
 <!-- Tier 1 and Tier 2 per Section 6, with the reason for each -->
 
 ## Repository Structure
@@ -2300,15 +2306,19 @@ At the end provide:
 ## Commands
 
 ## Tests Executed
+
 <!-- With real output. Anything not run is listed as not run. -->
 
 ## UI/UX Verification
+
 <!-- Section 13.2 results per screen, and where the bar is not yet met -->
 
 ## Security & Secrets Check
+
 <!-- Scan results, .env.example status, anything flagged -->
 
 ## Branches & PRs
+
 <!-- Branch names, PR URLs, merge status -->
 
 ## Known Limitations

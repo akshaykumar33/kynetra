@@ -6,7 +6,10 @@ import { telemetryRoutes } from './routes/telemetry.js';
 
 export function buildApp() {
   const app = Fastify({
-    logger: false,
+    // Structured logging is the foundation the OpenTelemetry work builds on
+    // (docs/02-architecture/observability). Silenced under test so suite
+    // output stays readable.
+    logger: process.env.NODE_ENV === 'test' ? false : { level: process.env.LOG_LEVEL ?? 'info' },
   });
 
   app.register(cors, {
