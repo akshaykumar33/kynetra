@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+# Kynetra pre-commit gate — prompts/starter_prompt.md §17.3
+#
+# Order matters: the secret scan runs FIRST and reads the staged index, so a
+# credential is caught before any formatter rewrites the file underneath it.
+#
+# This hook is a convenience, not a boundary. It is local, skippable with
+# --no-verify, and absent on a fresh clone. CI re-runs every one of these
+# checks on the pull request, and that is the gate that actually holds.
+
+set -e
+
+echo "→ [1/4] scanning staged content for secrets and sensitive files"
+node packages/secret-scan/src/cli.mjs --staged
+
+echo "→ [2/4] formatting and linting staged files"
+pnpm exec lint-staged
+
+echo "→ [3/4] typechecking"
+pnpm run typecheck
+
+echo "→ [4/4] running tests"
+pnpm run test
+
+echo "✓ pre-commit gate passed"
