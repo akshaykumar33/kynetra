@@ -25,6 +25,6 @@ export async function worldRoutes(app: FastifyInstance) {
       }
 
       return district;
-    }
+    },
   );
 }

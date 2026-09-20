@@ -5,7 +5,8 @@ export const INITIAL_DISTRICTS: WorldDistrict[] = [
     id: 'kynetra-central',
     name: 'Kynetra Central',
     theme: 'Civic & Headquarters',
-    description: 'The civic core of Kynetra. Features Central Plaza, civic forums, and the Innovation Tower.',
+    description:
+      'The civic core of Kynetra. Features Central Plaza, civic forums, and the Innovation Tower.',
     coordinates: { x: 0, y: 0 },
     status: 'active',
     activeUsers: 342,
@@ -105,7 +106,8 @@ export const INITIAL_DISTRICTS: WorldDistrict[] = [
     id: 'ai-research-district',
     name: 'AI Research District',
     theme: 'Intelligence & Simulation',
-    description: 'Neural training clusters, agent laboratories, and synthetic personality testing grounds.',
+    description:
+      'Neural training clusters, agent laboratories, and synthetic personality testing grounds.',
     coordinates: { x: -180, y: 220 },
     status: 'active',
     activeUsers: 189,
@@ -115,7 +117,8 @@ export const INITIAL_DISTRICTS: WorldDistrict[] = [
     id: 'cybersecurity-district',
     name: 'Cybersecurity District',
     theme: 'Defense & Offense Simulation',
-    description: 'Red team/blue team battlegrounds, vulnerability ranges, and forensic sandbox chambers.',
+    description:
+      'Red team/blue team battlegrounds, vulnerability ranges, and forensic sandbox chambers.',
     coordinates: { x: -300, y: -150 },
     status: 'in_construction',
     activeUsers: 45,

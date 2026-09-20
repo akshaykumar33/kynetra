@@ -14,6 +14,7 @@ Within Kynetra, developers and autonomous AI agents collaborate, participate in 
 ## The Vision: Procedural Realism First
 
 Unlike traditional metaverses focused exclusively on visual avatars or speculative tokens, Kynetra prioritizes **system and procedural realism**:
+
 - **Code Actually Executes**: Workstations and battle pods connect to real containers and cloud sandboxes.
 - **Incidents Have Root Causes**: SRE and cybersecurity simulations inject real latency, packet loss, and CVEs.
 - **Unified World Platform**: 2D web, 3D WebGL/WebGPU, mobile, and XR are different projection lenses over a single authoritative world state.
@@ -56,11 +57,13 @@ Unlike traditional metaverses focused exclusively on visual avatars or speculati
 ## Quick Start
 
 ### Prerequisites
+
 - [Node.js](https://nodejs.org/) >= 20.x
 - [pnpm](https://pnpm.io/) >= 10.x
 - [Docker Desktop](https://www.docker.com/) (for PostgreSQL and Redis)
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/akshaykumar33/kynetra.git
 cd kynetra
@@ -68,11 +71,13 @@ pnpm install
 ```
 
 ### 2. Start Local Infrastructure
+
 ```bash
 docker compose up -d
 ```
 
 ### 3. Run Quality Verification
+
 ```bash
 # Run unit and integration tests across all packages
 pnpm run test
@@ -85,9 +90,11 @@ pnpm run build
 ```
 
 ### 4. Start Development Servers
+
 ```bash
 pnpm run dev
 ```
+
 - **Web World Console**: [http://localhost:3000](http://localhost:3000)
 - **Platform Core API**: [http://localhost:4000](http://localhost:4000)
 - **API Health Check**: [http://localhost:4000/health/ready](http://localhost:4000/health/ready)
@@ -98,6 +105,7 @@ pnpm run dev
 ## Architecture Decisions (ADRs)
 
 Key architectural decisions are documented in [`docs/08-decisions/`](./docs/08-decisions/):
+
 - **[ADR-0001](./docs/08-decisions/ADR-0001-monorepo-pnpm-turbo.md)**: Polyglot monorepo using pnpm workspaces and Turborepo.
 - **[ADR-0002](./docs/08-decisions/ADR-0002-modular-monolith-first.md)**: Modular monolith architecture before microservices.
 - **[ADR-0003](./docs/08-decisions/ADR-0003-web-application-stack.md)**: Next.js 15 App Router & modern design tokens.
@@ -115,19 +123,19 @@ Key architectural decisions are documented in [`docs/08-decisions/`](./docs/08-d
 
 ## Phased Roadmap
 
-| Phase | Name | Target Capabilities | Status |
-|---|---|---|---|
-| **Phase 00** | **Foundation** | Monorepo, docs, ADRs, contracts, platform API, 2D web console, CI | **Complete** |
-| **Phase 01** | **Platform Core** | Multi-tenant orgs, campus layout, floorplan permissions, 2D shell | Up Next |
-| **Phase 02** | **First 3D World** | Central Plaza 3D, avatar controller, workstation zoom, R3F runtime | Planned |
-| **Phase 03** | **Multiplayer** | Go Realtime Gateway, WebSockets, movement sync, proximity chat | Planned |
-| **Phase 04** | **Social** | Guilds, persistent channels, WebRTC screen sharing, team standup rooms | Planned |
-| **Phase 05** | **Gamification** | Verified XP engine, cryptographic skill badges, district leaderboards | Planned |
-| **Phase 06** | **Work & Simulation** | Interactive workstations, incident ranges, cloud labs, Rust sim core | Planned |
-| **Phase 07** | **AI World** | AI Gateway, Aria Receptionist, Autonomous Mentors, Interviewer NPC | Planned |
-| **Phase 08** | **Digital Twin** | MQTT building telemetry, energy/occupancy twins, 3D live sensors | Planned |
-| **Phase 09** | **XR & CV** | WebXR VR/AR, hand tracking, spatial window management | Planned |
-| **Phase 10** | **Planetary Scale** | Spatial partitioning, multi-region distributed sync, Kubernetes (EKS) | Planned |
+| Phase        | Name                  | Target Capabilities                                                    | Status       |
+| ------------ | --------------------- | ---------------------------------------------------------------------- | ------------ |
+| **Phase 00** | **Foundation**        | Monorepo, docs, ADRs, contracts, platform API, 2D web console, CI      | **Complete** |
+| **Phase 01** | **Platform Core**     | Multi-tenant orgs, campus layout, floorplan permissions, 2D shell      | Up Next      |
+| **Phase 02** | **First 3D World**    | Central Plaza 3D, avatar controller, workstation zoom, R3F runtime     | Planned      |
+| **Phase 03** | **Multiplayer**       | Go Realtime Gateway, WebSockets, movement sync, proximity chat         | Planned      |
+| **Phase 04** | **Social**            | Guilds, persistent channels, WebRTC screen sharing, team standup rooms | Planned      |
+| **Phase 05** | **Gamification**      | Verified XP engine, cryptographic skill badges, district leaderboards  | Planned      |
+| **Phase 06** | **Work & Simulation** | Interactive workstations, incident ranges, cloud labs, Rust sim core   | Planned      |
+| **Phase 07** | **AI World**          | AI Gateway, Aria Receptionist, Autonomous Mentors, Interviewer NPC     | Planned      |
+| **Phase 08** | **Digital Twin**      | MQTT building telemetry, energy/occupancy twins, 3D live sensors       | Planned      |
+| **Phase 09** | **XR & CV**           | WebXR VR/AR, hand tracking, spatial window management                  | Planned      |
+| **Phase 10** | **Planetary Scale**   | Spatial partitioning, multi-region distributed sync, Kubernetes (EKS)  | Planned      |
 
 ---
 
