@@ -1,0 +1,20 @@
+{
+  "name": "@kynetra/secret-scan",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-free sensitive-data scanner for the pre-commit hook and CI.",
+  "bin": {
+    "secret-scan": "./src/cli.mjs"
+  },
+  "exports": {
+    ".": "./src/patterns.mjs"
+  },
+  "scripts": {
+    "scan": "node ./src/cli.mjs --all",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.7"
+  }
+}
