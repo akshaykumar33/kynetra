@@ -127,6 +127,23 @@ After merge: delete the branch, confirm `main` is green, then `git switch main &
 
 This repository currently runs with **one maintainer**, so the required-approval rule cannot be satisfied without blocking all work. Rather than disabling the gate, we keep the _automated_ checks strictly required and the maintainer performs a documented self-review pass on the PR diff page before merging. When a second maintainer joins, turn required approvals back on.
 
+### Branch protection status — read this
+
+`main` is **not** protected server-side, and you should know that rather than assume otherwise.
+
+GitHub does not offer branch protection or repository rulesets for **private repositories on the Free plan**. Both APIs return `403 Upgrade to GitHub Pro or make this repository public`. So the settings in §16.4 — required status checks, required PR, linear history, blocked force-push, include-administrators — are configured nowhere.
+
+What exists instead is a `pre-push` hook that refuses direct pushes to `main`. Be clear about what that is: it is **local, bypassable, and absent on a fresh clone until `pnpm install` runs**. It stops the accident. It does not stop intent, and it protects nobody else's clone.
+
+Closing this properly needs one of:
+
+| Option                     | Effect                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------- |
+| Make the repository public | Protection and rulesets become available at no cost — but the code becomes public |
+| GitHub Pro                 | Protection on private repos, ~$4/month                                            |
+
+Until then, the discipline in this document is what holds, and CI on pull requests is the only automated check that runs somewhere you cannot skip it. When protection is enabled, apply §16.4, keep the hook as a fast local failure, and delete this section.
+
 ## Local commands
 
 ```bash
