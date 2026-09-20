@@ -14,7 +14,7 @@
   "dependencies": {
     "@fastify/cors": "^10.1.0",
     "@kynetra/contracts": "workspace:*",
-    "fastify": "^5.2.1",
+    "fastify": "^5.12.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
