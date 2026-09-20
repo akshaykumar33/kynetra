@@ -8,9 +8,9 @@ const app = buildApp();
 async function start() {
   try {
     await app.listen({ port: PORT, host: HOST });
-    console.log(`[Kynetra Platform API] Running at http://${HOST}:${PORT}`);
+    app.log.info(`[Kynetra Platform API] Running at http://${HOST}:${PORT}`);
   } catch (err) {
-    console.error('Failed to start API service:', err);
+    app.log.error({ err }, 'Failed to start API service');
     process.exit(1);
   }
 }
