@@ -15,7 +15,7 @@
     "@fastify/cors": "^10.1.0",
     "@kynetra/contracts": "workspace:*",
     "fastify": "^5.2.1",
-    "zod": "^3.24.2"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
