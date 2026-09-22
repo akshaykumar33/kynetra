@@ -19,3 +19,17 @@ export const WorldStatsSchema = z.object({
   lastUpdated: z.string(),
 });
 export type WorldStats = z.infer<typeof WorldStatsSchema>;
+
+export const LiveTelemetryMetricSchema = z.object({
+  timestamp: z.string(),
+  cpuUsagePercent: z.number(),
+  memoryUsagePercent: z.number(),
+  dbPoolActiveConnections: z.number(),
+  dbPoolMaxConnections: z.number(),
+  p99LatencyMs: z.number(),
+  errorRate5xx: z.number(),
+  requestsPerSecond: z.number(),
+  activeIncidents: z.number(),
+});
+export type LiveTelemetryMetric = z.infer<typeof LiveTelemetryMetricSchema>;
+

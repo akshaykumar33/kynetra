@@ -88,7 +88,7 @@ pnpm run build
 ```bash
 pnpm run dev
 ```
-- **Web World Console**: [http://localhost:3000](http://localhost:3000)
+- **Web World Console**: [http://localhost:9000](http://localhost:9000)
 - **Platform Core API**: [http://localhost:4000](http://localhost:4000)
 - **API Health Check**: [http://localhost:4000/health/ready](http://localhost:4000/health/ready)
 - **Jaeger Telemetry UI**: [http://localhost:16686](http://localhost:16686)
