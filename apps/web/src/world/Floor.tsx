@@ -1,13 +1,23 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useRef } from 'react';
-import { Vector3, type Mesh } from 'three';
-import { player, useOffice } from '../state';
-import { desks, FLOOR, MY_DESK, ROOM, ROOM_DOOR, zones, type Desk } from './layout';
+import { type BufferGeometry, type Mesh, type MeshStandardMaterial } from 'three';
+import { useOffice, walkTo } from '../state';
+import { desks, FLOOR, MY_DESK, ROOM, ROOM_DOOR, zones, type Desk } from '@knovra/shared';
 
 const WOOD = '#d9bf98';
 const WALL = '#f4efe7';
 
-function Block({ p, s, c, r = 0.85 }: { p: [number, number, number]; s: [number, number, number]; c: string; r?: number }) {
+function Block({
+  p,
+  s,
+  c,
+  r = 0.85,
+}: {
+  p: [number, number, number];
+  s: [number, number, number];
+  c: string;
+  r?: number;
+}) {
   return (
     <mesh position={p} castShadow receiveShadow>
       <boxGeometry args={s} />
@@ -23,7 +33,11 @@ function Plant({ x, z, s = 1 }: { x: number; z: number; s?: number }) {
         <cylinderGeometry args={[0.22, 0.17, 0.5, 16]} />
         <meshStandardMaterial color="#c7764f" roughness={0.9} />
       </mesh>
-      {[[0, 0.85, 0, 0.36], [0.16, 1.1, 0.06, 0.26], [-0.14, 1.05, -0.08, 0.28]].map(([px, py, pz, r], i) => (
+      {[
+        [0, 0.85, 0, 0.36],
+        [0.16, 1.1, 0.06, 0.26],
+        [-0.14, 1.05, -0.08, 0.28],
+      ].map(([px, py, pz, r], i) => (
         <mesh key={i} position={[px, py, pz]} castShadow>
           <icosahedronGeometry args={[r, 0]} />
           <meshStandardMaterial color={i ? '#6f9d55' : '#5b8a45'} roughness={0.8} flatShading />
@@ -34,15 +48,21 @@ function Plant({ x, z, s = 1 }: { x: number; z: number; s?: number }) {
 }
 
 function DeskSet({ d, mine }: { d: Desk; mine?: boolean }) {
-  const screen = useRef<Mesh>(null);
+  const screen = useRef<Mesh<BufferGeometry, MeshStandardMaterial>>(null);
   useFrame(({ clock }) => {
-    if (screen.current) (screen.current.material as any).emissiveIntensity = 0.55 + Math.sin(clock.elapsedTime * 0.7 + d.x) * 0.08;
+    if (screen.current)
+      screen.current.material.emissiveIntensity = 0.55 + Math.sin(clock.elapsedTime * 0.7 + d.x) * 0.08;
   });
   const back = -d.facing * 0.25;
   return (
     <group position={[d.x, 0, d.z]}>
       <Block p={[0, 0.74, 0]} s={[2, 0.06, 0.9]} c={mine ? '#c9a271' : '#e8dccb'} />
-      {[[-0.92, -0.38], [0.92, -0.38], [-0.92, 0.38], [0.92, 0.38]].map(([x, z], i) => (
+      {[
+        [-0.92, -0.38],
+        [0.92, -0.38],
+        [-0.92, 0.38],
+        [0.92, 0.38],
+      ].map(([x, z], i) => (
         <Block key={i} p={[x, 0.37, z]} s={[0.05, 0.74, 0.05]} c="#6d6257" />
       ))}
       <Block p={[0, 1.05, back]} s={[0.8, 0.48, 0.04]} c="#2f3437" r={0.4} />
@@ -110,15 +130,34 @@ function MeetingRoom() {
   });
   const glass = <meshPhysicalMaterial color="#cfe3f2" transparent opacity={0.28} roughness={0.05} />;
   const h = 2.4;
-  const left = ROOM.x - ROOM.w / 2, right = ROOM.x + ROOM.w / 2, top = ROOM.z - ROOM.d / 2, bottom = ROOM.z + ROOM.d / 2;
-  const dl = ROOM_DOOR.x - ROOM_DOOR.w / 2, dr = ROOM_DOOR.x + ROOM_DOOR.w / 2;
+  const left = ROOM.x - ROOM.w / 2,
+    right = ROOM.x + ROOM.w / 2,
+    top = ROOM.z - ROOM.d / 2,
+    bottom = ROOM.z + ROOM.d / 2;
+  const dl = ROOM_DOOR.x - ROOM_DOOR.w / 2,
+    dr = ROOM_DOOR.x + ROOM_DOOR.w / 2;
   return (
     <group>
-      <mesh position={[ROOM.x, h / 2, top]}><boxGeometry args={[ROOM.w, h, 0.08]} />{glass}</mesh>
-      <mesh position={[left, h / 2, ROOM.z]}><boxGeometry args={[0.08, h, ROOM.d]} />{glass}</mesh>
-      <mesh position={[right, h / 2, ROOM.z]}><boxGeometry args={[0.08, h, ROOM.d]} />{glass}</mesh>
-      <mesh position={[(left + dl) / 2, h / 2, bottom]}><boxGeometry args={[dl - left, h, 0.08]} />{glass}</mesh>
-      <mesh position={[(dr + right) / 2, h / 2, bottom]}><boxGeometry args={[right - dr, h, 0.08]} />{glass}</mesh>
+      <mesh position={[ROOM.x, h / 2, top]}>
+        <boxGeometry args={[ROOM.w, h, 0.08]} />
+        {glass}
+      </mesh>
+      <mesh position={[left, h / 2, ROOM.z]}>
+        <boxGeometry args={[0.08, h, ROOM.d]} />
+        {glass}
+      </mesh>
+      <mesh position={[right, h / 2, ROOM.z]}>
+        <boxGeometry args={[0.08, h, ROOM.d]} />
+        {glass}
+      </mesh>
+      <mesh position={[(left + dl) / 2, h / 2, bottom]}>
+        <boxGeometry args={[dl - left, h, 0.08]} />
+        {glass}
+      </mesh>
+      <mesh position={[(dr + right) / 2, h / 2, bottom]}>
+        <boxGeometry args={[right - dr, h, 0.08]} />
+        {glass}
+      </mesh>
       <mesh ref={door} position={[ROOM_DOOR.x, h / 2, bottom + 0.06]} castShadow>
         <boxGeometry args={[ROOM_DOOR.w, h, 0.06]} />
         <meshStandardMaterial color="#a9805a" roughness={0.6} />
@@ -131,7 +170,9 @@ function MeetingRoom() {
         <meshStandardMaterial color="#2a3b4c" emissive="#3a6c95" emissiveIntensity={0.5} />
       </mesh>
       {/* frame lines on the glass so walls read as walls */}
-      {[left, right].map(x => <Block key={x} p={[x, h + 0.04, ROOM.z]} s={[0.12, 0.08, ROOM.d]} c="#7a6a5b" />)}
+      {[left, right].map(x => (
+        <Block key={x} p={[x, h + 0.04, ROOM.z]} s={[0.12, 0.08, ROOM.d]} c="#7a6a5b" />
+      ))}
       <Block p={[ROOM.x, h + 0.04, top]} s={[ROOM.w, 0.08, 0.12]} c="#7a6a5b" />
       <Block p={[ROOM.x, h + 0.04, bottom]} s={[ROOM.w, 0.08, 0.12]} c="#7a6a5b" />
     </group>
@@ -180,7 +221,7 @@ export function Floor() {
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     if (e.delta > 6) return; // ignore drags (camera orbit)
     e.stopPropagation();
-    player.target = new Vector3(e.point.x, 0, e.point.z);
+    walkTo(e.point.x, e.point.z);
   };
   return (
     <group>
@@ -193,14 +234,18 @@ export function Floor() {
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#cfd8c4" roughness={1} />
       </mesh>
-      {zones.filter(z => z.kind === 'team').map(z => (
-        <mesh key={z.id} rotation-x={-Math.PI / 2} position={[z.x, 0.012, z.z]} receiveShadow>
-          <planeGeometry args={[z.w - 0.6, z.d - 0.6]} />
-          <meshStandardMaterial color={z.color} roughness={1} />
-        </mesh>
-      ))}
+      {zones
+        .filter(z => z.kind === 'team')
+        .map(z => (
+          <mesh key={z.id} rotation-x={-Math.PI / 2} position={[z.x, 0.012, z.z]} receiveShadow>
+            <planeGeometry args={[z.w - 0.6, z.d - 0.6]} />
+            <meshStandardMaterial color={z.color} roughness={1} />
+          </mesh>
+        ))}
       <Shell />
-      {desks.map(d => <DeskSet key={d.id} d={d} />)}
+      {desks.map(d => (
+        <DeskSet key={d.id} d={d} />
+      ))}
       <DeskSet d={MY_DESK} mine />
       <Lounge />
       <MeetingRoom />

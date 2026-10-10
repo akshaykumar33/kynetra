@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type { Group } from 'three';
-import type { Status } from './layout';
+import type { Status } from '@knovra/shared';
 
 const STATUS_COLOR: Record<Status, string> = {
   available: '#3fb67d',
@@ -56,7 +56,11 @@ export function Avatar({ name, body, skin, hair, status, remote, speedRef, talki
       <group ref={ring} position={[0, 0.02, 0]}>
         <mesh rotation-x={-Math.PI / 2}>
           <ringGeometry args={[0.42, 0.5, 40]} />
-          <meshBasicMaterial color={talking ? '#3fb67d' : isMe ? '#2f6f8f' : '#000000'} transparent opacity={talking || isMe ? 0.75 : 0.08} />
+          <meshBasicMaterial
+            color={talking ? '#3fb67d' : isMe ? '#2f6f8f' : '#000000'}
+            transparent
+            opacity={talking || isMe ? 0.75 : 0.08}
+          />
         </mesh>
       </group>
       <group ref={rig}>

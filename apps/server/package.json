@@ -1,0 +1,17 @@
+{
+  "name": "@knovra/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@knovra/shared": "*",
+    "fastify": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
