@@ -4,9 +4,11 @@
 **Depends on:** Phase 02. **Spike inside this phase:** LiveKit spatial audio (timeboxed to 1 session).
 
 ## Goal
+
 Everyone on a floor sees everyone else move, sit and change status live.
 
 ## In scope
+
 1. **Room server:** Colyseus in `apps/server` (or a separate `apps/realtime`). One room per floor,
    joined with the session cookie (auth checked on join).
 2. **State:** the server holds each member's position, facing, status, zone and `inRoomId`. The server
@@ -25,9 +27,11 @@ Everyone on a floor sees everyone else move, sit and change status live.
    and a go/no-go for Phase 04.
 
 ## Out of scope
+
 Voice in the product (Phase 04) and chat (Phase 05).
 
 ## Exit gate
+
 - e2e: two browser contexts sign in as different users. User A walks; user B sees A's avatar move
   within 300 ms. A sets Focus; B sees it within 1 s. A closes the tab; B sees A leave within 35 s.
 - The load script with 60 bots holds the server tick below 20 ms (p95) and the client at 50 fps or
@@ -35,6 +39,7 @@ Voice in the product (Phase 04) and chat (Phase 05).
 - The spike doc exists with a go/no-go.
 
 ## Prompt
+
 ```
 Execute Phase 03 from docs/roadmap/phases/03-realtime-presence.md, following
 docs/roadmap/PROMPT_RULES.md. Load the multiplayer and performance-engineer

@@ -4,9 +4,11 @@
 **Depends on:** Phases 01–05 (critical path). Other phases are optional for beta.
 
 ## Goal
+
 A real company can use it every day, safely and reliably.
 
 ## In scope
+
 1. **Security review:**
    - Threat model (auth, websockets, LiveKit tokens, uploads, cross-tenant access).
    - Dependency audit, CSP and security headers, and rate limits.
@@ -27,12 +29,14 @@ A real company can use it every day, safely and reliably.
 7. **Beta:** onboard 2–3 pilot companies, add an in-app feedback button, and set up a status page.
 
 ## Exit gate
+
 - Staging passes the 1-hour load test inside the SLOs (dashboards linked).
 - A restore from backup into a fresh database is verified.
 - The security checklist has no open high or critical items.
 - First beta company active for 5 working days with no Sev-1 incident.
 
 ## Prompt
+
 ```
 Execute Phase 11 from docs/roadmap/phases/11-production-and-beta.md, following
 docs/roadmap/PROMPT_RULES.md. Load the devops-sre, security-engineer,

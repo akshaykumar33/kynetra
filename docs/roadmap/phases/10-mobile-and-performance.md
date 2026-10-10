@@ -4,9 +4,11 @@
 **Depends on:** Phase 07.
 
 ## Goal
+
 It runs well on phones and on laptops without a dedicated GPU.
 
 ## In scope
+
 1. **Profiling first:** measure CPU/GPU frame time, draw calls and memory on 3 reference devices
    (mid-range Android, iPhone, an integrated-GPU laptop). Record the numbers before changing anything.
 2. **Rendering:**
@@ -22,14 +24,17 @@ It runs well on phones and on laptops without a dedicated GPU.
 6. **2D fallback:** a lightweight top-down floor for devices without WebGL2, with the same features.
 
 ## Out of scope
+
 Native apps.
 
 ## Exit gate
+
 - On each reference device (numbers in the PR): 60 avatars on the floor at 45 fps or more on Balanced,
   and the floor is usable within 4 s on a 4G profile.
 - An e2e on a mobile viewport (Playwright device emulation) completes walk-up-to-talk using touch.
 
 ## Prompt
+
 ```
 Execute Phase 10 from docs/roadmap/phases/10-mobile-and-performance.md, following
 docs/roadmap/PROMPT_RULES.md. Load the performance-engineer,

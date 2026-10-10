@@ -4,10 +4,12 @@
 **Depends on:** Phase 02 (data model). Can start after Phase 03 if Phase 04/05 are blocked on externals.
 
 ## Goal
+
 An org admin designs their own office inside the floor area they rent, by drag and drop, and
 publishes it to everyone.
 
 ## In scope
+
 1. **Editor:**
    - A 2D top-down canvas: grid snapping, pan and zoom, and the leased area outlined. Placement
      outside the lease is impossible.
@@ -31,15 +33,18 @@ publishes it to everyone.
 7. **Templates:** "Startup 20", "Agency 40" and "Engineering 80" to start from.
 
 ## Out of scope
+
 Building owner tools (Phase 07) and custom 3D model uploads.
 
 ## Exit gate
+
 - Unit tests for the placement rules: inside lease, collisions, walkway width and reachability.
 - e2e: the admin builds a small office from a template, moves a pod, adds a meeting room and
   publishes. A member's open floor updates without reload. Rollback restores the previous layout.
 - A member (non-admin) gets 403 on the designer API.
 
 ## Prompt
+
 ```
 Execute Phase 06 from docs/roadmap/phases/06-office-designer.md, following
 docs/roadmap/PROMPT_RULES.md. Load the ux-research, accessibility and

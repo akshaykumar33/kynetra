@@ -4,9 +4,11 @@
 **Depends on:** Phase 01. External: OIDC dev apps, Postgres dev database.
 
 ## Goal
+
 A real company can sign in and see its own people on its own floor, instead of hard-coded data.
 
 ## In scope
+
 1. **Database:** Postgres with Drizzle ORM and migrations in `apps/server/db/`.
    - Tables: `organization`, `user`, `membership` (role: owner | admin | member | guest), `team`,
      `building`, `floor` (rentable area polygon), `lease` (org ↔ floor area), `floor_layout`
@@ -31,17 +33,21 @@ A real company can sign in and see its own people on its own floor, instead of h
    Status is user-set only.
 
 ## Out of scope
+
 Live presence, voice, and the designer.
 
 ## Exit gate
+
 ```
 npm run db:migrate && npm run db:seed && npm test && npm run e2e
 ```
+
 The e2e suite signs in with a test OIDC stub, completes onboarding, sees seeded colleagues from
 the database, changes status, and the change persists after reload. The authorization test
 (org A ↛ org B) passes.
 
 ## Prompt
+
 ```
 Execute Phase 02 from docs/roadmap/phases/02-accounts-and-data.md, following
 docs/roadmap/PROMPT_RULES.md. Load the data-engineer, security-engineer

@@ -4,9 +4,11 @@
 **Depends on:** Phase 03, and a "go" from the LiveKit spike.
 
 ## Goal
+
 Walking up to someone starts a real conversation, and walking away ends it, with no call buttons.
 
 ## In scope
+
 1. **Token service:** the server issues LiveKit tokens scoped to floor and room. Only org members can get one.
 2. **Proximity subscription:**
    - Clients subscribe only to the audio of people within voice range (3.2 m) and in the same space
@@ -23,9 +25,11 @@ Walking up to someone starts a real conversation, and walking away ends it, with
 8. **Quality:** echo cancellation, noise suppression, and adaptive bitrate. Reconnect without reload.
 
 ## Out of scope
+
 Recording, transcription, and AI summaries.
 
 ## Exit gate
+
 - e2e with fake media devices (`--use-fake-device-for-media-stream`): A walks to B and both are
   subscribed to each other's audio within 1 s. A walks away and both unsubscribe within 1 s. B sets
   Focus and A can't subscribe.
@@ -34,6 +38,7 @@ Recording, transcription, and AI summaries.
 - Unit tests for the subscription rules, including hysteresis and walls.
 
 ## Prompt
+
 ```
 Execute Phase 04 from docs/roadmap/phases/04-proximity-voice.md, following
 docs/roadmap/PROMPT_RULES.md. Load the multiplayer, security-engineer and
