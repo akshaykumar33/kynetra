@@ -3,16 +3,20 @@
 A virtual office for remote and hybrid teams. Everyone shares one 3D floor: you see who is in,
 walk up to someone to talk, knock on a meeting room, and grab coffee in the lounge.
 
-This is the phase 1 prototype. Colleagues, presence and voice are simulated.
+Sign-in, organisations, people and statuses are real (Phase 02). Movement, live presence and voice are still simulated.
 
 ## Run it
 
 ```sh
 npm install
-npm run dev
+cp apps/server/.env.example apps/server/.env.local
+npm run dev:server   # API on :4000, with a local database and the Northgate demo office
+npm run dev          # web app on :5173
 ```
 
-Open the printed local URL. Move with W A S D (or the arrow keys), or click the floor. Drag to look around.
+Open http://localhost:5173 and use the development sign-in: `you@northgate.test` shows first-time setup,
+`lena@northgate.test` (or any other seeded colleague) goes straight to the floor. Move with W A S D or
+the arrow keys, or click the floor. Drag to look around.
 
 ## Try this
 
