@@ -31,6 +31,8 @@ export default defineConfig({
         APP_ORIGIN: `http://localhost:${WEB_PORT}`,
         AUTH_DEV_LOGIN: '1',
         SEED_ON_START: '1',
+        // short grace so the leave test doesn't wait 30 s; the server unit tests cover the timer
+        PRESENCE_GRACE_MS: '3000',
       },
     },
     {

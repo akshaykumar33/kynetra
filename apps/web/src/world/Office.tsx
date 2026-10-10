@@ -1,11 +1,20 @@
-import { ContactShadows, SoftShadows } from '@react-three/drei';
+import { SoftShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Hud } from '../hud/Hud';
 import { Floor } from './Floor';
 import { Colleagues, Player } from './People';
 import { SPAWN } from '@knovra/shared';
+import { useEffect } from 'react';
+import { connect, disconnect } from '../realtime';
+import { DEMO, useOffice } from '../state';
 
 export function OfficeScene() {
+  const orgId = useOffice(s => s.orgId);
+  useEffect(() => {
+    if (DEMO || !orgId) return;
+    connect(orgId);
+    return disconnect;
+  }, [orgId]);
   return (
     <>
       <Canvas
@@ -16,7 +25,7 @@ export function OfficeScene() {
       >
         <color attach="background" args={['#e9eef0']} />
         <fog attach="fog" args={['#e9eef0', 40, 90]} />
-        <SoftShadows size={18} samples={10} />
+        <SoftShadows size={18} samples={6} />
         <hemisphereLight args={['#fff6e8', '#b9c4b0', 0.9]} />
         <directionalLight
           position={[14, 22, 10]}
@@ -32,7 +41,6 @@ export function OfficeScene() {
         <Floor />
         <Colleagues />
         <Player />
-        <ContactShadows position={[0, 0.01, 0]} scale={44} opacity={0.25} blur={2.4} far={3} />
       </Canvas>
       <Hud />
     </>

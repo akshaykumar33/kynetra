@@ -2,6 +2,7 @@ import { findPath, SPAWN, type KnockState, type Person, type Status } from '@kno
 import { Vector3 } from 'three';
 import { create } from 'zustand';
 import { api, type FloorData } from './api';
+import { remotes, sendStatus } from './realtime';
 
 // Per-frame positions live outside React so movement never re-renders the tree.
 export const positions = new Map<string, Vector3>();
@@ -9,7 +10,12 @@ export const player = {
   pos: new Vector3(SPAWN.x, 0, SPAWN.z),
   /** Waypoints still to walk, nearest first. Empty when standing or steering by keyboard. */
   path: [] as Vector3[],
+  /** Facing, in radians around the vertical axis. */
+  ry: Math.PI,
 };
+
+/** ?demo=1 fills the floor with simulated colleagues instead of live presence. */
+export const DEMO = new URLSearchParams(location.search).has('demo');
 
 /** Walks the player to a spot, routing around furniture. Returns false when there is no route. */
 export function walkTo(x: number, z: number): boolean {
@@ -37,6 +43,16 @@ interface OfficeState {
   knock: KnockState;
   insideRoom: boolean;
   toasts: Toast[];
+  /** Ids of colleagues connected to the floor right now. */
+  online: Record<string, true>;
+  connection: 'connecting' | 'live' | 'offline';
+  /** Bumped when someone unknown joins, so the people list is refetched. */
+  peopleVersion: number;
+  setConnection: (c: OfficeState['connection']) => void;
+  setPresence: (members: [string, Status][]) => void;
+  memberJoined: (id: string, status: Status) => void;
+  memberLeft: (id: string) => void;
+  memberStatus: (id: string, status: Status) => void;
   loadFloor: (data: FloorData) => void;
   setMyStatus: (s: Exclude<Status, 'meeting'>) => Promise<void>;
   setNearby: (ids: string[]) => void;
@@ -61,6 +77,28 @@ export const useOffice = create<OfficeState>((set, get) => ({
   knock: 'none',
   insideRoom: false,
   toasts: [],
+  online: {},
+  connection: 'connecting',
+  peopleVersion: 0,
+  setConnection: connection => get().connection !== connection && set({ connection }),
+  setPresence: members =>
+    set(s => ({
+      online: Object.fromEntries(members.map(([id]) => [id, true as const])),
+      statuses: { ...s.statuses, ...Object.fromEntries(members) },
+    })),
+  memberJoined: (id, status) =>
+    set(s => ({
+      online: { ...s.online, [id]: true },
+      statuses: { ...s.statuses, [id]: status },
+      peopleVersion: s.people.some(p => p.id === id) ? s.peopleVersion : s.peopleVersion + 1,
+    })),
+  memberLeft: id =>
+    set(s => {
+      const online = { ...s.online };
+      delete online[id];
+      return { online };
+    }),
+  memberStatus: (id, status) => set(s => ({ statuses: { ...s.statuses, [id]: status } })),
   loadFloor: data => {
     const me = data.people.find(p => p.id === data.meId) ?? null;
     const people = data.people.filter(p => p.id !== data.meId);
@@ -77,6 +115,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   setMyStatus: async myStatus => {
     const previous = get().myStatus;
     set({ myStatus }); // optimistic: the switch responds instantly
+    if (sendStatus(myStatus)) return; // live: the server saves it and tells everyone
     try {
       await api.updateMe(get().orgId, { status: myStatus });
     } catch {
@@ -103,5 +142,5 @@ export const personById = (id: string) => useOffice.getState().people.find(p => 
 
 // Test hook: lets e2e tests read the player position and store without poking at WebGL.
 if (import.meta.env.DEV) {
-  (window as unknown as { __office: unknown }).__office = { player, positions, useOffice };
+  (window as unknown as { __office: unknown }).__office = { player, positions, remotes, useOffice };
 }

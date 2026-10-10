@@ -26,7 +26,9 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run budget",
     "prepare": "simple-git-hooks",
     "db:migrate": "npm run db:migrate -w @knovra/server",
-    "db:seed": "npm run db:seed -w @knovra/server"
+    "db:seed": "npm run db:seed -w @knovra/server",
+    "load:presence": "node scripts/load-presence.mjs",
+    "measure:fps": "node scripts/measure-fps.mjs"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

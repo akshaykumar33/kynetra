@@ -15,7 +15,8 @@ import {
   zones,
   type Person,
 } from '@knovra/shared';
-import { player, positions, useOffice } from '../state';
+import { sampleAt } from '../realtime';
+import { DEMO, player, positions, useOffice } from '../state';
 import { Avatar } from './Avatar';
 
 function turnToward(g: Group, dx: number, dz: number, dt: number) {
@@ -114,6 +115,7 @@ export function Player() {
     }
     speed.current += (moving - speed.current) * Math.min(1, frameDt * 12);
     g.current?.position.copy(p);
+    if (g.current) player.ry = g.current.rotation.y;
 
     // where am I, who can hear me
     st.setInsideRoom(isInsideRoom(p.x, p.z));
@@ -256,7 +258,71 @@ function Colleague({ person, home }: { person: Person; home: Vector3 }) {
   );
 }
 
+/** A colleague who is connected: drawn where the server says they are, slightly in the past. */
+function RemoteColleague({ person }: { person: Person }) {
+  const g = useRef<Group>(null);
+  const speed = useRef(0);
+  const status = useOffice(s => s.statuses[person.id] ?? person.status);
+  const talking = useOffice(
+    s => s.nearby.includes(person.id) && s.myStatus !== 'focus' && s.statuses[person.id] !== 'focus',
+  );
+  const pos = useMemo(() => new Vector3(), []);
+  const at = useMemo(() => ({ x: 0, z: 0, ry: 0 }), []);
+
+  useEffect(() => {
+    positions.set(person.id, pos);
+    return () => {
+      positions.delete(person.id);
+    };
+  }, [person.id, pos]);
+
+  useFrame((_, rawDt) => {
+    if (!g.current || !sampleAt(person.id, performance.now(), at)) return;
+    const dt = Math.min(rawDt, 0.5);
+    const moved = Math.hypot(at.x - pos.x, at.z - pos.z);
+    pos.set(at.x, 0, at.z);
+    g.current.position.copy(pos);
+    g.current.rotation.y = at.ry;
+    const moving = dt > 0 ? Math.min(1, moved / (WALK_SPEED * dt)) : 0;
+    speed.current += (moving - speed.current) * Math.min(1, dt * 10);
+  });
+
+  return (
+    <group ref={g}>
+      <Avatar
+        name={person.name.split(' ')[0]}
+        body={person.body}
+        skin={person.skin}
+        hair={person.hair}
+        status={status}
+        remote={person.where === 'remote'}
+        speedRef={speed}
+        talking={talking}
+      />
+    </group>
+  );
+}
+
 export function Colleagues() {
+  return DEMO ? <SimulatedColleagues /> : <LiveColleagues />;
+}
+
+function LiveColleagues() {
+  const people = useOffice(s => s.people);
+  const online = useOffice(s => s.online);
+  return (
+    <>
+      {people
+        .filter(p => online[p.id])
+        .map(p => (
+          <RemoteColleague key={p.id} person={p} />
+        ))}
+    </>
+  );
+}
+
+/** ?demo=1: everyone sits at their desk and wanders for coffee, as in the prototype. */
+function SimulatedColleagues() {
   const people = useOffice(s => s.people);
   const placed = useMemo(() => {
     const inMeeting = people.filter(p => p.status === 'meeting');

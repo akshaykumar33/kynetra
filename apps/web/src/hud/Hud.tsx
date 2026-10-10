@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { personById, player, positions, useOffice, walkTo } from '../state';
+import { DEMO, personById, player, positions, useOffice, walkTo } from '../state';
 import { STATUS_COLOR } from '../world/Avatar';
 import { zones, type Status } from '@knovra/shared';
 
@@ -36,7 +36,9 @@ function Header() {
   const people = useOffice(s => s.people);
   const orgName = useOffice(s => s.orgName);
   const floorName = useOffice(s => s.floorName);
-  const here = people.filter(p => statuses[p.id] !== 'away');
+  const online = useOffice(s => s.online);
+  // live: connected and not away; demo: everyone not away
+  const here = people.filter(p => (DEMO || online[p.id]) && statuses[p.id] !== 'away');
   const inOffice = here.filter(p => p.where === 'office').length;
   return (
     <header className="panel header">
@@ -59,6 +61,7 @@ function Header() {
 
 function PeopleList() {
   const people = useOffice(s => s.people);
+  const online = useOffice(s => s.online);
   const statuses = useOffice(s => s.statuses);
   const nearby = useOffice(s => s.nearby);
   const [open, setOpen] = useState(() => matchMedia('(min-width: 760px)').matches);
@@ -77,12 +80,19 @@ function PeopleList() {
                 .map(p => {
                   const st = statuses[p.id];
                   const near = nearby.includes(p.id);
+                  const here = DEMO || !!online[p.id];
                   return (
                     <li key={p.id}>
                       <button
-                        disabled={st === 'away'}
+                        disabled={st === 'away' || !here}
                         onClick={() => walkToPerson(p.id)}
-                        title={st === 'away' ? `${p.name} is away` : `Walk over to ${p.name}`}
+                        title={
+                          !here
+                            ? `${p.name} isn't on the floor right now`
+                            : st === 'away'
+                              ? `${p.name} is away`
+                              : `Walk over to ${p.name}`
+                        }
                       >
                         <i className="dot" style={{ background: STATUS_COLOR[st] }} />
                         <span className="who">
@@ -93,6 +103,8 @@ function PeopleList() {
                         </span>
                         {near ? (
                           <span className="chip near">Nearby</span>
+                        ) : !here ? (
+                          <span className="chip">Offline</span>
                         ) : (
                           <span className={`chip ${p.where}`}>{p.where === 'office' ? 'Office' : 'Home'}</span>
                         )}
@@ -256,6 +268,16 @@ function MyStatus() {
   );
 }
 
+function ConnectionNotice() {
+  const connection = useOffice(s => s.connection);
+  if (DEMO || connection === 'live') return null;
+  return (
+    <div className="panel convo quiet" role="status">
+      {connection === 'connecting' ? 'Joining the floor…' : 'Connection lost. Reconnecting…'}
+    </div>
+  );
+}
+
 function Toasts() {
   const toasts = useOffice(s => s.toasts);
   return (
@@ -288,6 +310,7 @@ export function Hud() {
       </div>
       <div className="hud-bottom">
         <MyStatus />
+        <ConnectionNotice />
         <Conversation />
       </div>
       <Toasts />

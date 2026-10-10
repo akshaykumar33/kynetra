@@ -18,16 +18,19 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
   - `movement.ts`: collision (`blocked`, `step`) and room membership.
   - `pathfinding.ts`: A* routes around furniture for click-to-walk.
   - `proximity.ts`: who can hear whom. `knock.ts`: meeting room door state.
+  - `realtime.ts`: the live presence wire protocol (zod schemas both sides parse) and `acceptMove`, the server movement check.
 - `apps/web/src/`
   - `world/`: 3D scene (`Floor`, `People` with player and colleagues, `Avatar`).
   - `hud/Hud.tsx`: 2D overlay.
   - `state.ts`: zustand store, per-frame positions, `walkTo`, and the dev-only `window.__office` hook for e2e.
+  - `realtime.ts`: floor connection (reconnect with backoff), 10 Hz position sends, and `sampleAt` interpolation of remote avatars.
   - `api.ts`: typed API client (sends the CSRF header). `App.tsx`: sign-in → onboarding → office gate.
   - `screens/`: sign-in, onboarding and notice screens. The 3D office is lazy-loaded from `world/Office.tsx`.
 - `apps/server/src/`
   - `app.ts` builds the Fastify app (tests use `inject`); `main.ts` migrates, optionally seeds, and listens.
   - `db/`: `schema.ts` (Drizzle), `client.ts` (Postgres or PGlite), `seed.ts` (Northgate demo), migrations in `apps/server/drizzle/`.
   - `auth/`: sessions (hashed tokens), OIDC and dev sign-in. `http/access.ts`: `requireMember`, the one org access check.
+  - `realtime/`: `/realtime` WebSocket (session + Origin checked before upgrade) and `FloorRoom`, one live floor per org: 10 Hz delta snapshots, server-checked moves, 30 s reconnect grace.
   - `routes/api.ts`: `/api/v1`. Errors are always `{ error: { code, message } }`.
 - `e2e/`: Playwright specs. `scripts/check-budget.mjs`: initial JS budget (350 KB gzip).
 
@@ -44,7 +47,9 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
 - Keep per-frame data (positions) out of React state; write to the store only when a value changes.
 - Every org route calls `requireMember` first. Never take user or org identity from the request body.
 - Update `docs/privacy.md` with any change to what is stored.
-- People and statuses come from the API; movement, live presence and voice are simulated until Phases 03–04.
+- People, statuses and positions are live. `?demo=1` shows simulated colleagues instead. Voice is simulated until Phase 04.
+- Positions are never persisted or logged.
+- Perf checks: `npm run load:presence -- 60 90` (API running) and `npm run measure:fps` (web running). Results in `docs/perf/`.
 - Budgets: initial JS 350 KB gzip or less (enforced in CI); 60 fps with 60 avatars on a mid-range laptop.
 
 ## CodeGraph

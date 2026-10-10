@@ -11,6 +11,7 @@ export default defineConfig({
     proxy: {
       '/api': api,
       '/auth': api,
+      '/realtime': { target: api.replace(/^http/, 'ws'), ws: true },
     },
   },
   build: {

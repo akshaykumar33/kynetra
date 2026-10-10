@@ -13,6 +13,8 @@ test('shows the floor HUD with colleagues from the server', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Good morning' })).toBeVisible();
   await expect(page.getByText('Northgate · Floor 4')).toBeVisible();
   await expect(page.getByRole('button', { name: /Lena Fischer/ })).toBeVisible();
+  // nobody else is connected, so colleagues show as offline
+  await expect(page.getByRole('button', { name: /Lena Fischer/ }).getByText('Offline')).toBeVisible();
 });
 
 test('W moves the player forward', async ({ page }) => {
@@ -33,7 +35,9 @@ test('W moves the player forward', async ({ page }) => {
   await page.keyboard.up('w');
 });
 
-test('walking up to Lena opens a conversation', async ({ page }) => {
+test('in demo mode, walking up to Lena opens a conversation', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await waitForFloor(page);
   await page.getByRole('button', { name: /Lena Fischer/ }).click();
   await expect(page.getByText(/Talking with .*Lena/)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole('button', { name: /Lena Fischer/ }).getByText('Nearby')).toBeVisible();

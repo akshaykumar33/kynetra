@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   COOKIE_SECRET: z.string().min(32).optional(),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
   AUTH_DEV_LOGIN: bool,
+  // how long someone stays on the floor after their connection drops
+  PRESENCE_GRACE_MS: z.coerce.number().int().nonnegative().default(30_000),
   SEED_ON_START: bool,
   OIDC_GOOGLE_CLIENT_ID: z.string().optional(),
   OIDC_GOOGLE_CLIENT_SECRET: z.string().optional(),
