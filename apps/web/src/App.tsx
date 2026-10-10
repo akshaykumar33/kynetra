@@ -5,8 +5,8 @@ import { Onboarding } from './screens/Onboarding';
 import { Notice, SignIn } from './screens/SignIn';
 import { useOffice } from './state';
 
-// The 3D scene is the heavy part of the app; sign-in and onboarding load without it.
-const OfficeScene = lazy(() => import('./world/Office').then(m => ({ default: m.OfficeScene })));
+// The 3D hub (campus, lobby, floor) is the heavy part of the app; sign-in and onboarding load without it.
+const Hub = lazy(() => import('./world/Hub').then(m => ({ default: m.Hub })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,8 +88,8 @@ function OrgHome({ orgId, onboarded }: { orgId: string; onboarded: boolean }) {
     return <Notice title="Can't open the office" body={floor.error.message} retry={() => floor.refetch()} signOut />;
   if (!onboarded) return <Onboarding data={floor.data} />;
   return (
-    <Suspense fallback={<Notice title="Setting up the floor…" />}>
-      <OfficeScene />
+    <Suspense fallback={<Notice title="Arriving at the hub…" />}>
+      <Hub />
     </Suspense>
   );
 }

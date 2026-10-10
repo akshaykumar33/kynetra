@@ -22,7 +22,7 @@ function useClock() {
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function Header() {
+function Header({ onLeave }: { onLeave?: () => void }) {
   const time = useClock();
   const statuses = useOffice(s => s.statuses);
   const people = useOffice(s => s.people);
@@ -38,6 +38,11 @@ function Header() {
         {orgName} · {floorName}
       </p>
       <h1>Good morning</h1>
+      {onLeave && (
+        <button className="link" onClick={onLeave}>
+          ← Lobby
+        </button>
+      )}
       <p className="meta">
         <span>{time}</span>
         <span>
@@ -300,7 +305,7 @@ function Toasts() {
   );
 }
 
-export function Hud() {
+export function Hud({ onLeave }: { onLeave?: () => void }) {
   const toast = useOffice(s => s.toast);
   const myTeam = useOffice(s => zones.find(z => z.id === s.me?.team)?.name);
   useEffect(() => {
@@ -310,7 +315,7 @@ export function Hud() {
   return (
     <div className="hud">
       <div className="hud-top">
-        <Header />
+        <Header onLeave={onLeave} />
         <PeopleList />
       </div>
       <div className="hud-side">

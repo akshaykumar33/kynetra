@@ -11,9 +11,17 @@ export async function signIn(page: Page, email: string) {
   await page.getByRole('button', { name: 'Sign in' }).click();
 }
 
-/** Waits until the 3D floor and its test hook are ready, failing on any page error. */
+/**
+ * Gets from wherever the app opened (the campus, after sign-in) to your own floor, using the
+ * campus shortcut, and waits until the floor is ready.
+ */
 export async function waitForFloor(page: Page) {
-  await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  const floorHeading = page.getByRole('heading', { name: 'Good morning' });
+  const shortcut = page.getByRole('button', { name: 'Go straight to my desk' });
+  await expect(floorHeading.or(shortcut)).toBeVisible({ timeout: 30_000 });
+  if (await shortcut.isVisible()) await shortcut.click();
+  await expect(floorHeading).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('canvas')).toBeVisible();
   await page.waitForFunction(() => 'useOffice' in ((window as unknown as { __office?: object }).__office ?? {}));
 }
 

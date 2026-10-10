@@ -72,3 +72,25 @@ export const api = {
     request<{ url: string; room: string; token: string }>('POST', `/api/v1/orgs/${orgId}/voice-token`),
   acceptInvite: (token: string) => request<{ orgId: string }>('POST', '/api/v1/invites/accept', { token }),
 };
+
+export interface CampusBuilding {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  levels: number;
+  color: string;
+  floors: { level: number; tenant: string; mine: boolean }[];
+}
+
+export interface Campus {
+  name: string;
+  buildings: CampusBuilding[];
+  mine: { buildingId: string; level: number } | null;
+}
+
+export const campusApi = {
+  get: (orgId: string) => request<Campus>('GET', `/api/v1/orgs/${orgId}/campus`),
+};

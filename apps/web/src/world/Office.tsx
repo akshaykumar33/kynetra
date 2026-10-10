@@ -9,7 +9,7 @@ import { connect, disconnect } from '../realtime';
 import { leaveVoice } from '../voice';
 import { DEMO, useOffice } from '../state';
 
-export function OfficeScene() {
+export function OfficeScene({ onLeave }: { onLeave?: () => void }) {
   const orgId = useOffice(s => s.orgId);
   useEffect(() => {
     if (DEMO || !orgId) return;
@@ -46,7 +46,7 @@ export function OfficeScene() {
         <Colleagues />
         <Player />
       </Canvas>
-      <Hud />
+      <Hud onLeave={onLeave} />
     </>
   );
 }
