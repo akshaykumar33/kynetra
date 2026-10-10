@@ -59,6 +59,7 @@ test('walking up to someone connects real audio, and walking away ends it', asyn
   const [lenaId, samId] = [await myId(lena), await myId(sam)];
 
   // Lena steps away from the entrance so they start apart
+  await lena.bringToFront();
   await lena.getByRole('heading', { name: 'Good morning' }).click();
   await lena.keyboard.down('w');
   await reachDistance(lena, samId, 6, true);
@@ -69,6 +70,7 @@ test('walking up to someone connects real audio, and walking away ends it', asyn
   expect(await sam.evaluate(() => (window as unknown as { __office: Hook }).__office.audibleIds())).toEqual([]);
 
   // Sam walks over: both hear each other within a second of coming into range
+  await sam.bringToFront();
   await sam.getByRole('button', { name: /Arjun Nair/ }).click();
   const near = await reachDistance(sam, lenaId, 3.2);
   const samHears = await audible(sam, lenaId, true);
@@ -90,6 +92,7 @@ test('walking up to someone connects real audio, and walking away ends it', asyn
 
   // Lena focuses: Sam can walk right up and still never receives her audio
   await lena.getByRole('radio', { name: 'Focusing' }).click();
+  await sam.bringToFront();
   await sam.getByRole('button', { name: /Arjun Nair/ }).click();
   await reachDistance(sam, lenaId, 2);
   await sam.waitForTimeout(1500);

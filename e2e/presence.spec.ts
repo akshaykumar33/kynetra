@@ -28,6 +28,8 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
   await expect(lenaRow.getByText('Offline')).toHaveCount(0);
 
   // Lena walks; measure how long until Sam's client receives the move
+  // the person moving is the tab in front; background tabs have their timers throttled
+  await lena.bringToFront();
   await lena.getByRole('heading', { name: 'Good morning' }).click();
   const start = await lena.evaluate(() => {
     const o = (window as unknown as { __office: Hook }).__office;
@@ -62,6 +64,7 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
   expect(latency).toBeLessThan(300);
 
   // Sam walks over to Lena and a conversation opens
+  await sam.bringToFront();
   await lenaRow.click();
   await expect(sam.getByText(/Near .*Lena/)).toBeVisible({ timeout: 45_000 });
   await expect(lena.getByText(/Near .*Sam/)).toBeVisible({ timeout: 10_000 });
