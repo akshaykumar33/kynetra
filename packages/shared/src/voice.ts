@@ -5,6 +5,11 @@ import { isInsideRoom } from './movement';
 export const VOICE_ENTER = 3.2;
 /** …and stop only once they are this far, so standing at the edge doesn't flicker on and off. */
 export const VOICE_LEAVE = 4.0;
+/**
+ * Audio is fetched (at volume 0) from this far, so it is already flowing when someone steps into
+ * range. Setting up the first subscription can take over a second; prefetching hides that.
+ */
+export const VOICE_PREFETCH = 6.0;
 
 interface Point {
   x: number;
@@ -22,6 +27,8 @@ export function voiceTargets(
   others: Iterable<[string, Point]>,
   statuses: Record<string, Status>,
   current: ReadonlySet<string>,
+  enter = VOICE_ENTER,
+  leave = VOICE_LEAVE,
 ): Set<string> {
   const out = new Set<string>();
   if (myStatus === 'focus' || myStatus === 'away') return out;
@@ -31,7 +38,7 @@ export function voiceTargets(
     if (s === 'focus' || s === 'away') continue;
     if (isInsideRoom(p.x, p.z) !== meInside) continue;
     const d = Math.hypot(p.x - me.x, p.z - me.z);
-    if (d < (current.has(id) ? VOICE_LEAVE : VOICE_ENTER)) out.add(id);
+    if (d < (current.has(id) ? leave : enter)) out.add(id);
   }
   return out;
 }

@@ -1,4 +1,4 @@
-import { isInsideRoom, voiceTargets, voiceVolume } from '@knovra/shared';
+import { isInsideRoom, VOICE_PREFETCH, voiceTargets, voiceVolume } from '@knovra/shared';
 import {
   ConnectionState,
   LocalAudioTrack,
@@ -19,6 +19,7 @@ const TICK_MS = 150;
 let room: Room | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 let current = new Set<string>(); // who we are hearing
+let fetching = new Set<string>(); // whose audio we receive (hearing + a little beyond, at volume 0)
 let pttHeld = false;
 
 /** Camera and screen-share tracks of people we can see, for the video bubbles and room screen. */
@@ -42,19 +43,32 @@ function tick() {
   if (!room || room.state !== ConnectionState.Connected) return;
   const st = useOffice.getState();
   const next = voiceTargets(player.pos, st.myStatus, positions, st.statuses, current);
+  fetching = voiceTargets(
+    player.pos,
+    st.myStatus,
+    positions,
+    st.statuses,
+    fetching,
+    VOICE_PREFETCH,
+    VOICE_PREFETCH + 1,
+  );
+  for (const id of next) fetching.add(id);
   const meInRoom = isInsideRoom(player.pos.x, player.pos.z);
 
   for (const p of room.remoteParticipants.values()) {
     const near = next.has(p.identity);
+    const prefetch = fetching.has(p.identity);
     for (const pub of p.trackPublications.values()) {
       const want =
         pub.source === Track.Source.ScreenShare
           ? meInRoom && near // screen share is for the meeting room
-          : near;
+          : pub.source === Track.Source.Microphone
+            ? prefetch
+            : near; // cameras only once you're actually talking
       if (pub.isSubscribed !== want) pub.setSubscribed(want);
     }
     const pos = positions.get(p.identity);
-    if (near && pos) p.setVolume(voiceVolume(Math.hypot(pos.x - player.pos.x, pos.z - player.pos.z)));
+    if (prefetch) p.setVolume(near && pos ? voiceVolume(Math.hypot(pos.x - player.pos.x, pos.z - player.pos.z)) : 0);
   }
 
   // only send audio while someone can hear it; alone at your desk your mic is muted
@@ -129,6 +143,7 @@ function cleanup() {
   timer = null;
   room = null;
   current = new Set();
+  fetching = new Set();
   videoTracks.clear();
   screenTracks.clear();
   set({ hearing: [], speaking: [], camera: false, sharing: false });
@@ -184,11 +199,11 @@ export async function chooseMicrophone(deviceId: string) {
   set({ deviceId });
 }
 
-/** Ids whose microphone audio we are actually receiving from LiveKit (for tests and debugging). */
+/** Ids we can actually hear: their audio is arriving from LiveKit and they're in hearing range. */
 export function audibleIds() {
   if (!room) return [];
   return [...room.remoteParticipants.values()]
-    .filter(p => p.getTrackPublication(Track.Source.Microphone)?.isSubscribed)
+    .filter(p => p.getTrackPublication(Track.Source.Microphone)?.isSubscribed && current.has(p.identity))
     .map(p => p.identity)
     .sort();
 }

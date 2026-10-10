@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ROOM } from './layout';
-import { VOICE_ENTER, VOICE_LEAVE, voiceTargets, voiceVolume } from './voice';
+import { VOICE_ENTER, VOICE_LEAVE, VOICE_PREFETCH, voiceTargets, voiceVolume } from './voice';
 
 const me = { x: 0, z: 5 };
 const at = (dx: number): [string, { x: number; z: number }] => ['b', { x: dx, z: 5 }];
@@ -44,6 +44,17 @@ describe('voiceTargets', () => {
     const a = { x: ROOM.x, z: ROOM.z };
     const b = { x: ROOM.x + 1, z: ROOM.z };
     expect(voiceTargets(a, 'meeting', [['b', b]], { b: 'meeting' }, none).has('b')).toBe(true);
+  });
+});
+
+describe('prefetch range', () => {
+  it('reaches further than hearing range, with the same rules', () => {
+    const far = at((VOICE_ENTER + VOICE_PREFETCH) / 2);
+    expect(voiceTargets(me, 'available', [far], { b: 'available' }, none).size).toBe(0);
+    expect(
+      voiceTargets(me, 'available', [far], { b: 'available' }, none, VOICE_PREFETCH, VOICE_PREFETCH + 1).has('b'),
+    ).toBe(true);
+    expect(voiceTargets(me, 'available', [far], { b: 'focus' }, none, VOICE_PREFETCH, VOICE_PREFETCH + 1).size).toBe(0);
   });
 });
 
