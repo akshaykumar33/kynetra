@@ -28,21 +28,24 @@ test('shows the floor HUD', async ({ page }) => {
 });
 
 test('W moves the player forward', async ({ page }) => {
-  const before = await playerPos(page);
-  await page.locator('canvas').click({ position: { x: 5, y: 5 } }); // focus the page without walking far
-  await page.waitForTimeout(300);
   const start = await playerPos(page);
   await page.keyboard.down('w');
-  await page.waitForTimeout(800);
+  // poll rather than sleep: CI renders WebGL in software and can run at a few frames per second
+  await expect
+    .poll(
+      async () => {
+        const p = await playerPos(page);
+        return Math.hypot(p.x - start.x, p.z - start.z);
+      },
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThan(0.5);
   await page.keyboard.up('w');
-  const after = await playerPos(page);
-  expect(Math.hypot(after.x - start.x, after.z - start.z)).toBeGreaterThan(0.5);
-  expect(before).toBeTruthy();
 });
 
 test('walking up to Lena opens a conversation', async ({ page }) => {
   await page.getByRole('button', { name: /Lena Fischer/ }).click();
-  await expect(page.getByText(/Talking with .*Lena/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/Talking with .*Lena/)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole('button', { name: /Lena Fischer/ }).getByText('Nearby')).toBeVisible();
 });
 

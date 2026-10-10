@@ -55,7 +55,11 @@ export function Player() {
   const move = useMemo(() => new Vector3(), []);
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05);
+    // Long frames (slow devices, background tabs) are split into short sub-steps so walking speed
+    // doesn't depend on frame rate and a big step can never jump through a wall.
+    const frameDt = Math.min(rawDt, 0.5);
+    const steps = Math.max(1, Math.ceil(frameDt / 0.05));
+    const dt = frameDt / steps;
     const st = useOffice.getState();
     const doorOpen = st.knock === 'admitted';
     const k = keys.current;
@@ -71,30 +75,44 @@ export function Player() {
     if (k.has('s') || k.has('arrowdown')) move.sub(fwd);
     if (k.has('d') || k.has('arrowright')) move.add(right);
     if (k.has('a') || k.has('arrowleft')) move.sub(right);
-    if (move.lengthSq() > 0) player.path = [];
-    else {
-      // follow the route: drop waypoints as they are reached
-      while (player.path.length && Math.hypot(player.path[0].x - p.x, player.path[0].z - p.z) < 0.15)
-        player.path.shift();
-      if (player.path.length) move.set(player.path[0].x - p.x, 0, player.path[0].z - p.z);
+    const byKeys = move.lengthSq() > 0;
+    if (byKeys) {
+      player.path = [];
+      move.normalize();
     }
 
-    let moving = 0;
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(WALK_SPEED * dt);
-      const before = p.clone();
-      const next = step(p, move.x, move.z, doorOpen);
+    const before = p.clone();
+    for (let i = 0; i < steps; i++) {
+      if (!byKeys) {
+        // follow the route: drop waypoints as they are reached
+        while (player.path.length && Math.hypot(player.path[0].x - p.x, player.path[0].z - p.z) < 0.15)
+          player.path.shift();
+        if (!player.path.length) break;
+        move.set(player.path[0].x - p.x, 0, player.path[0].z - p.z).normalize();
+      }
+      const stride = Math.min(
+        WALK_SPEED * dt,
+        byKeys ? Infinity : Math.hypot(player.path[0].x - p.x, player.path[0].z - p.z),
+      );
+      const next = step(p, move.x * stride, move.z * stride, doorOpen);
+      if (next.x === p.x && next.z === p.z) {
+        player.path = []; // stuck: give up on the route
+        break;
+      }
       p.x = next.x;
       p.z = next.z;
-      const moved = p.distanceTo(before);
-      if (moved < 1e-4) player.path = []; // stuck: give up on the route
-      moving = moved / (WALK_SPEED * dt);
-      if (g.current && moved > 0) turnToward(g.current, p.x - before.x, p.z - before.z, dt);
-      // keep the camera following
-      camera.position.add(p.clone().sub(before));
-      if (controls.current) controls.current.target.add(p.clone().sub(before));
     }
-    speed.current += (moving - speed.current) * Math.min(1, dt * 12);
+
+    const moved = p.distanceTo(before);
+    const moving = moved / (WALK_SPEED * frameDt);
+    if (moved > 0) {
+      if (g.current) turnToward(g.current, p.x - before.x, p.z - before.z, frameDt);
+      // keep the camera following
+      const delta = p.clone().sub(before);
+      camera.position.add(delta);
+      controls.current?.target.add(delta);
+    }
+    speed.current += (moving - speed.current) * Math.min(1, frameDt * 12);
     g.current?.position.copy(p);
 
     // where am I, who can hear me
@@ -169,7 +187,7 @@ function Colleague({ person }: { person: Person }) {
   }, [person.id, pos]);
 
   useFrame(({ clock }, rawDt) => {
-    const dt = Math.min(rawDt, 0.05);
+    const dt = Math.min(rawDt, 0.5);
     const t = clock.elapsedTime;
     if (!g.current) return;
 
