@@ -8,6 +8,7 @@ import type { Db } from './db/client';
 import { AppError, registerErrorHandler } from './http/errors';
 import { registerRealtime } from './realtime/routes';
 import { registerApiRoutes } from './routes/api';
+import { registerCampusRoutes } from './routes/campus';
 import { registerVoiceRoutes } from './routes/voice';
 
 export const CSRF_HEADER = 'x-knovra-csrf';
@@ -39,6 +40,7 @@ export async function buildApp({ db, config }: { db: Db; config: Config }) {
   registerAuthRoutes(app, db, config);
   registerApiRoutes(app, db, config);
   registerVoiceRoutes(app, db, config);
+  registerCampusRoutes(app, db);
   await registerRealtime(app, db, config);
   return app;
 }

@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
   integer,
+  real,
 } from 'drizzle-orm/pg-core';
 import type { FloorLayout } from '@knovra/shared';
 
@@ -102,6 +103,14 @@ export const memberships = pgTable(
 export const buildings = pgTable('building', {
   id: id(),
   name: text('name').notNull(),
+  // where the tower stands on the hub campus, in metres, and its footprint
+  campusX: real('campus_x').notNull().default(0),
+  campusZ: real('campus_z').notNull().default(0),
+  width: real('width').notNull().default(24),
+  depth: real('depth').notNull().default(24),
+  levels: integer('levels').notNull().default(8),
+  // facade colour, a #rrggbb hex
+  color: text('color').notNull().default('#8fb3c9'),
   createdAt: createdAt(),
 });
 

@@ -139,7 +139,10 @@ export async function seedNorthgate(db: Db) {
 
   return db.transaction(async tx => {
     const [org] = await tx.insert(organizations).values({ name: 'Northgate', slug: 'northgate' }).returning();
-    const [building] = await tx.insert(buildings).values({ name: 'Northgate Hub' }).returning();
+    const [building] = await tx
+      .insert(buildings)
+      .values({ name: 'Northgate Tower', campusX: 0, campusZ: 0, width: 30, depth: 24, levels: 12, color: '#7fa7c4' })
+      .returning();
     const { w, d } = northgateFloor.size;
     const outline: [number, number][] = [
       [-w / 2, -d / 2],
@@ -184,6 +187,101 @@ export async function seedNorthgate(db: Db) {
 
     const [you] = await tx.insert(users).values({ email: NEW_MEMBER_EMAIL, name: 'Alex Morgan' }).returning();
     await tx.insert(memberships).values({ orgId: org.id, userId: you.id, role: 'member', title: 'Designer' });
+    await seedCampus(tx as unknown as Db, building.id);
     return org.id;
   });
+}
+
+// The rest of the IT park: towers around a central plaza, with fictional tenant companies so the
+// campus directory looks lived in. Tenants have no members; they only appear as names on floors.
+const TOWERS = [
+  {
+    name: 'Helix Tower',
+    campusX: -70,
+    campusZ: -40,
+    width: 26,
+    depth: 26,
+    levels: 22,
+    color: '#9fb8a8',
+    tenants: ['Pixel Forge', 'Bluefin Security', 'Lumen Analytics'],
+  },
+  {
+    name: 'Orbit One',
+    campusX: 70,
+    campusZ: -40,
+    width: 34,
+    depth: 22,
+    levels: 16,
+    color: '#c9b79f',
+    tenants: ['Acme Cloud', 'Quill Docs'],
+  },
+  {
+    name: 'Quartz Center',
+    campusX: -75,
+    campusZ: 45,
+    width: 40,
+    depth: 26,
+    levels: 8,
+    color: '#b7aec9',
+    tenants: ['DataNest', 'Cobalt Robotics', 'Fernway Health', 'Kite Payments'],
+  },
+  {
+    name: 'Meridian Labs',
+    campusX: 75,
+    campusZ: 45,
+    width: 28,
+    depth: 28,
+    levels: 28,
+    color: '#8fa9b8',
+    tenants: ['Nimbus AI', 'Tidal Games'],
+  },
+  {
+    name: 'Cedar House',
+    campusX: 0,
+    campusZ: -95,
+    width: 46,
+    depth: 20,
+    levels: 6,
+    color: '#cdb39a',
+    tenants: ['Harbor Design Co', 'Sprout Learning'],
+  },
+];
+
+async function seedCampus(db: Db, northgateBuildingId: string) {
+  const outline = (w: number, d: number): [number, number][] => [
+    [-w / 2, -d / 2],
+    [w / 2, -d / 2],
+    [w / 2, d / 2],
+    [-w / 2, d / 2],
+  ];
+  // Northgate's tower has other tenants too
+  const northgateTenants: [number, string][] = [
+    [2, 'Atlas Freight Tech'],
+    [7, 'Moss & Pine Studio'],
+    [9, 'Vertex Legal Cloud'],
+  ];
+  for (const [level, name] of northgateTenants) await addTenant(db, northgateBuildingId, level, name, outline(40, 28));
+
+  for (const t of TOWERS) {
+    const { tenants, ...tower } = t;
+    const [b] = await db.insert(buildings).values(tower).returning();
+    for (const [i, name] of tenants.entries()) {
+      // spread tenants up the tower
+      const level = 1 + Math.round(((i + 1) * (t.levels - 1)) / (tenants.length + 1));
+      await addTenant(db, b.id, level, name, outline(40, 28));
+    }
+  }
+}
+
+async function addTenant(db: Db, buildingId: string, level: number, name: string, area: [number, number][]) {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const [org] = await db.insert(organizations).values({ name, slug }).returning();
+  const [floor] = await db
+    .insert(floors)
+    .values({ buildingId, level, name: `Floor ${level}`, rentableArea: area })
+    .returning();
+  const [lease] = await db.insert(leases).values({ orgId: org.id, floorId: floor.id, area }).returning();
+  await db
+    .insert(floorLayouts)
+    .values({ leaseId: lease.id, version: 1, layout: northgateFloor, publishedAt: new Date() });
 }

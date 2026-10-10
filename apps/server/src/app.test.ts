@@ -200,6 +200,34 @@ describe('invites', () => {
   });
 });
 
+describe('campus', () => {
+  it('shows every tower and marks my floor', async () => {
+    const cookie = await signIn('lena@northgate.test');
+    const res = await call(cookie, 'GET', `/api/v1/orgs/${northgateId}/campus`);
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.buildings).toHaveLength(6);
+    const tower = body.buildings.find((b: { name: string }) => b.name === 'Northgate Tower');
+    expect(body.mine).toEqual({ buildingId: tower.id, level: 4 });
+    expect(tower.floors.find((f: { level: number }) => f.level === 4)).toEqual({
+      level: 4,
+      tenant: 'Northgate',
+      mine: true,
+    });
+    // other tenants show only their company name
+    expect(Object.keys(tower.floors.find((f: { level: number }) => f.level === 2))).toEqual([
+      'level',
+      'tenant',
+      'mine',
+    ]);
+  });
+
+  it('is only for members', async () => {
+    const outsider = await signIn('outsider@other.test');
+    expect((await call(outsider, 'GET', `/api/v1/orgs/${northgateId}/campus`)).statusCode).toBe(404);
+  });
+});
+
 describe('voice tokens', () => {
   const claims = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
 
