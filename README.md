@@ -15,6 +15,7 @@ npm run dev
 Open the printed local URL. Move with W A S D (or the arrow keys), or click the floor. Drag to look around.
 
 ## Try this
+
 - Walk up to Lena or Arjun at the Design pod: a conversation opens, and closes when you walk away.
 - Walk up to Mei (focusing): you can leave a note instead of interrupting.
 - Stand at the Harbour room door and knock.
@@ -22,6 +23,7 @@ Open the printed local URL. Move with W A S D (or the arrow keys), or click the 
 - Set yourself to Focusing or Away.
 
 ## Roadmap
+
 1. Floor prototype (this)
 2. Real-time presence (WebSocket rooms) and proximity voice/video (WebRTC via LiveKit)
 3. Admin office designer: drag-and-drop layout within the rented floor area

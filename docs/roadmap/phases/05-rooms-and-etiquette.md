@@ -4,10 +4,12 @@
 **Depends on:** Phase 04.
 
 ## Goal
+
 Make the office polite: closed doors mean something, quick messages don't need a walk, and nobody
 feels ambushed.
 
 ## In scope
+
 1. **Real knock:** the knock reaches the people inside, who see "Arjun is knocking" with Let in / Not now.
    Doors can be open, closed or locked. A meeting has a host.
 2. **Room booking:** book a room for a time slot, show the booking on the door, and optionally sync
@@ -25,9 +27,11 @@ feels ambushed.
 7. **Pilot:** run a 5-person, one-week pilot. Collect friction notes in `docs/research/pilot-1.md`.
 
 ## Out of scope
+
 Office designer, multiple buildings.
 
 ## Exit gate
+
 - e2e: a knock is shown to the host and "Let in" opens the door for the knocker only. "Not now" shows
   the knocker a polite message. Sending a DM shows an unread badge for the recipient, and reading it
   clears the badge.
@@ -35,6 +39,7 @@ Office designer, multiple buildings.
   follow-ups.
 
 ## Prompt
+
 ```
 Execute Phase 05 from docs/roadmap/phases/05-rooms-and-etiquette.md, following
 docs/roadmap/PROMPT_RULES.md. Load the ux-research and accessibility

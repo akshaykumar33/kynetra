@@ -4,9 +4,11 @@
 **Depends on:** Phase 04 (voice).
 
 ## Goal
+
 People in the physical office and people at home share one floor, with no "remote second class".
 
 ## In scope
+
 1. **Check-in:** a QR code at the real office door (a signed, rotating code), or an optional office
    Wi-Fi check. Checked-in people show "In office" on their avatar. Checking in is always opt-in and
    expires at the end of the day.
@@ -19,14 +21,17 @@ People in the physical office and people at home share one floor, with no "remot
 5. **Insights for admins:** aggregated, anonymised occupancy by day only. No per-person tracking reports.
 
 ## Out of scope
+
 Badge-system integrations and hardware.
 
 ## Exit gate
+
 - e2e: scanning a valid QR code (simulated) marks the user In office; an expired or forged code is
   rejected. Booking a desk shows it in the weekly view for teammates.
 - Display mode runs for 8 hours in a soak test without memory growing past 20% (measured).
 
 ## Prompt
+
 ```
 Execute Phase 08 from docs/roadmap/phases/08-hybrid-bridge.md, following
 docs/roadmap/PROMPT_RULES.md. Load the security-engineer and ux-research

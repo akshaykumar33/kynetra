@@ -3,14 +3,17 @@
 **Branch:** `chore/foundation-monorepo-quality`
 
 ## Goal
+
 Make the codebase safe to grow: a monorepo shape ready for a server, automated checks on every PR,
 and performance budgets we can measure.
 
 ## Why now
+
 Phases 02–04 add a server, database and real-time code. Without tests and CI, every later phase
 risks silently breaking the floor.
 
 ## In scope
+
 1. **Monorepo with npm workspaces:**
    - `apps/web`: the current Vite app, moved here.
    - `apps/server`: empty Node 22 + TypeScript service with a `/health` endpoint (Fastify).
@@ -35,19 +38,24 @@ risks silently breaking the floor.
 7. **Git hooks:** a lightweight pre-commit (lint-staged plus Prettier) through `simple-git-hooks`.
 
 ## Out of scope
+
 Any new product feature, the server's real logic, or database work.
 
 ## Exit gate (all must pass)
+
 ```
 npm ci && npm run lint && npm run typecheck && npm test && npm run build && npm run budget && npm run e2e
 ```
+
 CI is green on the PR, and the floor behaves exactly as in Phase 00.
 
 ## Deliverables
+
 Workspace layout, CI workflow, test suites, budget script, and an updated `CLAUDE.md` describing the
 new layout.
 
 ## Prompt
+
 ```
 Execute Phase 01 from docs/roadmap/phases/01-foundation.md, following
 docs/roadmap/PROMPT_RULES.md. Restructure into an npm-workspaces monorepo

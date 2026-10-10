@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Hud } from './hud/Hud';
 import { Floor } from './world/Floor';
 import { Colleagues, Player } from './world/People';
-import { SPAWN } from './world/layout';
+import { SPAWN } from '@knovra/shared';
 
 export function App() {
   return (

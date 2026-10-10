@@ -10,3 +10,6 @@ dist/
 Thumbs.db
 .idea/
 /.codegraph/
+
+playwright-report/
+test-results/

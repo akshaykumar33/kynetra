@@ -1,23 +1,33 @@
 import { Vector3 } from 'three';
 import { create } from 'zustand';
-import { people, SPAWN, type Status } from './world/layout';
+import { findPath, SPAWN, type KnockState, type Status } from '@knovra/shared';
+import { people } from './dev/seed';
 
 // Per-frame positions live outside React so movement never re-renders the tree.
 export const positions = new Map<string, Vector3>();
 export const player = {
   pos: new Vector3(SPAWN.x, 0, SPAWN.z),
-  target: null as Vector3 | null,
+  /** Waypoints still to walk, nearest first. Empty when standing or steering by keyboard. */
+  path: [] as Vector3[],
 };
 
-export type KnockState = 'none' | 'available' | 'waiting' | 'admitted' | 'declined';
+/** Walks the player to a spot, routing around furniture. Returns false when there is no route. */
+export function walkTo(x: number, z: number): boolean {
+  const route = findPath(player.pos, { x, z }, useOffice.getState().knock === 'admitted');
+  player.path = route.map(p => new Vector3(p.x, 0, p.z));
+  return route.length > 0;
+}
 
-interface Toast { id: number; text: string }
+interface Toast {
+  id: number;
+  text: string;
+}
 
 interface OfficeState {
   myStatus: Status;
   statuses: Record<string, Status>;
-  nearby: string[];          // colleagues inside voice range
-  zoneId: string | null;     // zone the player stands in
+  nearby: string[]; // colleagues inside voice range
+  zoneId: string | null; // zone the player stands in
   knock: KnockState;
   insideRoom: boolean;
   toasts: Toast[];
@@ -56,3 +66,8 @@ export const useOffice = create<OfficeState>((set, get) => ({
 }));
 
 export const VOICE_RANGE = 3.2;
+
+// Test hook: lets e2e tests read the player position and store without poking at WebGL.
+if (import.meta.env.DEV) {
+  (window as unknown as { __office: unknown }).__office = { player, positions, useOffice };
+}

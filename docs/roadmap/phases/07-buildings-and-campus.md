@@ -4,10 +4,12 @@
 **Depends on:** Phase 06.
 
 ## Goal
+
 Model a real IT hub: a campus of buildings, each with floors leased to different companies, which
 people can move between.
 
 ## In scope
+
 1. **Roles:**
    - Building owner (manages buildings, floors and leases), tenant admin (designs within the lease),
      member and visitor.
@@ -25,15 +27,18 @@ people can move between.
    "Go to" walks or teleports there.
 
 ## Out of scope
+
 Real-world maps (Phase 12).
 
 ## Exit gate
+
 - e2e: the owner creates a building with 2 floors and leases floor 2 to org B. A member of org A can't
   enter floor 2 (blocked with a clear message). An org B member enters through lobby → lift →
   floor 2.
 - Scene switch from lobby to floor takes 1.5 s or less on the reference laptop (measured).
 
 ## Prompt
+
 ```
 Execute Phase 07 from docs/roadmap/phases/07-buildings-and-campus.md, following
 docs/roadmap/PROMPT_RULES.md. Load the software-architect and

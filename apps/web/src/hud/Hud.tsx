@@ -1,27 +1,38 @@
 import { useEffect, useState } from 'react';
-import { Vector3 } from 'three';
-import { player, positions, useOffice } from '../state';
+import { player, positions, useOffice, walkTo } from '../state';
 import { STATUS_COLOR } from '../world/Avatar';
-import { people, zones, type Status } from '../world/layout';
+import { zones, type Status } from '@knovra/shared';
+import { people } from '../dev/seed';
 
 const STATUS_LABEL: Record<Status, string> = {
-  available: 'Available', meeting: 'In a meeting', focus: 'Focusing', away: 'Away',
+  available: 'Available',
+  meeting: 'In a meeting',
+  focus: 'Focusing',
+  away: 'Away',
 };
-const TEAMS = [['platform', 'Platform'], ['design', 'Design'], ['support', 'Support']] as const;
+const TEAMS = [
+  ['platform', 'Platform'],
+  ['design', 'Design'],
+  ['support', 'Support'],
+] as const;
 const byId = (id: string) => people.find(p => p.id === id)!;
 const firstName = (id: string) => byId(id).name.split(' ')[0];
 
-function walkTo(id: string) {
+function walkToPerson(id: string) {
   const pos = positions.get(id);
   if (!pos) return;
   const dir = player.pos.clone().sub(pos).setY(0);
   if (dir.lengthSq() < 0.01) dir.set(0, 0, 1);
-  player.target = pos.clone().add(dir.normalize().multiplyScalar(1.3));
+  const spot = pos.clone().add(dir.normalize().multiplyScalar(1.3));
+  walkTo(spot.x, spot.z);
 }
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 15000);
+    return () => clearInterval(t);
+  }, []);
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -36,8 +47,12 @@ function Header() {
       <h1>Good morning</h1>
       <p className="meta">
         <span>{time}</span>
-        <span><b>{here.length}</b> of {people.length} teammates in</span>
-        <span>{inOffice} at the office · {here.length - inOffice} from home</span>
+        <span>
+          <b>{here.length}</b> of {people.length} teammates in
+        </span>
+        <span>
+          {inOffice} at the office · {here.length - inOffice} from home
+        </span>
       </p>
     </header>
   );
@@ -52,29 +67,42 @@ function PeopleList() {
       <button className="people-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         People on this floor <span>{open ? 'Hide' : 'Show'}</span>
       </button>
-      {open && TEAMS.map(([team, label]) => (
-        <section key={team}>
-          <h2>{label}</h2>
-          <ul>
-            {people.filter(p => p.team === team).map(p => {
-              const st = statuses[p.id];
-              const near = nearby.includes(p.id);
-              return (
-                <li key={p.id}>
-                  <button disabled={st === 'away'} onClick={() => walkTo(p.id)} title={st === 'away' ? `${p.name} is away` : `Walk over to ${p.name}`}>
-                    <i className="dot" style={{ background: STATUS_COLOR[st] }} />
-                    <span className="who">
-                      <b>{p.name}</b>
-                      <small>{p.role} · {STATUS_LABEL[st]}</small>
-                    </span>
-                    {near ? <span className="chip near">Nearby</span> : <span className={`chip ${p.where}`}>{p.where === 'office' ? 'Office' : 'Home'}</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
+      {open &&
+        TEAMS.map(([team, label]) => (
+          <section key={team}>
+            <h2>{label}</h2>
+            <ul>
+              {people
+                .filter(p => p.team === team)
+                .map(p => {
+                  const st = statuses[p.id];
+                  const near = nearby.includes(p.id);
+                  return (
+                    <li key={p.id}>
+                      <button
+                        disabled={st === 'away'}
+                        onClick={() => walkToPerson(p.id)}
+                        title={st === 'away' ? `${p.name} is away` : `Walk over to ${p.name}`}
+                      >
+                        <i className="dot" style={{ background: STATUS_COLOR[st] }} />
+                        <span className="who">
+                          <b>{p.name}</b>
+                          <small>
+                            {p.role} · {STATUS_LABEL[st]}
+                          </small>
+                        </span>
+                        {near ? (
+                          <span className="chip near">Nearby</span>
+                        ) : (
+                          <span className={`chip ${p.where}`}>{p.where === 'office' ? 'Office' : 'Home'}</span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+            </ul>
+          </section>
+        ))}
     </aside>
   );
 }
@@ -91,19 +119,29 @@ function Conversation() {
   const zone = zones.find(z => z.id === zoneId);
 
   if (myStatus === 'focus') {
-    return <div className="panel convo quiet"><b>Focus mode is on.</b> People see you're focusing and can leave you a note instead of talking.</div>;
+    return (
+      <div className="panel convo quiet">
+        <b>Focus mode is on.</b> People see you're focusing and can leave you a note instead of talking.
+      </div>
+    );
   }
   if (talkable.length) {
     return (
       <div className="panel convo live" role="status">
         <div className="faces">
-          {talkable.map(id => <i key={id} style={{ background: byId(id).body }}>{firstName(id)[0]}</i>)}
+          {talkable.map(id => (
+            <i key={id} style={{ background: byId(id).body }}>
+              {firstName(id)[0]}
+            </i>
+          ))}
         </div>
         <div className="convo-text">
           <b>Talking with {talkable.map(firstName).join(', ')}</b>
           <small>Voice opens when you walk up and fades when you walk away. Simulated in this prototype.</small>
         </div>
-        <button className="btn ghost" aria-pressed={muted} onClick={() => setMuted(m => !m)}>{muted ? 'Unmute' : 'Mute'}</button>
+        <button className="btn ghost" aria-pressed={muted} onClick={() => setMuted(m => !m)}>
+          {muted ? 'Unmute' : 'Mute'}
+        </button>
       </div>
     );
   }
@@ -111,13 +149,23 @@ function Conversation() {
     const id = focusing[0];
     return (
       <div className="panel convo quiet">
-        <span><b>{firstName(id)} is focusing.</b> They won't hear you right now.</span>
-        <button className="btn" onClick={() => toast(`Note left on ${firstName(id)}'s desk`)}>Leave a note</button>
+        <span>
+          <b>{firstName(id)} is focusing.</b> They won't hear you right now.
+        </span>
+        <button className="btn" onClick={() => toast(`Note left on ${firstName(id)}'s desk`)}>
+          Leave a note
+        </button>
       </div>
     );
   }
-  if (zone?.kind === 'team') return <div className="panel convo quiet">You're in the <b>{zone.name}</b> area. You can hear the team quietly; walk up to someone to talk.</div>;
-  if (zone?.kind === 'lounge') return <div className="panel convo quiet">Kitchen & lounge. Anyone can drop in here for a chat.</div>;
+  if (zone?.kind === 'team')
+    return (
+      <div className="panel convo quiet">
+        You're in the <b>{zone.name}</b> area. You can hear the team quietly; walk up to someone to talk.
+      </div>
+    );
+  if (zone?.kind === 'lounge')
+    return <div className="panel convo quiet">Kitchen & lounge. Anyone can drop in here for a chat.</div>;
   return null;
 }
 
@@ -140,7 +188,9 @@ function KnockCard() {
       <p className="eyebrow">Harbour room · door closed</p>
       <b>Sprint planning</b>
       <small>{inside.join(' and ')} are inside</small>
-      <button className="btn" disabled={knock === 'waiting'} onClick={doKnock}>{knock === 'waiting' ? 'Knocking…' : 'Knock'}</button>
+      <button className="btn" disabled={knock === 'waiting'} onClick={doKnock}>
+        {knock === 'waiting' ? 'Knocking…' : 'Knock'}
+      </button>
     </div>
   );
 }
@@ -148,15 +198,30 @@ function KnockCard() {
 function CoffeeInvite() {
   const [show, setShow] = useState(false);
   const statuses = useOffice(s => s.statuses);
-  useEffect(() => { const t = setTimeout(() => setShow(true), 25000); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 25000);
+    return () => clearTimeout(t);
+  }, []);
   if (!show || statuses.arjun === 'away') return null;
   return (
     <div className="panel invite" role="dialog" aria-label="Coffee pair">
       <p className="eyebrow">Today's coffee pair</p>
-      <span>You and <b>Arjun</b> haven't chatted in a while. He's free now.</span>
+      <span>
+        You and <b>Arjun</b> haven't chatted in a while. He's free now.
+      </span>
       <div className="row">
-        <button className="btn" onClick={() => { player.target = new Vector3(-9, 0, -6.6); setShow(false); }}>Meet in the lounge</button>
-        <button className="btn ghost" onClick={() => setShow(false)}>Not today</button>
+        <button
+          className="btn"
+          onClick={() => {
+            walkTo(-9, -6.6);
+            setShow(false);
+          }}
+        >
+          Meet in the lounge
+        </button>
+        <button className="btn ghost" onClick={() => setShow(false)}>
+          Not today
+        </button>
       </div>
     </div>
   );
@@ -171,23 +236,40 @@ function MyStatus() {
       <div className="seg" role="radiogroup" id="my-status">
         {(['available', 'focus', 'away'] as Status[]).map(s => (
           <button key={s} role="radio" aria-checked={myStatus === s} onClick={() => setMyStatus(s)}>
-            <i className="dot" style={{ background: STATUS_COLOR[s] }} />{STATUS_LABEL[s]}
+            <i className="dot" style={{ background: STATUS_COLOR[s] }} />
+            {STATUS_LABEL[s]}
           </button>
         ))}
       </div>
-      <p className="hint">Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or click the floor · drag to look around</p>
+      <p className="hint">
+        Move with <kbd>W</kbd>
+        <kbd>A</kbd>
+        <kbd>S</kbd>
+        <kbd>D</kbd> or click the floor · drag to look around
+      </p>
     </div>
   );
 }
 
 function Toasts() {
   const toasts = useOffice(s => s.toasts);
-  return <div className="toasts" aria-live="polite">{toasts.map(t => <div key={t.id} className="toast">{t.text}</div>)}</div>;
+  return (
+    <div className="toasts" aria-live="polite">
+      {toasts.map(t => (
+        <div key={t.id} className="toast">
+          {t.text}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function Hud() {
   const toast = useOffice(s => s.toast);
-  useEffect(() => { const t = setTimeout(() => toast("You're in. Your desk is by the Design team"), 900); return () => clearTimeout(t); }, [toast]);
+  useEffect(() => {
+    const t = setTimeout(() => toast("You're in. Your desk is by the Design team"), 900);
+    return () => clearTimeout(t);
+  }, [toast]);
   return (
     <div className="hud">
       <div className="hud-top">
