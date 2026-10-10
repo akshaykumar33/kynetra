@@ -17,6 +17,11 @@ server stores, and what it never does. Update it in the same PR as any schema ch
 | Desk assignment                                | `desk_assignment`      | Your desk on the floor                   | Members of that organisation                            |
 | Invite email, role, expiry, and token **hash** | `invite`               | Letting someone join                     | Admins of that organisation                             |
 
+## Shared across companies
+
+The campus directory shows every tenant company's **name** and which floor it is on, as a real
+lobby directory board would. Nothing about a company's people is visible to other companies.
+
 ## Never collected
 
 - **Activity tracking.** Status is only what you set. We don't infer it from your keyboard, mouse,

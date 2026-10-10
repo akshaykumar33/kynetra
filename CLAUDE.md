@@ -21,7 +21,7 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
   - `voice.ts`: who hears whom (`voiceTargets`, 3.2 m in / 4.0 m out, walls, focus) and `voiceVolume`.
   - `realtime.ts`: the live presence wire protocol (zod schemas both sides parse) and `acceptMove`, the server movement check.
 - `apps/web/src/`
-  - `world/`: 3D scene (`Floor`, `People` with player and colleagues, `Avatar`).
+  - `world/`: 3D scenes. `Hub` moves you campus → lobby → lift → floor. `Campus` (IT park towers, roads, traffic, trees), `Lobby`, and the floor (`Office`, `Floor`, `People`, `Avatar`).
   - `hud/Hud.tsx`: 2D overlay.
   - `state.ts`: zustand store, per-frame positions, `walkTo`, and the dev-only `window.__office` hook for e2e.
   - `realtime.ts`: floor connection (reconnect with backoff), 10 Hz position sends, and `sampleAt` interpolation of remote avatars.
@@ -33,6 +33,7 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
   - `db/`: `schema.ts` (Drizzle), `client.ts` (Postgres or PGlite), `seed.ts` (Northgate demo), migrations in `apps/server/drizzle/`.
   - `auth/`: sessions (hashed tokens), OIDC and dev sign-in. `http/access.ts`: `requireMember`, the one org access check.
   - `realtime/`: `/realtime` WebSocket (session + Origin checked before upgrade) and `FloorRoom`, one live floor per org: 10 Hz delta snapshots, server-checked moves, 30 s reconnect grace.
+  - `routes/campus.ts`: the IT park directory (towers, floors, tenant names, which floor is yours).
   - `routes/voice.ts`: LiveKit tokens scoped to the member's floor room (mic, camera, screen share).
   - `routes/api.ts`: `/api/v1`. Errors are always `{ error: { code, message } }`.
 - `e2e/`: Playwright specs. `scripts/check-budget.mjs`: initial JS budget (350 KB gzip).
