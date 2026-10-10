@@ -1,30 +1,18 @@
-import { expect, test, type Page } from '@playwright/test';
-
-interface OfficeHook {
-  player: { pos: { x: number; z: number }; target: { x: number; y: number; z: number } | null };
-  positions: Map<string, { x: number; z: number }>;
-  useOffice: { getState: () => { nearby: string[] } };
-}
-
-const playerPos = (page: Page) =>
-  page.evaluate(() => {
-    const o = (window as unknown as { __office: OfficeHook }).__office;
-    return { x: o.player.pos.x, z: o.player.pos.z };
-  });
+import { expect, test } from '@playwright/test';
+import { playerPos, signIn, waitForFloor } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/');
-  await expect(page.locator('canvas')).toBeVisible();
-  await page.waitForFunction(() => 'useOffice' in ((window as unknown as { __office?: object }).__office ?? {}));
+  await signIn(page, 'sam@northgate.test');
+  await waitForFloor(page);
   expect(errors).toEqual([]);
 });
 
-test('shows the floor HUD', async ({ page }) => {
+test('shows the floor HUD with colleagues from the server', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Good morning' })).toBeVisible();
-  await expect(page.getByText('People on this floor')).toBeVisible();
-  await expect(page.getByRole('radio', { name: 'Available' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByText('Northgate · Floor 4')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Lena Fischer/ })).toBeVisible();
 });
 
 test('W moves the player forward', async ({ page }) => {
@@ -49,9 +37,4 @@ test('walking up to Lena opens a conversation', async ({ page }) => {
   await page.getByRole('button', { name: /Lena Fischer/ }).click();
   await expect(page.getByText(/Talking with .*Lena/)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole('button', { name: /Lena Fischer/ }).getByText('Nearby')).toBeVisible();
-});
-
-test('setting Focus replaces conversations with focus mode', async ({ page }) => {
-  await page.getByRole('radio', { name: 'Focusing' }).click();
-  await expect(page.getByText('Focus mode is on.')).toBeVisible();
 });

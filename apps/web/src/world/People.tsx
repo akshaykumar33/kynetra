@@ -15,7 +15,6 @@ import {
   zones,
   type Person,
 } from '@knovra/shared';
-import { ME, people } from '../dev/seed';
 import { player, positions, useOffice } from '../state';
 import { Avatar } from './Avatar';
 
@@ -34,6 +33,7 @@ export function Player() {
   const controls = useRef<OrbitImpl>(null);
   const { camera } = useThree();
   const myStatus = useOffice(s => s.myStatus);
+  const me = useOffice(s => s.me);
   const nearby = useOffice(s => s.nearby);
 
   useEffect(() => {
@@ -137,7 +137,9 @@ export function Player() {
       />
       <group ref={g} position={player.pos.toArray()} rotation-y={Math.PI}>
         <Avatar
-          {...ME}
+          body={me?.body ?? '#2f6f8f'}
+          skin={me?.skin ?? '#d6a07a'}
+          hair={me?.hair ?? '#3a2416'}
           name="You"
           status={myStatus}
           speedRef={speed}
@@ -159,21 +161,20 @@ const MEETING_SEATS = [
   new Vector3(ROOM.x + 1, 0, ROOM.z + 1),
 ];
 
-function homeFor(p: Person) {
-  if (p.status === 'meeting')
-    return MEETING_SEATS[people.filter(q => q.status === 'meeting').indexOf(p) % MEETING_SEATS.length].clone();
+/** Where someone spends their time: a meeting seat, or the chair at their desk. Null if they have neither. */
+function homeFor(p: Person, meetingIndex: number) {
+  if (p.status === 'meeting') return MEETING_SEATS[meetingIndex % MEETING_SEATS.length].clone();
   const d = deskById(p.desk);
-  return new Vector3(d.x, 0, d.z + d.facing * 0.85);
+  return d ? new Vector3(d.x, 0, d.z + d.facing * 0.85) : null;
 }
 
-function Colleague({ person }: { person: Person }) {
+function Colleague({ person, home }: { person: Person; home: Vector3 }) {
   const g = useRef<Group>(null);
   const speed = useRef(0);
   const status = useOffice(s => s.statuses[person.id]);
   const talking = useOffice(
     s => s.nearby.includes(person.id) && s.myStatus !== 'focus' && s.statuses[person.id] !== 'focus',
   );
-  const home = useMemo(() => homeFor(person), [person]);
   const pos = useMemo(() => home.clone(), [home]);
   const route = useRef<Vector3[]>([]);
   const nextTrip = useRef(8 + Math.random() * 30);
@@ -232,10 +233,7 @@ function Colleague({ person }: { person: Person }) {
       turnToward(g.current, player.pos.x - pos.x, player.pos.z - pos.z, dt); // face the visitor
     } else if (!next) {
       if (person.status === 'meeting') turnToward(g.current, ROOM.x + 1 - pos.x, ROOM.z - 0.4 - pos.z, dt);
-      else {
-        const d = deskById(person.desk);
-        turnToward(g.current, 0, -d.facing, dt);
-      }
+      else turnToward(g.current, 0, -(deskById(person.desk)?.facing ?? 1), dt);
     }
     speed.current += (moving - speed.current) * Math.min(1, dt * 10);
     g.current.position.copy(pos);
@@ -259,10 +257,18 @@ function Colleague({ person }: { person: Person }) {
 }
 
 export function Colleagues() {
+  const people = useOffice(s => s.people);
+  const placed = useMemo(() => {
+    const inMeeting = people.filter(p => p.status === 'meeting');
+    return people.flatMap(p => {
+      const home = homeFor(p, inMeeting.indexOf(p));
+      return home ? [{ person: p, home }] : [];
+    });
+  }, [people]);
   return (
     <>
-      {people.map(p => (
-        <Colleague key={p.id} person={p} />
+      {placed.map(({ person, home }) => (
+        <Colleague key={person.id} person={person} home={home} />
       ))}
     </>
   );

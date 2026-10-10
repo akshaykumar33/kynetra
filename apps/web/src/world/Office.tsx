@@ -1,18 +1,18 @@
 import { ContactShadows, SoftShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Hud } from './hud/Hud';
-import { Floor } from './world/Floor';
-import { Colleagues, Player } from './world/People';
+import { Hud } from '../hud/Hud';
+import { Floor } from './Floor';
+import { Colleagues, Player } from './People';
 import { SPAWN } from '@knovra/shared';
 
-export function App() {
+export function OfficeScene() {
   return (
     <>
       <Canvas
         shadows
         dpr={[1, 2]}
         camera={{ position: [SPAWN.x + 6, 13, SPAWN.z + 12], fov: 42 }}
-        aria-label="Floor 4 of Northgate Hub, shown in 3D"
+        aria-label="Your office floor, shown in 3D"
       >
         <color attach="background" args={['#e9eef0']} />
         <fog attach="fog" args={['#e9eef0', 40, 90]} />

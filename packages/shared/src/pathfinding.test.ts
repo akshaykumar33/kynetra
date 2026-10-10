@@ -18,7 +18,7 @@ describe('findPath', () => {
   });
 
   it('routes around the reception desk to reach a colleague', () => {
-    const d = deskById('design-0');
+    const d = deskById('design-0')!;
     const target = { x: d.x, z: d.z + d.facing * 0.85 };
     const path = findPath(SPAWN, target, false);
     expect(path.length).toBeGreaterThan(1);
@@ -28,7 +28,7 @@ describe('findPath', () => {
   });
 
   it('ends next to furniture when the target is inside it', () => {
-    const d = deskById('support-0');
+    const d = deskById('support-0')!;
     const path = findPath(SPAWN, { x: d.x, z: d.z }, false);
     const end = path[path.length - 1];
     expect(blocked(end.x, end.z, false)).toBe(false);
