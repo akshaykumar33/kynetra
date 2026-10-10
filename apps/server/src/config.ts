@@ -20,6 +20,10 @@ const EnvSchema = z.object({
   // how long someone stays on the floor after their connection drops
   PRESENCE_GRACE_MS: z.coerce.number().int().nonnegative().default(30_000),
   SEED_ON_START: bool,
+  // LiveKit voice server. The URL is what browsers connect to. Dev defaults match `livekit-server --dev`.
+  LIVEKIT_URL: z.string().url().default('ws://localhost:7880'),
+  LIVEKIT_API_KEY: z.string().min(1).optional(),
+  LIVEKIT_API_SECRET: z.string().min(1).optional(),
   OIDC_GOOGLE_CLIENT_ID: z.string().optional(),
   OIDC_GOOGLE_CLIENT_SECRET: z.string().optional(),
   OIDC_MICROSOFT_CLIENT_ID: z.string().optional(),
@@ -27,14 +31,25 @@ const EnvSchema = z.object({
   OIDC_MICROSOFT_TENANT: z.string().default('common'),
 });
 
-export type Config = z.infer<typeof EnvSchema> & { devLogin: boolean; cookieSecret: string };
+export type Config = z.infer<typeof EnvSchema> & {
+  devLogin: boolean;
+  cookieSecret: string;
+  livekit: { url: string; apiKey: string; apiSecret: string };
+};
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   // treat KEY= (empty) the same as unset so .env files can list optional keys
   const parsed = EnvSchema.parse(Object.fromEntries(Object.entries(env).filter(([, v]) => v !== '')));
   if (parsed.NODE_ENV === 'production' && !parsed.COOKIE_SECRET)
     throw new Error('COOKIE_SECRET is required in production');
+  if (parsed.NODE_ENV === 'production' && (!parsed.LIVEKIT_API_KEY || !parsed.LIVEKIT_API_SECRET))
+    throw new Error('LIVEKIT_API_KEY and LIVEKIT_API_SECRET are required in production');
+  const livekit = {
+    url: parsed.LIVEKIT_URL,
+    apiKey: parsed.LIVEKIT_API_KEY ?? 'devkey',
+    apiSecret: parsed.LIVEKIT_API_SECRET ?? 'secret',
+  };
   const cookieSecret = parsed.COOKIE_SECRET ?? randomBytes(32).toString('hex');
   // The password-less dev sign-in must never be reachable in production, whatever the env says.
-  return { ...parsed, cookieSecret, devLogin: parsed.AUTH_DEV_LOGIN && parsed.NODE_ENV !== 'production' };
+  return { ...parsed, livekit, cookieSecret, devLogin: parsed.AUTH_DEV_LOGIN && parsed.NODE_ENV !== 'production' };
 }
