@@ -24,7 +24,9 @@
     "e2e": "playwright test",
     "budget": "node scripts/check-budget.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run budget",
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "db:migrate": "npm run db:migrate -w @knovra/server",
+    "db:seed": "npm run db:seed -w @knovra/server"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

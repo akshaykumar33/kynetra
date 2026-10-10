@@ -34,8 +34,8 @@ velocity is measured. Re-forecast after Phase 1.
 | #   | Phase                                                             | Retires the risk that…                             | Size | Status            |
 | --- | ----------------------------------------------------------------- | -------------------------------------------------- | ---- | ----------------- |
 | 00  | [Floor prototype](phases/00-floor-prototype.md)                   | the idea doesn't feel like an office               | M    | Done (PR #3)      |
-| 01  | [Foundation and quality bar](phases/01-foundation.md)             | we can't change code safely                        | M    | Gate met, PR open |
-| 02  | [Accounts, orgs and data model](phases/02-accounts-and-data.md)   | the office can't be owned by a real team           | L    | Not started       |
+| 01  | [Foundation and quality bar](phases/01-foundation.md)             | we can't change code safely                        | M    | Done (PR #5)      |
+| 02  | [Accounts, orgs and data model](phases/02-accounts-and-data.md)   | the office can't be owned by a real team           | L    | Gate met, PR open |
 | 03  | [Real-time presence](phases/03-realtime-presence.md)              | people can't see each other live                   | L    | Not started       |
 | 04  | [Proximity voice and video](phases/04-proximity-voice.md)         | walk-up conversation doesn't work for real         | L    | Not started       |
 | 05  | [Rooms, chat and etiquette](phases/05-rooms-and-etiquette.md)     | it feels intrusive or chaotic                      | M    | Not started       |
@@ -55,33 +55,37 @@ timeboxed spike during Phase 03 (see the Phase 03 file).
 
 ## External dependencies (start in week one)
 
-| Dependency                                                    | Needed by    | Owner | Next action                                     |
-| ------------------------------------------------------------- | ------------ | ----- | ----------------------------------------------- |
-| LiveKit Cloud project (or self-hosted LiveKit) and API keys   | 03 spike, 04 | Owner | Create free project, store keys in `.env.local` |
-| OIDC provider (Google Workspace / Microsoft Entra) client IDs | 02           | Owner | Register dev OAuth apps for localhost           |
-| Postgres host (Neon / Supabase / RDS)                         | 02           | Owner | Create dev database                             |
-| Hosting for web and real-time server (Fly.io / Render / AWS)  | 11           | Owner | Choose by Phase 10                              |
-| Google Maps Platform key with Map Tiles API                   | 12 only      | Owner | Not needed unless Phase 12 is approved          |
+| Dependency                                                    | Needed by                    | Owner | Next action                                                                                                  |
+| ------------------------------------------------------------- | ---------------------------- | ----- | ------------------------------------------------------------------------------------------------------------ |
+| LiveKit Cloud project (or self-hosted LiveKit) and API keys   | 03 spike, 04                 | Owner | Create free project, store keys in `.env.local`                                                              |
+| OIDC provider (Google Workspace / Microsoft Entra) client IDs | 02 (code done), real sign-in | Owner | Register OAuth apps; redirect URI `{APP_ORIGIN}/auth/google/callback`. Until then only dev sign-in is tested |
+| Postgres host (Neon / Supabase / RDS)                         | 11                           | Owner | Not needed for development: PGlite is used locally and in tests                                              |
+| Hosting for web and real-time server (Fly.io / Render / AWS)  | 11                           | Owner | Choose by Phase 10                                                                                           |
+| Google Maps Platform key with Map Tiles API                   | 12 only                      | Owner | Not needed unless Phase 12 is approved                                                                       |
 
 ## RAID log
 
-| Type       | Entry                                                                                                                                             | Owner | Next action / date             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------ |
-| Risk       | WebRTC voice quality and cost at 50+ people per floor. High impact, medium likelihood. Mitigation: SFU (LiveKit), subscribe only to nearby tracks | Owner | Spike in Phase 03              |
-| Risk       | 3D is too heavy for low-end laptops and phones. Mitigation: performance budget in Phase 01, low-quality mode in Phase 10                          | Owner | Budget set in Phase 01         |
-| Risk       | People feel watched. Mitigation: status is user-set only, no activity tracking, no location by default, privacy review in Phase 11                | Owner | Written in Phase 02 data model |
-| Assumption | Teams want a spatial office more than a chat tool. Test: 5-person pilot uses it for a full week                                                   | Owner | End of Phase 05                |
-| Assumption | One floor holds ~60 avatars at 60 fps on a mid-range laptop. Test: load scene with 60 bots in Phase 03                                            | Owner | Phase 03                       |
-| Dependency | LiveKit keys                                                                                                                                      | Owner | Before Phase 03 spike          |
+| Type       | Entry                                                                                                                                                                                  | Owner | Next action / date                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------ |
+| Risk       | WebRTC voice quality and cost at 50+ people per floor. High impact, medium likelihood. Mitigation: SFU (LiveKit), subscribe only to nearby tracks                                      | Owner | Spike in Phase 03                                |
+| Risk       | 3D is too heavy for low-end laptops and phones. Mitigation: performance budget in Phase 01, low-quality mode in Phase 10                                                               | Owner | Budget set in Phase 01                           |
+| Risk       | People feel watched. Mitigation: status is user-set only, no activity tracking, no location by default, privacy review in Phase 11                                                     | Owner | Stored data listed in docs/privacy.md (Phase 02) |
+| Assumption | Teams want a spatial office more than a chat tool. Test: 5-person pilot uses it for a full week                                                                                        | Owner | End of Phase 05                                  |
+| Assumption | One floor holds ~60 avatars at 60 fps on a mid-range laptop. Test: load scene with 60 bots in Phase 03                                                                                 | Owner | Phase 03                                         |
+| Dependency | LiveKit keys                                                                                                                                                                           | Owner | Before Phase 03 spike                            |
+| Risk       | Real Google/Microsoft sign-in has never run end to end (no OAuth apps yet). Medium impact. Mitigation: code follows openid-client v6 PKCE flow; test against a real tenant before beta | Owner | When OAuth apps exist                            |
+| Risk       | PGlite (dev/test) and hosted Postgres may differ. Low impact. Mitigation: same migrations; run the API suite against real Postgres in Phase 11 CI                                      | Owner | Phase 11                                         |
 
 ## Decision log
 
-| Date       | Decision                                                                             | Options considered                   | Why                                                                                   | Decided by        |
-| ---------- | ------------------------------------------------------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------- | ----------------- |
-| 2026-10-10 | Reuse the knovra repo; archive v1 at tag `archive/knovra-v1`                         | New repo / reuse                     | Keeps one repo and history                                                            | Owner             |
-| 2026-10-10 | Stylised avatars built from primitives                                               | Ready Player Me realistic / stylised | Warmer "home" feel, light on phones                                                   | Owner             |
-| 2026-10-10 | Phase 01 adds A* pathfinding for walk-to (not in the original scope)                 | Leave walk-to broken / fix now       | The e2e gate showed walk-to got stuck on furniture; it is a bug in existing behaviour | Owner (free hand) |
-| 2026-10-10 | Product focus is presence for remote and hybrid work; GPS map is optional (Phase 12) | Map-first / presence-first           | Remote people don't commute to the hub; tracking feels like surveillance              | Owner             |
+| Date       | Decision                                                                              | Options considered                                   | Why                                                                                                 | Decided by        |
+| ---------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------- |
+| 2026-10-10 | Reuse the knovra repo; archive v1 at tag `archive/knovra-v1`                          | New repo / reuse                                     | Keeps one repo and history                                                                          | Owner             |
+| 2026-10-10 | Stylised avatars built from primitives                                                | Ready Player Me realistic / stylised                 | Warmer "home" feel, light on phones                                                                 | Owner             |
+| 2026-10-10 | Phase 01 adds A* pathfinding for walk-to (not in the original scope)                  | Leave walk-to broken / fix now                       | The e2e gate showed walk-to got stuck on furniture; it is a bug in existing behaviour               | Owner (free hand) |
+| 2026-10-10 | Use PGlite (Postgres in Node) for local dev and tests; real Postgres via DATABASE_URL | Docker Postgres / hosted dev DB / PGlite             | Docker was not running and no hosted DB exists yet; PGlite runs the same migrations with zero setup | Owner (free hand) |
+| 2026-10-10 | Development sign-in (email only) for local and e2e, disabled in production            | Wait for OAuth apps / OIDC stub server / dev sign-in | Unblocks Phase 02 without external accounts; production guard is unit-tested                        | Owner (free hand) |
+| 2026-10-10 | Product focus is presence for remote and hybrid work; GPS map is optional (Phase 12)  | Map-first / presence-first                           | Remote people don't commute to the hub; tracking feels like surveillance                            | Owner             |
 
 ## Status report template
 

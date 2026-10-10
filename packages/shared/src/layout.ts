@@ -97,7 +97,8 @@ export const obstacles: Rect[] = [
   },
 ];
 
-export const deskById = (id: string) => desks.find(d => d.id === id)!;
+/** Any desk on the floor, including the newcomer desk by the Design pod. */
+export const deskById = (id: string): Desk | undefined => [...desks, MY_DESK].find(d => d.id === id);
 
 export function inRect(x: number, z: number, r: Rect, pad = 0) {
   return Math.abs(x - r.x) <= r.w / 2 + pad && Math.abs(z - r.z) <= r.d / 2 + pad;

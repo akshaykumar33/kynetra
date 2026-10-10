@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { player, positions, useOffice, walkTo } from '../state';
+import { personById, player, positions, useOffice, walkTo } from '../state';
 import { STATUS_COLOR } from '../world/Avatar';
 import { zones, type Status } from '@knovra/shared';
-import { people } from '../dev/seed';
 
 const STATUS_LABEL: Record<Status, string> = {
   available: 'Available',
@@ -10,13 +9,8 @@ const STATUS_LABEL: Record<Status, string> = {
   focus: 'Focusing',
   away: 'Away',
 };
-const TEAMS = [
-  ['platform', 'Platform'],
-  ['design', 'Design'],
-  ['support', 'Support'],
-] as const;
-const byId = (id: string) => people.find(p => p.id === id)!;
-const firstName = (id: string) => byId(id).name.split(' ')[0];
+const TEAMS = zones.filter(z => z.kind === 'team').map(z => [z.id, z.name.replace(/ team$/, '')] as const);
+const firstName = (id: string) => personById(id)?.name.split(' ')[0] ?? 'Someone';
 
 function walkToPerson(id: string) {
   const pos = positions.get(id);
@@ -39,11 +33,16 @@ function useClock() {
 function Header() {
   const time = useClock();
   const statuses = useOffice(s => s.statuses);
+  const people = useOffice(s => s.people);
+  const orgName = useOffice(s => s.orgName);
+  const floorName = useOffice(s => s.floorName);
   const here = people.filter(p => statuses[p.id] !== 'away');
   const inOffice = here.filter(p => p.where === 'office').length;
   return (
     <header className="panel header">
-      <p className="eyebrow">Northgate Hub · Floor 4</p>
+      <p className="eyebrow">
+        {orgName} · {floorName}
+      </p>
       <h1>Good morning</h1>
       <p className="meta">
         <span>{time}</span>
@@ -59,6 +58,7 @@ function Header() {
 }
 
 function PeopleList() {
+  const people = useOffice(s => s.people);
   const statuses = useOffice(s => s.statuses);
   const nearby = useOffice(s => s.nearby);
   const [open, setOpen] = useState(() => matchMedia('(min-width: 760px)').matches);
@@ -130,7 +130,7 @@ function Conversation() {
       <div className="panel convo live" role="status">
         <div className="faces">
           {talkable.map(id => (
-            <i key={id} style={{ background: byId(id).body }}>
+            <i key={id} style={{ background: personById(id)?.body }}>
               {firstName(id)[0]}
             </i>
           ))}
@@ -173,6 +173,7 @@ function KnockCard() {
   const knock = useOffice(s => s.knock);
   const setKnock = useOffice(s => s.setKnock);
   const toast = useOffice(s => s.toast);
+  const people = useOffice(s => s.people);
   if (knock !== 'available' && knock !== 'waiting') return null;
   const inside = people.filter(p => p.status === 'meeting').map(p => p.name.split(' ')[0]);
   const doKnock = () => {
@@ -198,16 +199,20 @@ function KnockCard() {
 function CoffeeInvite() {
   const [show, setShow] = useState(false);
   const statuses = useOffice(s => s.statuses);
+  const people = useOffice(s => s.people);
+  const me = useOffice(s => s.me);
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 25000);
     return () => clearTimeout(t);
   }, []);
-  if (!show || statuses.arjun === 'away') return null;
+  // someone from another team who is free right now
+  const pair = people.find(p => p.team !== me?.team && statuses[p.id] === 'available');
+  if (!show || !pair) return null;
   return (
     <div className="panel invite" role="dialog" aria-label="Coffee pair">
       <p className="eyebrow">Today's coffee pair</p>
       <span>
-        You and <b>Arjun</b> haven't chatted in a while. He's free now.
+        You and <b>{pair.name.split(' ')[0]}</b> haven't chatted in a while. They're free now.
       </span>
       <div className="row">
         <button
@@ -234,7 +239,7 @@ function MyStatus() {
     <div className="panel mine">
       <label htmlFor="my-status">Your status</label>
       <div className="seg" role="radiogroup" id="my-status">
-        {(['available', 'focus', 'away'] as Status[]).map(s => (
+        {(['available', 'focus', 'away'] as const).map(s => (
           <button key={s} role="radio" aria-checked={myStatus === s} onClick={() => setMyStatus(s)}>
             <i className="dot" style={{ background: STATUS_COLOR[s] }} />
             {STATUS_LABEL[s]}
@@ -266,10 +271,11 @@ function Toasts() {
 
 export function Hud() {
   const toast = useOffice(s => s.toast);
+  const myTeam = useOffice(s => zones.find(z => z.id === s.me?.team)?.name);
   useEffect(() => {
-    const t = setTimeout(() => toast("You're in. Your desk is by the Design team"), 900);
+    const t = setTimeout(() => toast(myTeam ? `You're in. Your desk is by the ${myTeam}` : "You're in."), 900);
     return () => clearTimeout(t);
-  }, [toast]);
+  }, [toast, myTeam]);
   return (
     <div className="hud">
       <div className="hud-top">

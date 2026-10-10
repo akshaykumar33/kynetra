@@ -9,7 +9,7 @@ Delivery plan: `docs/roadmap/README.md`. Every phase follows `docs/roadmap/PROMP
 ## Stack
 
 npm workspaces. Web: Vite + React 18 + TypeScript, React Three Fiber + drei, zustand.
-Server: Fastify (Node 22). Shared: TypeScript + zod. Tests: Vitest (unit), Playwright (e2e).
+Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests), OIDC sign-in. Shared: TypeScript + zod. Tests: Vitest (unit), Playwright (e2e).
 
 ## Layout
 
@@ -22,20 +22,29 @@ Server: Fastify (Node 22). Shared: TypeScript + zod. Tests: Vitest (unit), Playw
   - `world/`: 3D scene (`Floor`, `People` with player and colleagues, `Avatar`).
   - `hud/Hud.tsx`: 2D overlay.
   - `state.ts`: zustand store, per-frame positions, `walkTo`, and the dev-only `window.__office` hook for e2e.
-  - `dev/seed.ts`: demo colleagues until Phase 02 loads real people.
-- `apps/server/src/`: `app.ts` builds the Fastify app (tests use `inject`), `main.ts` listens.
+  - `api.ts`: typed API client (sends the CSRF header). `App.tsx`: sign-in → onboarding → office gate.
+  - `screens/`: sign-in, onboarding and notice screens. The 3D office is lazy-loaded from `world/Office.tsx`.
+- `apps/server/src/`
+  - `app.ts` builds the Fastify app (tests use `inject`); `main.ts` migrates, optionally seeds, and listens.
+  - `db/`: `schema.ts` (Drizzle), `client.ts` (Postgres or PGlite), `seed.ts` (Northgate demo), migrations in `apps/server/drizzle/`.
+  - `auth/`: sessions (hashed tokens), OIDC and dev sign-in. `http/access.ts`: `requireMember`, the one org access check.
+  - `routes/api.ts`: `/api/v1`. Errors are always `{ error: { code, message } }`.
 - `e2e/`: Playwright specs. `scripts/check-budget.mjs`: initial JS budget (350 KB gzip).
 
 ## Commands
 
-- `npm run dev`: web app. `npm run dev:server`: API on :4000.
+- First time: `cp apps/server/.env.example apps/server/.env.local`.
+- `npm run dev:server` (API on :4000, local PGlite in `apps/server/.data`) and `npm run dev` (web on :5173, proxies /api and /auth).
+- `npm run db:migrate`, `npm run db:seed`. After editing `schema.ts`: `npm run db:generate -w @knovra/server`.
 - `npm run check`: lint + typecheck + unit tests + build + budget. `npm run e2e`: Playwright.
 
 ## Rules
 
 - Game logic that is not rendering goes in `packages/shared` as pure functions with tests.
 - Keep per-frame data (positions) out of React state; write to the store only when a value changes.
-- Colleagues, presence and voice are simulated until Phases 03–04.
+- Every org route calls `requireMember` first. Never take user or org identity from the request body.
+- Update `docs/privacy.md` with any change to what is stored.
+- People and statuses come from the API; movement, live presence and voice are simulated until Phases 03–04.
 - Budgets: initial JS 350 KB gzip or less (enforced in CI); 60 fps with 60 avatars on a mid-range laptop.
 
 ## CodeGraph

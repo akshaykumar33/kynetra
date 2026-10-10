@@ -1,7 +1,7 @@
+import { findPath, SPAWN, type KnockState, type Person, type Status } from '@knovra/shared';
 import { Vector3 } from 'three';
 import { create } from 'zustand';
-import { findPath, SPAWN, type KnockState, type Status } from '@knovra/shared';
-import { people } from './dev/seed';
+import { api, type FloorData } from './api';
 
 // Per-frame positions live outside React so movement never re-renders the tree.
 export const positions = new Map<string, Vector3>();
@@ -24,6 +24,12 @@ interface Toast {
 }
 
 interface OfficeState {
+  orgId: string;
+  orgName: string;
+  floorName: string;
+  me: Person | null;
+  /** Everyone on the floor except me. */
+  people: Person[];
   myStatus: Status;
   statuses: Record<string, Status>;
   nearby: string[]; // colleagues inside voice range
@@ -31,7 +37,8 @@ interface OfficeState {
   knock: KnockState;
   insideRoom: boolean;
   toasts: Toast[];
-  setMyStatus: (s: Status) => void;
+  loadFloor: (data: FloorData) => void;
+  setMyStatus: (s: Exclude<Status, 'meeting'>) => Promise<void>;
   setNearby: (ids: string[]) => void;
   setZone: (id: string | null) => void;
   setKnock: (k: KnockState) => void;
@@ -42,14 +49,41 @@ interface OfficeState {
 let toastId = 0;
 
 export const useOffice = create<OfficeState>((set, get) => ({
+  orgId: '',
+  orgName: '',
+  floorName: '',
+  me: null,
+  people: [],
   myStatus: 'available',
-  statuses: Object.fromEntries(people.map(p => [p.id, p.status])),
+  statuses: {},
   nearby: [],
   zoneId: null,
   knock: 'none',
   insideRoom: false,
   toasts: [],
-  setMyStatus: myStatus => set({ myStatus }),
+  loadFloor: data => {
+    const me = data.people.find(p => p.id === data.meId) ?? null;
+    const people = data.people.filter(p => p.id !== data.meId);
+    set({
+      orgId: data.org.id,
+      orgName: data.org.name,
+      floorName: data.floor.name,
+      me,
+      people,
+      myStatus: me?.status ?? 'available',
+      statuses: Object.fromEntries(people.map(p => [p.id, p.status])),
+    });
+  },
+  setMyStatus: async myStatus => {
+    const previous = get().myStatus;
+    set({ myStatus }); // optimistic: the switch responds instantly
+    try {
+      await api.updateMe(get().orgId, { status: myStatus });
+    } catch {
+      set({ myStatus: previous });
+      get().toast("Couldn't save your status. Check your connection and try again.");
+    }
+  },
   setNearby: nearby => {
     const prev = get().nearby;
     if (prev.length === nearby.length && prev.every((id, i) => id === nearby[i])) return;
@@ -65,7 +99,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   },
 }));
 
-export const VOICE_RANGE = 3.2;
+export const personById = (id: string) => useOffice.getState().people.find(p => p.id === id);
 
 // Test hook: lets e2e tests read the player position and store without poking at WebGL.
 if (import.meta.env.DEV) {
