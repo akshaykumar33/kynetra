@@ -8,6 +8,7 @@ import type { Db } from './db/client';
 import { AppError, registerErrorHandler } from './http/errors';
 import { registerRealtime } from './realtime/routes';
 import { registerApiRoutes } from './routes/api';
+import { registerVoiceRoutes } from './routes/voice';
 
 export const CSRF_HEADER = 'x-knovra-csrf';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -37,6 +38,7 @@ export async function buildApp({ db, config }: { db: Db; config: Config }) {
   app.get('/health', async () => ({ status: 'ok' }));
   registerAuthRoutes(app, db, config);
   registerApiRoutes(app, db, config);
+  registerVoiceRoutes(app, db, config);
   await registerRealtime(app, db, config);
   return app;
 }

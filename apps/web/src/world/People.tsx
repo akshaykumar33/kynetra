@@ -1,4 +1,4 @@
-import { OrbitControls } from '@react-three/drei';
+import { Html, OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { Vector3, type Group } from 'three';
@@ -16,7 +16,8 @@ import {
   type Person,
 } from '@knovra/shared';
 import { sampleAt } from '../realtime';
-import { DEMO, player, positions, useOffice } from '../state';
+import { DEMO, followTick, player, positions, useOffice } from '../state';
+import { VideoBubble } from '../hud/Voice';
 import { Avatar } from './Avatar';
 
 function turnToward(g: Group, dx: number, dz: number, dt: number) {
@@ -35,6 +36,9 @@ export function Player() {
   const { camera } = useThree();
   const myStatus = useOffice(s => s.myStatus);
   const me = useOffice(s => s.me);
+  const voiceOn = useOffice(s => s.voice.state === 'on');
+  const hearing = useOffice(s => s.voice.hearing);
+  const speakingMe = useOffice(s => !!s.me && s.voice.speaking.includes(s.me.id));
   const nearby = useOffice(s => s.nearby);
 
   useEffect(() => {
@@ -77,6 +81,7 @@ export function Player() {
     if (k.has('d') || k.has('arrowright')) move.add(right);
     if (k.has('a') || k.has('arrowleft')) move.sub(right);
     const byKeys = move.lengthSq() > 0;
+    followTick(performance.now(), byKeys);
     if (byKeys) {
       player.path = [];
       move.normalize();
@@ -145,9 +150,13 @@ export function Player() {
           name="You"
           status={myStatus}
           speedRef={speed}
-          talking={nearby.length > 0 && myStatus !== 'focus'}
+          talking={(voiceOn ? hearing.length : nearby.length) > 0 && myStatus !== 'focus'}
+          speaking={speakingMe}
           isMe
         />
+        <Html position={[0, 2.5, 0]} center distanceFactor={18} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+          <VideoBubble id="me" name="You" />
+        </Html>
       </group>
     </>
   );
@@ -263,9 +272,9 @@ function RemoteColleague({ person }: { person: Person }) {
   const g = useRef<Group>(null);
   const speed = useRef(0);
   const status = useOffice(s => s.statuses[person.id] ?? person.status);
-  const talking = useOffice(
-    s => s.nearby.includes(person.id) && s.myStatus !== 'focus' && s.statuses[person.id] !== 'focus',
-  );
+  // live voice: talking means we receive their audio; speaking means they're saying something now
+  const talking = useOffice(s => s.voice.hearing.includes(person.id));
+  const speaking = useOffice(s => s.voice.speaking.includes(person.id));
   const pos = useMemo(() => new Vector3(), []);
   const at = useMemo(() => ({ x: 0, z: 0, ry: 0 }), []);
 
@@ -298,7 +307,13 @@ function RemoteColleague({ person }: { person: Person }) {
         remote={person.where === 'remote'}
         speedRef={speed}
         talking={talking}
+        speaking={speaking}
       />
+      {talking && (
+        <Html position={[0, 2.5, 0]} center distanceFactor={18} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+          <VideoBubble id={person.id} name={person.name.split(' ')[0]} />
+        </Html>
+      )}
     </group>
   );
 }

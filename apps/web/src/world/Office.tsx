@@ -6,6 +6,7 @@ import { Colleagues, Player } from './People';
 import { SPAWN } from '@knovra/shared';
 import { useEffect } from 'react';
 import { connect, disconnect } from '../realtime';
+import { leaveVoice } from '../voice';
 import { DEMO, useOffice } from '../state';
 
 export function OfficeScene() {
@@ -13,7 +14,10 @@ export function OfficeScene() {
   useEffect(() => {
     if (DEMO || !orgId) return;
     connect(orgId);
-    return disconnect;
+    return () => {
+      disconnect();
+      void leaveVoice();
+    };
   }, [orgId]);
   return (
     <>

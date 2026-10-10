@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { DEMO, personById, player, positions, useOffice, walkTo } from '../state';
+import { DEMO, personById, useOffice, walkTo, walkToPerson } from '../state';
 import { STATUS_COLOR } from '../world/Avatar';
+import { ScreenPanel, VoicePanel } from './Voice';
 import { zones, type Status } from '@knovra/shared';
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -11,15 +12,6 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 const TEAMS = zones.filter(z => z.kind === 'team').map(z => [z.id, z.name.replace(/ team$/, '')] as const);
 const firstName = (id: string) => personById(id)?.name.split(' ')[0] ?? 'Someone';
-
-function walkToPerson(id: string) {
-  const pos = positions.get(id);
-  if (!pos) return;
-  const dir = player.pos.clone().sub(pos).setY(0);
-  if (dir.lengthSq() < 0.01) dir.set(0, 0, 1);
-  const spot = pos.clone().add(dir.normalize().multiplyScalar(1.3));
-  walkTo(spot.x, spot.z);
-}
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
@@ -126,7 +118,10 @@ function Conversation() {
   const zoneId = useOffice(s => s.zoneId);
   const toast = useOffice(s => s.toast);
   const [muted, setMuted] = useState(false);
-  const talkable = nearby.filter(id => statuses[id] !== 'focus');
+  const voice = useOffice(s => s.voice);
+  const voiceOn = !DEMO && voice.state === 'on';
+  // with voice on, the proximity rules decide who you hear; otherwise show who is close
+  const talkable = voiceOn ? voice.hearing : nearby.filter(id => statuses[id] !== 'focus');
   const focusing = nearby.filter(id => statuses[id] === 'focus');
   const zone = zones.find(z => z.id === zoneId);
 
@@ -142,18 +137,32 @@ function Conversation() {
       <div className="panel convo live" role="status">
         <div className="faces">
           {talkable.map(id => (
-            <i key={id} style={{ background: personById(id)?.body }}>
+            <i
+              key={id}
+              className={voice.speaking.includes(id) ? 'speaking' : undefined}
+              style={{ background: personById(id)?.body }}
+            >
               {firstName(id)[0]}
             </i>
           ))}
         </div>
         <div className="convo-text">
-          <b>Talking with {talkable.map(firstName).join(', ')}</b>
-          <small>Voice opens when you walk up and fades when you walk away. Simulated in this prototype.</small>
+          <b>
+            {voiceOn || DEMO ? 'Talking with' : 'Near'} {talkable.map(firstName).join(', ')}
+          </b>
+          <small>
+            {DEMO
+              ? 'Voice is simulated in demo mode.'
+              : voiceOn
+                ? 'Voice opens when you walk up and fades when you walk away.'
+                : 'Turn on voice to talk.'}
+          </small>
         </div>
-        <button className="btn ghost" aria-pressed={muted} onClick={() => setMuted(m => !m)}>
-          {muted ? 'Unmute' : 'Mute'}
-        </button>
+        {DEMO && (
+          <button className="btn ghost" aria-pressed={muted} onClick={() => setMuted(m => !m)}>
+            {muted ? 'Unmute' : 'Mute'}
+          </button>
+        )}
       </div>
     );
   }
@@ -306,11 +315,13 @@ export function Hud() {
       </div>
       <div className="hud-side">
         <KnockCard />
+        <ScreenPanel />
         <CoffeeInvite />
       </div>
       <div className="hud-bottom">
         <MyStatus />
         <ConnectionNotice />
+        {!DEMO && <VoicePanel />}
         <Conversation />
       </div>
       <Toasts />

@@ -612,3 +612,68 @@ fieldset {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- voice ---------- */
+.voice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  max-width: 420px;
+}
+.voice small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.voice .check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.voice select {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-width: 200px;
+}
+.faces i.speaking {
+  box-shadow: 0 0 0 3px var(--green);
+  animation: talk 0.6s ease-in-out infinite alternate;
+}
+@keyframes talk {
+  to {
+    transform: scale(1.08);
+  }
+}
+.bubble {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 3px solid var(--paper);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  background: #222;
+}
+.screen {
+  padding: 8px;
+  width: min(560px, 100%);
+}
+.screen-video {
+  width: 100%;
+  border-radius: 10px;
+  background: #111;
+}
+.screen figcaption {
+  font-size: 12px;
+  color: var(--ink-soft);
+  padding: 4px 4px 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .faces i.speaking {
+    animation: none;
+  }
+}

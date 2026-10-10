@@ -24,7 +24,9 @@ server stores, and what it never does. Update it in the same PR as any schema ch
 - **Location.** No GPS or IP-based location. The optional city map (roadmap Phase 12) would be
   opt-in, per trip, and never stored.
 - **Movement history.** Positions on the floor are live only and are not logged (from Phase 03).
-- **Audio or video.** Conversations are not recorded or transcribed.
+- **Audio or video.** Conversations are not recorded or transcribed. Audio and video pass through the
+  LiveKit media server only to the people within voice range, and your microphone is muted whenever
+  nobody is near. Voice is off until you turn it on.
 
 ## Retention
 

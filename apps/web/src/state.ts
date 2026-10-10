@@ -17,6 +17,38 @@ export const player = {
 /** ?demo=1 fills the floor with simulated colleagues instead of live presence. */
 export const DEMO = new URLSearchParams(location.search).has('demo');
 
+/** Someone we are walking over to; their position is re-checked as they move (see followTick). */
+let following: string | null = null;
+let lastRoute = 0;
+
+/** Walks over to a colleague and keeps adjusting the route if they move, until we're beside them. */
+export function walkToPerson(id: string) {
+  following = id;
+  lastRoute = 0;
+  followTick(performance.now());
+}
+
+/** Called every frame by the player. Stops when close, when they leave, or when keys take over. */
+export function followTick(now: number, steering = false) {
+  if (!following) return;
+  const pos = positions.get(following);
+  if (steering || !pos) {
+    following = null;
+    return;
+  }
+  const d = Math.hypot(pos.x - player.pos.x, pos.z - player.pos.z);
+  if (d < 1.6) {
+    following = null;
+    player.path = [];
+    return;
+  }
+  if (now - lastRoute < 500) return; // re-plan twice a second at most
+  lastRoute = now;
+  // stand 1.3 m from them, on our side
+  const k = 1.3 / Math.max(d, 0.01);
+  walkTo(pos.x + (player.pos.x - pos.x) * k, pos.z + (player.pos.z - pos.z) * k);
+}
+
 /** Walks the player to a spot, routing around furniture. Returns false when there is no route. */
 export function walkTo(x: number, z: number): boolean {
   const route = findPath(player.pos, { x, z }, useOffice.getState().knock === 'admitted');
@@ -29,7 +61,25 @@ interface Toast {
   text: string;
 }
 
+export interface VoiceState {
+  state: 'off' | 'joining' | 'on' | 'reconnecting';
+  error: string | null;
+  /** People whose audio we receive right now (from the proximity rules). */
+  hearing: string[];
+  /** People talking right now, including me. */
+  speaking: string[];
+  muted: boolean;
+  pushToTalk: boolean;
+  camera: boolean;
+  sharing: boolean;
+  devices: { id: string; label: string }[];
+  deviceId: string | null;
+  /** Bumped when remote video tracks come or go. */
+  tracksVersion: number;
+}
+
 interface OfficeState {
+  voice: VoiceState;
   orgId: string;
   orgName: string;
   floorName: string;
@@ -65,6 +115,19 @@ interface OfficeState {
 let toastId = 0;
 
 export const useOffice = create<OfficeState>((set, get) => ({
+  voice: {
+    state: 'off',
+    error: null,
+    hearing: [],
+    speaking: [],
+    muted: false,
+    pushToTalk: false,
+    camera: false,
+    sharing: false,
+    devices: [],
+    deviceId: null,
+    tracksVersion: 0,
+  },
   orgId: '',
   orgName: '',
   floorName: '',

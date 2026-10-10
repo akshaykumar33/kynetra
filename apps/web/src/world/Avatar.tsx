@@ -21,12 +21,14 @@ interface Props {
   /** 0..1 how fast the avatar is moving; drives the walk bob. */
   speedRef: { current: number };
   talking?: boolean;
+  /** Saying something right now: the ring pulses. */
+  speaking?: boolean;
   isMe?: boolean;
 }
 
 // Stylised figure: rounded body, big head, stubby feet. Built from primitives so
 // it stays light on phones and needs no model files.
-export function Avatar({ name, body, skin, hair, status, remote, speedRef, talking, isMe }: Props) {
+export function Avatar({ name, body, skin, hair, status, remote, speedRef, talking, speaking, isMe }: Props) {
   const rig = useRef<Group>(null);
   const footL = useRef<Group>(null);
   const footR = useRef<Group>(null);
@@ -46,7 +48,7 @@ export function Avatar({ name, body, skin, hair, status, remote, speedRef, talki
       footR.current.position.z = s > 0.05 ? -Math.sin(t) * 0.14 : 0;
     }
     if (ring.current) {
-      const k = talking ? 1 + Math.sin(t * 3) * 0.08 : 1;
+      const k = speaking ? 1.12 + Math.sin(t * 9) * 0.1 : talking ? 1 + Math.sin(t * 3) * 0.04 : 1;
       ring.current.scale.setScalar(k);
     }
   });

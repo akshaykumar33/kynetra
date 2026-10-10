@@ -24,6 +24,18 @@ Walking up to someone starts a real conversation, and walking away ends it, with
 7. **Focus means silence:** focusing users are never subscribed to or heard. Visitors get "leave a note".
 8. **Quality:** echo cancellation, noise suppression, and adaptive bitrate. Reconnect without reload.
 
+## Delivered vs scope (2026-10-11)
+
+Done: token service, proximity subscription with falloff and hysteresis, walls and focus respected,
+mute, push-to-talk, microphone picker, speaking indicators, camera bubbles, screen share inside the
+meeting room, echo cancellation and noise suppression, LiveKit reconnects without reload, mic muted
+when nobody is near.
+
+Follow-ups (not built, moved to Phase 05):
+
+- Team ambience (hearing teammates quietly in the team zone, off by default).
+- A video grid view inside meeting rooms; today the room shows camera bubbles and the shared screen.
+
 ## Out of scope
 
 Recording, transcription, and AI summaries.

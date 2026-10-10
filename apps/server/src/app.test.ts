@@ -83,7 +83,13 @@ describe('basics', () => {
   });
 
   it('never offers the dev login in production', async () => {
-    const prod = loadConfig({ NODE_ENV: 'production', AUTH_DEV_LOGIN: '1', COOKIE_SECRET: 'x'.repeat(32) });
+    const prod = loadConfig({
+      NODE_ENV: 'production',
+      AUTH_DEV_LOGIN: '1',
+      COOKIE_SECRET: 'x'.repeat(32),
+      LIVEKIT_API_KEY: 'k',
+      LIVEKIT_API_SECRET: 's',
+    });
     expect(prod.devLogin).toBe(false);
     expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(/COOKIE_SECRET/);
   });
@@ -191,6 +197,43 @@ describe('invites', () => {
     expect((await call(guest, 'GET', `/api/v1/orgs/${northgateId}/floor`)).statusCode).toBe(200);
 
     expect((await call(guest, 'POST', '/api/v1/invites/accept', { token })).statusCode).toBe(400);
+  });
+});
+
+describe('voice tokens', () => {
+  const claims = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
+
+  it('gives a member a token for their own floor only', async () => {
+    const cookie = await signIn('lena@northgate.test');
+    const res = await call(cookie, 'POST', `/api/v1/orgs/${northgateId}/voice-token`);
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.room).toBe(`floor-${northgateId}`);
+    const c = claims(body.token);
+    expect(c.video).toMatchObject({ room: body.room, roomJoin: true, canPublishData: false });
+    expect(c.video.canPublishSources.sort()).toEqual(['camera', 'microphone', 'screen_share']);
+    const me = (await call(cookie, 'GET', '/api/v1/me')).json();
+    expect(c.sub).toBe(me.user.id);
+    expect(c.exp - c.nbf).toBeLessThanOrEqual(2 * 3600);
+  });
+
+  it('refuses a token for another organisation', async () => {
+    const outsider = await signIn('outsider@other.test');
+    expect((await call(outsider, 'POST', `/api/v1/orgs/${northgateId}/voice-token`)).statusCode).toBe(404);
+  });
+
+  it('needs the CSRF header', async () => {
+    const cookie = await signIn('lena@northgate.test');
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/orgs/${northgateId}/voice-token`,
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('requires real LiveKit keys in production', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', COOKIE_SECRET: 'x'.repeat(32) })).toThrow(/LIVEKIT/);
   });
 });
 

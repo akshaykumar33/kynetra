@@ -63,8 +63,8 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
 
   // Sam walks over to Lena and a conversation opens
   await lenaRow.click();
-  await expect(sam.getByText(/Talking with .*Lena/)).toBeVisible({ timeout: 45_000 });
-  await expect(lena.getByText(/Talking with .*Sam/)).toBeVisible({ timeout: 10_000 });
+  await expect(sam.getByText(/Near .*Lena/)).toBeVisible({ timeout: 45_000 });
+  await expect(lena.getByText(/Near .*Sam/)).toBeVisible({ timeout: 10_000 });
 
   // Lena focuses; Sam sees it within a second
   await lena.getByRole('radio', { name: 'Focusing' }).click();

@@ -68,5 +68,7 @@ export const api = {
   me: () => request<Me>('GET', '/api/v1/me'),
   floor: (orgId: string) => request<FloorData>('GET', `/api/v1/orgs/${orgId}/floor`),
   updateMe: (orgId: string, patch: UpdateMe) => request<{ ok: true }>('PATCH', `/api/v1/orgs/${orgId}/me`, patch),
+  voiceToken: (orgId: string) =>
+    request<{ url: string; room: string; token: string }>('POST', `/api/v1/orgs/${orgId}/voice-token`),
   acceptInvite: (token: string) => request<{ orgId: string }>('POST', '/api/v1/invites/accept', { token }),
 };
