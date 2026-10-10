@@ -28,6 +28,8 @@ test('shows the floor HUD', async ({ page }) => {
 });
 
 test('W moves the player forward', async ({ page }) => {
+  // give the page keyboard focus without walking anywhere (the header is not interactive)
+  await page.getByRole('heading', { name: 'Good morning' }).click();
   const start = await playerPos(page);
   await page.keyboard.down('w');
   // poll rather than sleep: CI renders WebGL in software and can run at a few frames per second
