@@ -73,6 +73,12 @@ function Gate() {
 function OrgHome({ orgId, onboarded }: { orgId: string; onboarded: boolean }) {
   const floor = useQuery({ queryKey: ['floor', orgId], queryFn: () => api.floor(orgId) });
   const loadFloor = useOffice(s => s.loadFloor);
+  const peopleVersion = useOffice(s => s.peopleVersion);
+  const { refetch } = floor;
+  // someone new walked in (e.g. just accepted an invite): fetch their name and look
+  useEffect(() => {
+    if (peopleVersion > 0) refetch();
+  }, [peopleVersion, refetch]);
   useEffect(() => {
     if (floor.data) loadFloor(floor.data);
   }, [floor.data, loadFloor]);

@@ -16,11 +16,16 @@ test('a new member signs in, sets up and lands on their floor', async ({ page })
 test('a status change is saved and survives a reload', async ({ page }) => {
   await signIn(page, 'noah@northgate.test');
   await waitForFloor(page);
-  // listen before clicking so the save response can't slip past
-  const saved = page.waitForResponse(r => r.url().endsWith('/me') && r.request().method() === 'PATCH');
   await page.getByRole('radio', { name: 'Focusing' }).click();
   await expect(page.getByText('Focus mode is on.')).toBeVisible();
-  expect((await saved).status()).toBe(200);
+  // the live connection saves it; wait until the server reports it before reloading
+  await expect
+    .poll(async () => {
+      const me = await (await page.request.get('/api/v1/me')).json();
+      const floor = await (await page.request.get(`/api/v1/orgs/${me.orgs[0].id}/floor`)).json();
+      return floor.people.find((p: { id: string }) => p.id === floor.meId).status;
+    })
+    .toBe('focus');
   await page.reload();
   await waitForFloor(page);
   await expect(page.getByRole('radio', { name: 'Focusing' })).toHaveAttribute('aria-checked', 'true');

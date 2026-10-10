@@ -75,7 +75,7 @@ export function Avatar({ name, body, skin, hair, status, remote, speedRef, talki
           <meshStandardMaterial color={skin} roughness={0.8} />
         </mesh>
         {/* hair cap */}
-        <mesh position={[0, 1.25, -0.03]} scale={[1.04, 0.82, 1.04]} castShadow>
+        <mesh position={[0, 1.25, -0.03]} scale={[1.04, 0.82, 1.04]}>
           <sphereGeometry args={[0.3, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial color={hair} roughness={0.9} />
         </mesh>
@@ -89,7 +89,7 @@ export function Avatar({ name, body, skin, hair, status, remote, speedRef, talki
       </group>
       {[footL, footR].map((r, i) => (
         <group key={i} ref={r}>
-          <mesh position={[i ? 0.12 : -0.12, 0.07, 0.04]} castShadow>
+          <mesh position={[i ? 0.12 : -0.12, 0.07, 0.04]}>
             <sphereGeometry args={[0.1, 12, 8]} />
             <meshStandardMaterial color="#3b3b3b" />
           </mesh>
