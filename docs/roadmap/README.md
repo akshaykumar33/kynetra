@@ -37,8 +37,8 @@ velocity is measured. Re-forecast after Phase 1.
 | 01  | [Foundation and quality bar](phases/01-foundation.md)             | we can't change code safely                        | M    | Done (PR #5)                                            |
 | 02  | [Accounts, orgs and data model](phases/02-accounts-and-data.md)   | the office can't be owned by a real team           | L    | Done (PR #6)                                            |
 | 03  | [Real-time presence](phases/03-realtime-presence.md)              | people can't see each other live                   | L    | Done (PR #7; spike: docs/spikes/livekit-spatial.md, GO) |
-| 04  | [Proximity voice and video](phases/04-proximity-voice.md)         | walk-up conversation doesn't work for real         | L    | Not started                                             |
-| 05  | [Rooms, chat and etiquette](phases/05-rooms-and-etiquette.md)     | it feels intrusive or chaotic                      | M    | Not started                                             |
+| 04  | [Proximity voice and video](phases/04-proximity-voice.md)         | walk-up conversation doesn't work for real         | L    | Gate met except the two-machine manual check, PR open   |
+| 05  | [Rooms, chat and etiquette](phases/05-rooms-and-etiquette.md)     | it feels intrusive or chaotic                      | M    | Not started (+2 follow-ups from 04)                     |
 | 06  | [Office designer](phases/06-office-designer.md)                   | each company can't make the office its own         | L    | Not started                                             |
 | 07  | [Buildings, floors and campus](phases/07-buildings-and-campus.md) | it can't model a real IT hub with tenants          | L    | Not started                                             |
 | 08  | [Hybrid bridge](phases/08-hybrid-bridge.md)                       | in-office and remote people stay split             | M    | Not started                                             |
