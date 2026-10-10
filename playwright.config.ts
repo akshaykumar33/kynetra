@@ -14,10 +14,29 @@ export default defineConfig({
     baseURL: `http://localhost:${WEB_PORT}`,
     trace: 'retain-on-failure',
     // software WebGL so tests run on CI machines without a GPU
-    launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
+    launchOptions: {
+      args: [
+        '--use-angle=swiftshader',
+        '--enable-unsafe-swiftshader',
+        // fake microphone and camera so voice tests run anywhere
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+        '--autoplay-policy=no-user-gesture-required',
+      ],
+    },
+    permissions: ['microphone', 'camera'],
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
+    {
+      command: 'node scripts/run-livekit.mjs',
+      url: 'http://127.0.0.1:7880',
+      // LiveKit logs every RTP stat at debug level; keep test output readable
+      stdout: 'ignore',
+      stderr: 'ignore',
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
     {
       // a fresh in-memory database, seeded with the Northgate demo office, on every run
       command: 'npm run start -w @knovra/server',
@@ -33,6 +52,7 @@ export default defineConfig({
         SEED_ON_START: '1',
         // short grace so the leave test doesn't wait 30 s; the server unit tests cover the timer
         PRESENCE_GRACE_MS: '3000',
+        LIVEKIT_URL: 'ws://127.0.0.1:7880',
       },
     },
     {

@@ -28,7 +28,8 @@
     "db:migrate": "npm run db:migrate -w @knovra/server",
     "db:seed": "npm run db:seed -w @knovra/server",
     "load:presence": "node scripts/load-presence.mjs",
-    "measure:fps": "node scripts/measure-fps.mjs"
+    "measure:fps": "node scripts/measure-fps.mjs",
+    "dev:voice": "node scripts/run-livekit.mjs"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
