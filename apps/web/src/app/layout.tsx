@@ -1,42 +1,45 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+import { THEME_BOOT_SCRIPT } from '@/lib/theme';
+import { TopBar } from '@/features/world/components/TopBar';
+import { Providers } from './providers';
 import './globals.css';
 
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Kynetra — Open Digital IT World Platform',
+  title: 'Kynetra — World Console',
   description:
     'A persistent virtual technology city where developers and AI agents collaborate, simulate software systems, operate cloud infrastructure, and build the future.',
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#12161f' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f7fa' },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The boot script sets data-theme before hydration, so the attribute differs by design.
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body>
-        <header className="topbar">
-          <div className="brand">
-            <span className="brand-badge">KY</span>
-            <span className="brand-title">KYNETRA</span>
-            <span className="brand-tag">WORLD OS v0.1</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="pulse-indicator" id="system-status-indicator" />
-              <span style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                PLATFORM ONLINE
-              </span>
-            </div>
-            <a
-              href="#diagnostics"
-              className="btn-secondary"
-              id="diagnostics-btn"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
-            >
-              System HUD
-            </a>
-          </div>
-        </header>
-
-        <main>{children}</main>
+        <a className="skip-link" href="#main">
+          Skip to the world view
+        </a>
+        <Providers>
+          <TopBar />
+          <main id="main">{children}</main>
+        </Providers>
       </body>
     </html>
   );
