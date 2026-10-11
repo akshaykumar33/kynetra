@@ -6,3 +6,4 @@ export * from './pathfinding';
 export * from './realtime';
 export * from './voice';
 export * from './world';
+export * from './home';

@@ -127,6 +127,8 @@ export const WorldMapSchema = z.object({
   you: z.object({
     userId: z.string(),
     name: z.string(),
+    /** Homes whose owners have invited you in. */
+    invitedHomes: z.array(z.string()),
     orgs: z.array(
       z.object({
         orgId: z.string(),
