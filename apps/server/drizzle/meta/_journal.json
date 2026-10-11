@@ -22,6 +22,13 @@
       "when": 1791697462259,
       "tag": "0002_world_homes",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791699417510,
+      "tag": "0003_home_decor_guestbook",
+      "breakpoints": true
     }
   ]
 }

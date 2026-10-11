@@ -13,7 +13,7 @@ import {
   integer,
   real,
 } from 'drizzle-orm/pg-core';
-import type { FloorLayout } from '@kynetra/shared';
+import type { FloorLayout, HomeDecor } from '@kynetra/shared';
 
 const id = () =>
   uuid('id')
@@ -219,6 +219,8 @@ export const homes = pgTable(
     lot: integer('lot').notNull(),
     // open homes let anyone visit; closed ones only the owner and invited guests
     open: boolean('open').notNull().default(false),
+    // style, wall colour and furniture; read through readDecor() so old or missing values still work
+    decor: jsonb('decor').$type<HomeDecor>(),
     createdAt: createdAt(),
   },
   t => [uniqueIndex('home_lot_idx').on(t.lot)],
@@ -236,4 +238,21 @@ export const homeInvites = pgTable(
     createdAt: createdAt(),
   },
   t => [primaryKey({ columns: [t.ownerId, t.guestId] }), index('home_invite_guest_idx').on(t.guestId)],
+);
+
+/** The guestbook: short notes visitors leave in a home. The owner and the author can delete them. */
+export const homeNotes = pgTable(
+  'home_note',
+  {
+    id: id(),
+    homeOwnerId: uuid('home_owner_id')
+      .notNull()
+      .references(() => homes.ownerId, { onDelete: 'cascade' }),
+    authorId: uuid('author_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    text: text('text').notNull(),
+    createdAt: createdAt(),
+  },
+  t => [index('home_note_home_idx').on(t.homeOwnerId, t.createdAt), index('home_note_author_idx').on(t.authorId)],
 );

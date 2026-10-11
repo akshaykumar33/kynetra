@@ -28,7 +28,7 @@ async function signIn(email: string, name = '') {
   return `kynetra_sid=${cookie!.value}`;
 }
 
-function call(cookie: string, method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) {
+function call(cookie: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) {
   return app.inject({ method, url, payload, headers: { cookie, [CSRF_HEADER]: '1' } });
 }
 
@@ -264,6 +264,94 @@ describe('world', () => {
 
   it('needs sign-in', async () => {
     expect((await app.inject({ method: 'GET', url: '/api/v1/world' })).statusCode).toBe(401);
+  });
+});
+
+describe('homes', () => {
+  // one small cast for every home test; the dev login is rate limited like the real one
+  type Person = { cookie: string; id: string };
+  let hana: Person, ravi: Person, gita: Person, nia: Person;
+  async function person(email: string, name: string): Promise<Person> {
+    const cookie = await signIn(email, name);
+    const me = (await call(cookie, 'GET', '/api/v1/world')).json();
+    return { cookie, id: me.you.userId };
+  }
+  beforeAll(async () => {
+    hana = await person('hana@homes.test', 'Hana Ito');
+    ravi = await person('ravi@homes.test', 'Ravi Shah');
+    gita = await person('gita@homes.test', 'Gita Rao');
+    nia = await person('nia@homes.test', 'Nia Cole');
+  });
+
+  it('lets the owner in with the default cabin, and keeps strangers out', async () => {
+    const mine = await call(hana.cookie, 'GET', `/api/v1/homes/${hana.id}`);
+    expect(mine.statusCode).toBe(200);
+    expect(mine.json()).toMatchObject({
+      as: 'owner',
+      home: { name: "Hana's home", open: false, decor: { style: 'cabin' } },
+      guests: [],
+    });
+    const refused = await call(ravi.cookie, 'GET', `/api/v1/homes/${hana.id}`);
+    expect(refused.statusCode).toBe(403);
+    expect(errorCode(refused)).toBe('private_home');
+  });
+
+  it("won't take notes for a closed home you weren't invited to", async () => {
+    const res = await call(ravi.cookie, 'POST', `/api/v1/homes/${hana.id}/notes`, { text: 'hello?' });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('lets invited guests in, without telling the owner whether an email exists', async () => {
+    const real = await call(hana.cookie, 'POST', '/api/v1/homes/mine/guests', { email: 'GITA@homes.test' });
+    const ghost = await call(hana.cookie, 'POST', '/api/v1/homes/mine/guests', { email: 'nobody@homes.test' });
+    expect([real.statusCode, ghost.statusCode]).toEqual([200, 200]);
+    expect(real.json()).toEqual(ghost.json());
+
+    expect((await call(gita.cookie, 'GET', `/api/v1/homes/${hana.id}`)).json()).toMatchObject({
+      as: 'guest',
+      guests: null,
+    });
+    expect((await call(gita.cookie, 'GET', '/api/v1/world')).json().you.invitedHomes).toContain(hana.id);
+    expect((await call(hana.cookie, 'GET', `/api/v1/homes/${hana.id}`)).json().guests).toEqual([
+      { id: gita.id, name: 'Gita Rao' },
+    ]);
+
+    await call(hana.cookie, 'DELETE', `/api/v1/homes/mine/guests/${gita.id}`);
+    expect((await call(gita.cookie, 'GET', `/api/v1/homes/${hana.id}`)).statusCode).toBe(403);
+  });
+
+  it('refuses bad decor and unknown fields', async () => {
+    const bad = await call(hana.cookie, 'PATCH', '/api/v1/homes/mine', {
+      decor: { style: 'loft', wall: 'url(javascript:x)', items: [] },
+    });
+    expect(bad.statusCode).toBe(400);
+    expect((await call(hana.cookie, 'PATCH', '/api/v1/homes/mine', { lot: 0 })).statusCode).toBe(400);
+  });
+
+  it('opens the door to everyone, and saves the decor visitors see', async () => {
+    const decor = { style: 'neon', wall: '#1d1a33', items: ['aquarium', 'telescope'] };
+    expect((await call(nia.cookie, 'PATCH', '/api/v1/homes/mine', { open: true, decor })).statusCode).toBe(200);
+    const visit = (await call(ravi.cookie, 'GET', `/api/v1/homes/${nia.id}`)).json();
+    expect(visit).toMatchObject({ as: 'guest', home: { open: true, decor } });
+  });
+
+  it('keeps a guestbook: visitors write, the owner tidies, and nobody floods it', async () => {
+    const home = `/api/v1/homes/${nia.id}`;
+    const posted = await call(ravi.cookie, 'POST', `${home}/notes`, { text: '  Lovely aquarium!  ' });
+    expect(posted.statusCode).toBe(201);
+    const [note] = (await call(nia.cookie, 'GET', home)).json().notes;
+    expect(note).toMatchObject({ author: 'Ravi Shah', text: 'Lovely aquarium!', mine: false, canDelete: true });
+
+    // a third person can read it but not delete it
+    expect((await call(gita.cookie, 'GET', home)).json().notes[0].canDelete).toBe(false);
+    expect((await call(gita.cookie, 'DELETE', `${home}/notes/${note.id}`)).statusCode).toBe(404);
+
+    for (let i = 0; i < 4; i++) await call(ravi.cookie, 'POST', `${home}/notes`, { text: `hi ${i}` });
+    expect((await call(ravi.cookie, 'POST', `${home}/notes`, { text: 'one more' })).statusCode).toBe(429);
+
+    expect((await call(nia.cookie, 'DELETE', `${home}/notes/${note.id}`)).statusCode).toBe(200);
+    const left = (await call(nia.cookie, 'GET', home)).json().notes;
+    expect(left.map((n: { id: string }) => n.id)).not.toContain(note.id);
   });
 });
 

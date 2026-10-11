@@ -2,7 +2,7 @@ import { homeLot, type WorldMap } from '@kynetra/shared';
 import { eq, inArray } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db/client';
-import { buildings, floors, homes, leases, memberships, organizations, teams } from '../db/schema';
+import { buildings, floors, homeInvites, homes, leases, memberships, organizations, teams } from '../db/schema';
 import { requireUser } from '../http/access';
 import { ensureHome } from '../world/homes';
 
@@ -47,6 +47,10 @@ export function registerWorldRoutes(app: FastifyInstance, db: Db) {
     }
 
     const homeRows = await db.select().from(homes).orderBy(homes.lot);
+    const invitedTo = await db
+      .select({ ownerId: homeInvites.ownerId })
+      .from(homeInvites)
+      .where(eq(homeInvites.guestId, user.id));
     const mine = await db
       .select({
         orgId: memberships.orgId,
@@ -71,6 +75,7 @@ export function registerWorldRoutes(app: FastifyInstance, db: Db) {
       you: {
         userId: user.id,
         name: user.name,
+        invitedHomes: invitedTo.map(i => i.ownerId),
         orgs: mine.map(m => {
           const team = teamRows.find(t => t.id === m.teamId);
           return {
