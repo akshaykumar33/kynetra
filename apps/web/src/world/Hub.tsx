@@ -6,9 +6,11 @@ import { useOffice } from '../state';
 import { WorldScene, type WorldSelection } from './Campus';
 import { LobbyScene } from './Lobby';
 import { OfficeScene } from './Office';
+import { HomeView } from './HomeView';
 
 type Place =
-  | { at: 'world' }
+  | { at: 'world'; focusHome?: string }
+  | { at: 'home'; ownerId: string }
   | { at: 'lobby'; buildingId: string }
   | { at: 'riding'; buildingId: string; level: number }
   | { at: 'floor' };
@@ -35,8 +37,18 @@ export function Hub({ orgId = '' }: { orgId?: string }) {
         {world.isError ? `Couldn't load the world: ${world.error.message}` : 'Arriving in the world…'}
       </div>
     );
+  if (place.at === 'home')
+    return <HomeView ownerId={place.ownerId} onLeave={() => setPlace({ at: 'world', focusHome: place.ownerId })} />;
   if (place.at === 'world' || place.at === 'floor')
-    return <WorldView world={world.data} campus={campus} orgId={orgId} go={setPlace} />;
+    return (
+      <WorldView
+        world={world.data}
+        campus={campus}
+        orgId={orgId}
+        focusHome={place.at === 'world' ? place.focusHome : undefined}
+        go={setPlace}
+      />
+    );
   const building = campus.buildings.find(b => b.id === place.buildingId)!;
   return <LobbyView campus={campus} building={building} place={place} go={setPlace} />;
 }
@@ -47,19 +59,25 @@ function WorldView({
   world,
   campus,
   orgId,
+  focusHome,
   go,
 }: {
   world: WorldMap;
   campus: Campus;
   orgId: string;
+  focusHome?: string;
   go: (p: Place) => void;
 }) {
-  // no company yet: arrive looking at your own home
+  // back from a visit: look at that house; no company yet: arrive looking at your own home
   const [selection, setSelection] = useState<WorldSelection>(() => {
-    const home = campus.mine ? undefined : world.homes.find(h => h.mine);
+    const home = focusHome
+      ? world.homes.find(h => h.ownerId === focusHome)
+      : campus.mine
+        ? undefined
+        : world.homes.find(h => h.mine);
     return home ? { kind: 'home', id: home.ownerId } : null;
   });
-  const [district, setDistrict] = useState<District>(campus.mine ? 'business' : 'residential');
+  const [district, setDistrict] = useState<District>(campus.mine && !focusHome ? 'business' : 'residential');
   const myHome = world.homes.find(h => h.mine) ?? null;
   const commons = world.buildings.filter(b => b.district === 'commons');
   const towers = campus.buildings;
@@ -176,7 +194,9 @@ function WorldView({
             />
           )}
           {selBuilding?.district === 'commons' && <CommonsCard name={selBuilding.name} />}
-          {selHome && <HomeCard world={world} home={selHome} />}
+          {selHome && (
+            <HomeCard world={world} home={selHome} onEnter={() => go({ at: 'home', ownerId: selHome.ownerId })} />
+          )}
         </div>
         <div className="hud-bottom">
           <p className="panel hint-panel">
@@ -272,12 +292,12 @@ const REFUSAL = {
 } as const;
 
 /** A house, and whether you may go in: the same canEnter rule the server uses. */
-function HomeCard({ world, home }: { world: WorldMap; home: WorldMap['homes'][number] }) {
+function HomeCard({ world, home, onEnter }: { world: WorldMap; home: WorldMap['homes'][number]; onEnter: () => void }) {
   const entry = canEnter(
     {
       userId: world.you.userId,
       memberships: world.you.orgs.map(o => ({ orgId: o.orgId, role: o.role, teamKey: o.team?.key ?? null })),
-      invitedHomes: [],
+      invitedHomes: world.you.invitedHomes,
     },
     { district: 'residential', homeOwnerId: home.ownerId, homeOpen: home.open },
   );
@@ -285,13 +305,19 @@ function HomeCard({ world, home }: { world: WorldMap; home: WorldMap['homes'][nu
     ? REFUSAL[entry.reason]
     : entry.as === 'owner'
       ? 'Your own place. Nobody comes in unless you invite them or open the door.'
-      : 'The door is open: visitors are welcome.';
+      : home.open
+        ? 'The door is open: visitors are welcome.'
+        : "You're on the guest list.";
   return (
     <section className="panel directory" aria-label={home.name}>
       <p className="eyebrow">{DISTRICT_LABEL.residential}</p>
       <h2>{home.name}</h2>
       <p className="hint">{message}</p>
-      <p className="hint">Going inside homes comes in the next update.</p>
+      {entry.allowed && (
+        <button className="btn" onClick={onEnter}>
+          {entry.as === 'owner' ? 'Go inside' : 'Step inside'}
+        </button>
+      )}
     </section>
   );
 }

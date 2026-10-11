@@ -18,6 +18,8 @@ server stores, and what it never does. Update it in the same PR as any schema ch
 | Invite email, role, expiry, and token **hash** | `invite`               | Letting someone join                     | Admins of that organisation                             |
 | Home name (your first name), lot, open or not  | `home`                 | Your own place in the world              | Everyone signed in, like a name on a street             |
 | Who you invited home                           | `home_invite`          | Letting guests into your home            | You and each guest (their own invite only)              |
+| Your home's style, wall colour and furniture   | `home.decor`           | Showing your home as you made it         | You, your guests, and anyone while your door is open    |
+| Guestbook notes (text, author, time)           | `home_note`            | Notes visitors leave in your home        | Anyone who can enter that home; you can delete any note |
 
 ## Shared across companies
 

@@ -32,11 +32,14 @@ app and server can never disagree.
    tables, commons buildings in the seed, every person gets a home on first visit,
    `GET /api/v1/world` returns the whole map plus where you belong. Campus directory stays
    business-only.
-2. **World scene.** A 3D world view: the commons plaza in the middle, the IT park towers to the
+2. **World scene (done).** A 3D world view: the commons plaza in the middle, the IT park towers to the
    north, the residential street to the south. Land at home (no org) or at your tower (with one).
    Breadcrumb from `describe()`. Walk or fast-travel between districts; doors refuse with
    `canEnter`'s reason.
-3. **Homes.** Enter your home, open/close it, invite people, and talk to visitors (reuse the
+3. **Homes (done, voice still to come).** Enter a home: four styles, wall colour and ten pieces of
+   furniture, windows that follow the viewer's time of day, the door open or closed, guests by
+   email (no account enumeration), and a guestbook (5 notes per visitor per hour). Still to do: talk
+   to visitors (reuse the
    proximity voice room per home).
 4. **Owners and orgs.** Found an organisation from the world (you become owner), lease a free floor
    in a tower, create teams, assign team zones, invite people.

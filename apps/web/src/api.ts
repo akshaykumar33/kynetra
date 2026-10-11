@@ -1,4 +1,4 @@
-import type { FloorLayout, Person, Status, WorldMap } from '@kynetra/shared';
+import type { FloorLayout, HomeDecor, Person, Status, WorldMap } from '@kynetra/shared';
 
 export interface Me {
   user: { id: string; email: string; name: string };
@@ -126,3 +126,23 @@ export function toCampus(world: WorldMap, orgId: string): Campus {
     }));
   return { name: 'Kynetra IT Park', buildings, mine };
 }
+
+export interface HomeView {
+  home: { ownerId: string; name: string; open: boolean; decor: HomeDecor };
+  owner: { name: string };
+  as: 'owner' | 'guest';
+  notes: { id: string; author: string; text: string; createdAt: string; mine: boolean; canDelete: boolean }[];
+  guests: { id: string; name: string }[] | null;
+}
+
+export const homeApi = {
+  get: (ownerId: string) => request<HomeView>('GET', `/api/v1/homes/${ownerId}`),
+  update: (patch: { open?: boolean; name?: string; decor?: HomeDecor }) =>
+    request<{ ok: true }>('PATCH', '/api/v1/homes/mine', patch),
+  invite: (email: string) => request<{ ok: true }>('POST', '/api/v1/homes/mine/guests', { email }),
+  uninvite: (guestId: string) => request<{ ok: true }>('DELETE', `/api/v1/homes/mine/guests/${guestId}`),
+  addNote: (ownerId: string, text: string) =>
+    request<{ id: string }>('POST', `/api/v1/homes/${ownerId}/notes`, { text }),
+  deleteNote: (ownerId: string, noteId: string) =>
+    request<{ ok: true }>('DELETE', `/api/v1/homes/${ownerId}/notes/${noteId}`),
+};
