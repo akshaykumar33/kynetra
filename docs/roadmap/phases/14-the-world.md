@@ -41,7 +41,7 @@ app and server can never disagree.
    email (no account enumeration), and a guestbook (5 notes per visitor per hour). Still to do: talk
    to visitors (reuse the
    proximity voice room per home).
-4. **Owners and orgs.** Found an organisation from the world (you become owner), lease a free floor
+4. **Owners and orgs (done).** Found a company from the world (you become owner, up to 3 each), lease a free floor
    in a tower, create teams, assign team zones, invite people.
 5. **Commons life.** Town Hall events (ties into Phase 13 auditoriums), café drop-in tables, world
    presence counts per district.

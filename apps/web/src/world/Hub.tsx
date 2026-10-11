@@ -1,4 +1,4 @@
-import { canEnter, describe, DISTRICT_LABEL, type District, type WorldMap } from '@kynetra/shared';
+import { canEnter, describe, DISTRICT_LABEL, MAX_OWNED_ORGS, type District, type WorldMap } from '@kynetra/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toCampus, worldApi, type Campus, type CampusBuilding } from '../api';
@@ -6,6 +6,8 @@ import { useOffice } from '../state';
 import { WorldScene, type WorldSelection } from './Campus';
 import { LobbyScene } from './Lobby';
 import { OfficeScene } from './Office';
+import { FoundPanel, ManagePanel } from './OrgPanels';
+import { useActiveOrg } from '../activeOrg';
 import { HomeView } from './HomeView';
 
 type Place =
@@ -92,6 +94,8 @@ function WorldView({
       ? [DISTRICT_LABEL.residential, selHome.name]
       : [DISTRICT_LABEL[district]];
 
+  const [panel, setPanel] = useState<{ kind: 'found' } | { kind: 'manage'; orgId: string; name: string } | null>(null);
+
   const pick = (s: WorldSelection) => {
     setSelection(s);
     if (s?.kind === 'home') setDistrict('residential');
@@ -143,7 +147,16 @@ function WorldView({
               )}
             </div>
           </header>
-          <YouPanel world={world} activeOrgId={orgId} onFocusBuilding={id => pick({ kind: 'building', id })} />
+          <YouPanel
+            world={world}
+            activeOrgId={orgId}
+            onFocusBuilding={id => pick({ kind: 'building', id })}
+            onManage={org => setPanel({ kind: 'manage', ...org })}
+            onFound={() => {
+              setPanel({ kind: 'found' });
+              setDistrict('business');
+            }}
+          />
           <nav className="panel towers" aria-label="Places">
             <div className="segmented" role="group" aria-label="District">
               {DISTRICT_ORDER.map(d => (
@@ -187,14 +200,24 @@ function WorldView({
           </nav>
         </div>
         <div className="hud-side">
-          {selBuilding?.district === 'business' && (
+          {panel?.kind === 'found' && (
+            <FoundPanel
+              towerId={selBuilding?.district === 'business' ? selBuilding.id : null}
+              onPickTower={id => pick({ kind: 'building', id })}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === 'manage' && (
+            <ManagePanel orgId={panel.orgId} orgName={panel.name} onClose={() => setPanel(null)} />
+          )}
+          {!panel && selBuilding?.district === 'business' && (
             <Directory
               building={towers.find(b => b.id === selBuilding.id)!}
               onEnter={() => go({ at: 'lobby', buildingId: selBuilding.id })}
             />
           )}
-          {selBuilding?.district === 'commons' && <CommonsCard name={selBuilding.name} />}
-          {selHome && (
+          {!panel && selBuilding?.district === 'commons' && <CommonsCard name={selBuilding.name} />}
+          {!panel && selHome && (
             <HomeCard world={world} home={selHome} onEnter={() => go({ at: 'home', ownerId: selHome.ownerId })} />
           )}
         </div>
@@ -236,41 +259,65 @@ function YouPanel({
   world,
   activeOrgId,
   onFocusBuilding,
+  onManage,
+  onFound,
 }: {
   world: WorldMap;
   activeOrgId: string;
   onFocusBuilding: (id: string) => void;
+  onManage: (org: { orgId: string; name: string }) => void;
+  onFound: () => void;
 }) {
   const { you } = world;
+  const setOrg = useActiveOrg(s => s.setOrg);
+  const owned = you.orgs.filter(o => o.role === 'owner').length;
   return (
     <section className="panel you" aria-label="You">
       <p className="eyebrow">You</p>
       <h2>{you.name}</h2>
       {you.orgs.length === 0 ? (
         <p className="hint">
-          No company yet. Your home is yours either way; an invite link from a company puts its office on your map.
+          No company yet. Found your own, or open an invite link from one to put its office on your map.
         </p>
       ) : (
         <ul>
           {you.orgs.map(o => {
             const tower = o.office ? world.buildings.find(b => b.id === o.office?.buildingId) : undefined;
+            const active = o.orgId === activeOrgId;
             return (
-              <li key={o.orgId} className={o.orgId === activeOrgId ? 'mine' : undefined}>
+              <li key={o.orgId} className={active ? 'mine' : undefined}>
                 <b>{o.name}</b>
                 <small>
                   {ROLE_LABEL[o.role]}
                   {o.team && ` · ${o.team.name}`}
                   {tower && o.office && ` · ${tower.name}, floor ${o.office.level}`}
                 </small>
-                {tower && (
-                  <button className="link" onClick={() => onFocusBuilding(tower.id)}>
-                    Show on map
-                  </button>
-                )}
+                <span className="actions">
+                  {tower && (
+                    <button className="link" onClick={() => onFocusBuilding(tower.id)}>
+                      Show on map
+                    </button>
+                  )}
+                  {!active && (
+                    <button className="link" onClick={() => setOrg(o.orgId)}>
+                      Switch here
+                    </button>
+                  )}
+                  {(o.role === 'owner' || o.role === 'admin') && (
+                    <button className="link" onClick={() => onManage({ orgId: o.orgId, name: o.name })}>
+                      Manage
+                    </button>
+                  )}
+                </span>
               </li>
             );
           })}
         </ul>
+      )}
+      {owned < MAX_OWNED_ORGS && (
+        <button className="btn ghost found-btn" onClick={onFound}>
+          Found a company
+        </button>
       )}
     </section>
   );

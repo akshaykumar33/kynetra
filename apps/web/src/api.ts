@@ -146,3 +146,29 @@ export const homeApi = {
   deleteNote: (ownerId: string, noteId: string) =>
     request<{ ok: true }>('DELETE', `/api/v1/homes/${ownerId}/notes/${noteId}`),
 };
+
+export interface Vacancy {
+  id: string;
+  name: string;
+  levels: number;
+  vacant: number[];
+}
+
+export interface ManageView {
+  role: 'owner' | 'admin';
+  people: number;
+  teams: { key: string; name: string; people: number }[];
+  roomForTeams: boolean;
+}
+
+export const orgApi = {
+  vacancies: () => request<{ buildings: Vacancy[] }>('GET', '/api/v1/vacancies'),
+  found: (body: { name: string; buildingId: string; level: number; teams: string[] }) =>
+    request<{ orgId: string }>('POST', '/api/v1/orgs', body),
+  manage: (orgId: string) => request<ManageView>('GET', `/api/v1/orgs/${orgId}/manage`),
+  addTeam: (orgId: string, name: string) => request<{ key: string }>('POST', `/api/v1/orgs/${orgId}/teams`, { name }),
+  renameTeam: (orgId: string, key: string, name: string) =>
+    request<{ ok: true }>('PATCH', `/api/v1/orgs/${orgId}/teams/${key}`, { name }),
+  invite: (orgId: string, email: string, role: 'admin' | 'member' | 'guest') =>
+    request<{ link: string }>('POST', `/api/v1/orgs/${orgId}/invites`, { email, role }),
+};

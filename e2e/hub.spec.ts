@@ -89,3 +89,30 @@ test('make your home your own, open the door, and get a visitor', async ({ brows
   // close both 3D pages so they stop rendering during later tests
   await Promise.all([host.close(), guest.close()]);
 });
+
+test('found a company: name it, pick a free floor, and arrive as its owner', async ({ page }) => {
+  await signIn(page, 'founder@e2e.test');
+  const you = page.getByRole('region', { name: 'You' });
+  await you.getByRole('button', { name: 'Found a company' }).click({ timeout: 30_000 });
+
+  const panel = page.getByRole('region', { name: 'Found a company' });
+  await panel.getByLabel('Company name').fill('Kite Studio');
+  await panel.getByLabel('Team 1').fill('Makers');
+  await panel.getByRole('button', { name: '+ Add a team' }).click();
+  await page.keyboard.type('Sellers'); // the new team field takes the cursor
+  await panel.getByRole('button', { name: 'Choose a floor' }).click();
+
+  await panel
+    .getByRole('group', { name: 'Towers' })
+    .getByRole('button', { name: /Orbit One/ })
+    .click();
+  const floors = panel.getByRole('group', { name: 'Free floors in Orbit One' });
+  const level = (await floors.getByRole('button').first().textContent())!.trim();
+  await floors.getByRole('button').first().click();
+  await panel.getByRole('button', { name: `Found Kite Studio on floor ${level}` }).click();
+
+  // straight into onboarding for the new company, with its teams
+  await expect(page.getByText(`Kite Studio · Floor ${level}`, { exact: false })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Makers' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Sellers' })).toBeVisible();
+});

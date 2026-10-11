@@ -1134,3 +1134,102 @@ fieldset {
     width: min(300px, calc(100vw - 32px));
   }
 }
+
+/* ---------- founding and running a company ---------- */
+.found {
+  width: 330px;
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.found h2 {
+  margin: 0;
+  font: 600 18px var(--display);
+}
+.found fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.found legend {
+  font: 700 12px var(--body);
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.found .field {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+  font: 700 12px var(--body);
+  color: var(--ink-soft);
+}
+.found input:not([type='color']),
+.found select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: 14px var(--body);
+  color: var(--ink);
+  background: var(--paper);
+}
+.found .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+.found .chips button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.chips.floors button {
+  min-width: 40px;
+  text-align: center;
+}
+.team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.team-list .field-row {
+  margin: 0;
+}
+.team-list small {
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.invite-link input {
+  width: 100%;
+  font:
+    12px ui-monospace,
+    monospace;
+}
+.you .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.you .found-btn {
+  margin-top: 10px;
+  width: 100%;
+}
+/* side panels live in the middle row of the HUD: fit it and scroll inside, never sideways */
+.hud-side > .panel {
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.found .field-row input,
+.home-owner .field-row input[type='email'] {
+  min-width: 0;
+  flex: 1;
+}

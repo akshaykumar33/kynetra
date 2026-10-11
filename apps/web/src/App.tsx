@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { api, ApiError } from './api';
 import { Onboarding } from './screens/Onboarding';
 import { Notice, SignIn } from './screens/SignIn';
+import { useActiveOrg } from './activeOrg';
 import { useOffice } from './state';
 
 // The 3D hub (campus, lobby, floor) is the heavy part of the app; sign-in and onboarding load without it.
@@ -48,13 +49,14 @@ function Gate() {
   const me = useQuery({ queryKey: ['me'], queryFn: api.me });
   const signedIn = me.isSuccess;
   const invite = useInvite(signedIn);
+  const activeOrgId = useActiveOrg(s => s.orgId);
 
   if (me.isPending) return <Notice title="Opening your office…" />;
   if (me.error instanceof ApiError && me.error.status === 401) return <SignIn />;
   if (me.isError) return <Notice title="Can't reach the office" body={me.error.message} retry={() => me.refetch()} />;
   if (invite.isPending) return <Notice title="Joining the office…" />;
 
-  const org = me.data.orgs[0];
+  const org = me.data.orgs.find(o => o.id === activeOrgId) ?? me.data.orgs[0];
   // no company yet: you still live in the world, at your own home
   if (!org) {
     if (invite.isError) return <Notice title="That invite didn't work" body={invite.error.message} signOut />;
@@ -64,7 +66,8 @@ function Gate() {
       </Suspense>
     );
   }
-  return <OrgHome orgId={org.id} onboarded={org.onboarded} />;
+  // keyed so switching companies starts that company's office fresh
+  return <OrgHome key={org.id} orgId={org.id} onboarded={org.onboarded} />;
 }
 
 function OrgHome({ orgId, onboarded }: { orgId: string; onboarded: boolean }) {
