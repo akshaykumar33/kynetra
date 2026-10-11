@@ -355,6 +355,125 @@ describe('homes', () => {
   });
 });
 
+describe('founding companies', () => {
+  let founder: string;
+  let rival: string;
+  let tower: { id: string; name: string; levels: number; vacant: number[] };
+  beforeAll(async () => {
+    founder = await signIn('founder@orgs.test', 'Fay Founder');
+    rival = await signIn('rival@orgs.test', 'Rex Rival');
+    const { buildings } = (await call(founder, 'GET', '/api/v1/vacancies')).json();
+    tower = buildings.find((b: { name: string }) => b.name === 'Helix Tower');
+  });
+
+  it('lists free floors, never the ones already leased', async () => {
+    expect(tower.vacant.length).toBeGreaterThan(0);
+    const world = (await call(founder, 'GET', '/api/v1/world')).json();
+    const leased = world.buildings
+      .find((b: { id: string }) => b.id === tower.id)
+      .tenants.map((t: { level: number }) => t.level);
+    for (const level of leased) expect(tower.vacant).not.toContain(level);
+  });
+
+  it('founds a company with its floor and teams, and makes you the owner', async () => {
+    const level = tower.vacant[0];
+    const res = await call(founder, 'POST', '/api/v1/orgs', {
+      name: 'Moonbase Labs',
+      buildingId: tower.id,
+      level,
+      teams: ['Rockets', 'Mission Control'],
+    });
+    expect(res.statusCode).toBe(201);
+    const { orgId } = res.json();
+
+    const me = (await call(founder, 'GET', '/api/v1/me')).json();
+    expect(me.orgs).toContainEqual({ id: orgId, name: 'Moonbase Labs', role: 'owner', onboarded: false });
+    const floor = (await call(founder, 'GET', `/api/v1/orgs/${orgId}/floor`)).json();
+    expect(floor.floor.level).toBe(level);
+    expect(floor.teams.map((t: { name: string }) => t.name).sort()).toEqual(['Mission Control', 'Rockets']);
+    const teamZones = floor.layout.zones
+      .filter((z: { kind: string }) => z.kind === 'team')
+      .map((z: { name: string }) => z.name);
+    expect(teamZones).toEqual(['Rockets', 'Mission Control', 'Open desks']);
+
+    // the world now shows the company on that floor
+    const world = (await call(rival, 'GET', '/api/v1/world')).json();
+    expect(world.buildings.find((b: { id: string }) => b.id === tower.id).tenants).toContainEqual({
+      level,
+      orgId,
+      name: 'Moonbase Labs',
+    });
+  });
+
+  it('refuses a floor someone already leases', async () => {
+    const taken = tower.vacant[0];
+    const res = await call(rival, 'POST', '/api/v1/orgs', {
+      name: 'Copycat Inc',
+      buildingId: tower.id,
+      level: taken,
+      teams: ['Cats'],
+    });
+    expect(res.statusCode).toBe(409);
+    // and nothing half-made is left behind
+    expect((await call(rival, 'GET', '/api/v1/me')).json().orgs).toEqual([]);
+  });
+
+  it('refuses floors that do not exist and towers outside the IT park', async () => {
+    const tooHigh = await call(rival, 'POST', '/api/v1/orgs', {
+      name: 'Sky Co',
+      buildingId: tower.id,
+      level: tower.levels + 1,
+      teams: ['Up'],
+    });
+    expect(tooHigh.statusCode).toBe(400);
+    const world = (await call(rival, 'GET', '/api/v1/world')).json();
+    const hall = world.buildings.find((b: { district: string }) => b.district === 'commons');
+    const commons = await call(rival, 'POST', '/api/v1/orgs', {
+      name: 'Town Co',
+      buildingId: hall.id,
+      level: 1,
+      teams: ['Up'],
+    });
+    expect(commons.statusCode).toBe(404);
+  });
+
+  it('lets owners add and rename teams until the floor is full, and members cannot', async () => {
+    const orgId = (await call(founder, 'GET', '/api/v1/me'))
+      .json()
+      .orgs.find((o: { name: string }) => o.name === 'Moonbase Labs').id;
+    expect((await call(founder, 'POST', `/api/v1/orgs/${orgId}/teams`, { name: 'rockets' })).statusCode).toBe(409);
+    expect((await call(founder, 'POST', `/api/v1/orgs/${orgId}/teams`, { name: 'Ground Crew' })).statusCode).toBe(201);
+    expect((await call(founder, 'POST', `/api/v1/orgs/${orgId}/teams`, { name: 'One Too Many' })).statusCode).toBe(409);
+
+    const manage = (await call(founder, 'GET', `/api/v1/orgs/${orgId}/manage`)).json();
+    expect(manage).toMatchObject({ role: 'owner', people: 1, roomForTeams: false });
+    const rockets = manage.teams.find((t: { name: string }) => t.name === 'Rockets');
+    expect(rockets.people).toBe(1);
+    expect(
+      (await call(founder, 'PATCH', `/api/v1/orgs/${orgId}/teams/${rockets.key}`, { name: 'Launch' })).statusCode,
+    ).toBe(200);
+    const zones = (await call(founder, 'GET', `/api/v1/orgs/${orgId}/floor`)).json().layout.zones;
+    expect(zones.map((z: { name: string }) => z.name)).toContain('Launch');
+
+    // a non-member sees nothing; the founder's rival can't manage it
+    expect((await call(rival, 'GET', `/api/v1/orgs/${orgId}/manage`)).statusCode).toBe(404);
+    expect((await call(rival, 'POST', `/api/v1/orgs/${orgId}/teams`, { name: 'Sneaky' })).statusCode).toBe(404);
+  });
+
+  it('caps how many companies one person can found', async () => {
+    const { buildings } = (await call(founder, 'GET', '/api/v1/vacancies')).json();
+    const free = buildings.flatMap((b: { id: string; vacant: number[] }) =>
+      b.vacant.map(level => ({ buildingId: b.id, level })),
+    );
+    const codes = [];
+    for (let i = 0; i < 3; i++) {
+      const res = await call(founder, 'POST', '/api/v1/orgs', { name: `Spinoff ${i}`, ...free[i], teams: ['Core'] });
+      codes.push(res.statusCode);
+    }
+    expect(codes).toEqual([201, 201, 409]);
+  });
+});
+
 describe('voice tokens', () => {
   const claims = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
 

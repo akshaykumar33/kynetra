@@ -44,7 +44,7 @@ const INVITE_TTL_DAYS = 7;
 const DEFAULT_AVATAR = { body: '#2f6f8f', skin: '#d6a07a', hair: '#3a2416' };
 
 /** The org's current lease and its newest published layout. One office per org until Phase 07. */
-async function currentOffice(db: Db, orgId: string) {
+export async function currentOffice(db: Db, orgId: string) {
   const [row] = await db
     .select({ lease: leases, floor: floors, layout: floorLayouts })
     .from(leases)
