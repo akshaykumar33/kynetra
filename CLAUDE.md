@@ -20,6 +20,7 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
   - `proximity.ts`: who can hear whom. `knock.ts`: meeting room door state.
   - `voice.ts`: who hears whom (`voiceTargets`, 3.2 m in / 4.0 m out, walls, focus) and `voiceVolume`.
   - `realtime.ts`: the live presence wire protocol (zod schemas both sides parse) and `acceptMove`, the server movement check.
+  - `world.ts`: the world's places (districts, homes, org floors, team zones) and the one access rule, `canEnter` / `canManage`.
 - `apps/web/src/`
   - `world/`: 3D scenes. `Hub` moves you campus → lobby → lift → floor. `Campus` (IT park towers, roads, traffic, trees), `Lobby`, and the floor (`Office`, `Floor`, `People`, `Avatar`).
   - `hud/Hud.tsx`: 2D overlay.
@@ -34,6 +35,7 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
   - `auth/`: sessions (hashed tokens), OIDC and dev sign-in. `http/access.ts`: `requireMember`, the one org access check.
   - `realtime/`: `/realtime` WebSocket (session + Origin checked before upgrade) and `FloorRoom`, one live floor per org: 10 Hz delta snapshots, server-checked moves, 30 s reconnect grace.
   - `routes/campus.ts`: the IT park directory (towers, floors, tenant names, which floor is yours).
+  - `routes/world.ts`: `GET /api/v1/world`, the whole map and where you belong; `world/homes.ts` gives each person a home.
   - `routes/voice.ts`: LiveKit tokens scoped to the member's floor room (mic, camera, screen share).
   - `routes/api.ts`: `/api/v1`. Errors are always `{ error: { code, message } }`.
 - `e2e/`: Playwright specs. `scripts/check-budget.mjs`: initial JS budget (350 KB gzip).

@@ -20,6 +20,8 @@ export function registerCampusRoutes(app: FastifyInstance, db: Db) {
       .leftJoin(floors, eq(floors.buildingId, buildings.id))
       .leftJoin(leases, eq(leases.floorId, floors.id))
       .leftJoin(organizations, eq(organizations.id, leases.orgId))
+      // the directory board lists the IT park's towers, not the commons
+      .where(eq(buildings.district, 'business'))
       .orderBy(buildings.name, floors.level);
 
     const byId = new Map<

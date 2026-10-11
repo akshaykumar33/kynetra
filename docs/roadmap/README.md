@@ -47,6 +47,7 @@ velocity is measured. Re-forecast after Phase 1.
 | 11  | [Production readiness and beta](phases/11-production-and-beta.md)               | it isn't safe or reliable enough for a real team                                                 | L    | Not started                                                                                                                    |
 | 12  | [City map arrival (optional)](phases/12-map-arrival.md)                         | the outer "arrive at the hub" layer adds no value                                                | M    | Not started                                                                                                                    |
 | 13  | [Virbela virtual campus features](phases/13-virbela-virtual-campus-features.md) | it lacks enterprise virtual campus depth (in-world screens, auditoriums, seating, audio bubbles) | L    | Not started (benchmark: `docs/research/virbela-benchmark.md`)                                                                  |
+| 14  | [The world](phases/14-the-world.md)                                             | it stays one company's office instead of a world people live in                                  | L    | **In progress** (slice 1 done)                                                                                                 |
 
 ## Critical path
 

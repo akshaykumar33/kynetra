@@ -228,6 +228,45 @@ describe('campus', () => {
   });
 });
 
+describe('world', () => {
+  it('shows every district and where I belong', async () => {
+    const cookie = await signIn('lena@northgate.test');
+    const res = await call(cookie, 'GET', '/api/v1/world');
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    const districts = new Set(body.buildings.map((b: { district: string }) => b.district));
+    expect(districts).toEqual(new Set(['business', 'commons']));
+    const [northgate] = body.you.orgs;
+    expect(northgate).toMatchObject({ name: 'Northgate', team: { key: expect.any(String) } });
+    const tower = body.buildings.find((b: { id: string }) => b.id === northgate.office.buildingId);
+    expect(tower.name).toBe('Northgate Tower');
+    expect(northgate.office.level).toBe(4);
+    expect(body.homes.filter((h: { mine: boolean }) => h.mine)).toHaveLength(1);
+  });
+
+  it('gives a person with no org a home and a world to stand in', async () => {
+    const cookie = await signIn('solo@nowhere.test', 'Sol Indie');
+    const first = (await call(cookie, 'GET', '/api/v1/world')).json();
+    expect(first.you.orgs).toEqual([]);
+    const home = first.homes.find((h: { mine: boolean }) => h.mine);
+    expect(home).toMatchObject({ name: "Sol's home", open: false });
+    // visiting again keeps the same lot
+    const again = (await call(cookie, 'GET', '/api/v1/world')).json();
+    expect(again.homes.find((h: { mine: boolean }) => h.mine)).toEqual(home);
+  });
+
+  it('never gives two people the same lot', async () => {
+    const cookie = await signIn('lena@northgate.test');
+    const { homes } = (await call(cookie, 'GET', '/api/v1/world')).json();
+    const spots = homes.map((h: { x: number; z: number }) => `${h.x},${h.z}`);
+    expect(new Set(spots).size).toBe(spots.length);
+  });
+
+  it('needs sign-in', async () => {
+    expect((await app.inject({ method: 'GET', url: '/api/v1/world' })).statusCode).toBe(401);
+  });
+});
+
 describe('voice tokens', () => {
   const claims = (jwt: string) => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
 

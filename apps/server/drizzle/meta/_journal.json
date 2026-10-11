@@ -15,6 +15,13 @@
       "when": 1791658302716,
       "tag": "0001_campus_buildings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791697462259,
+      "tag": "0002_world_homes",
+      "breakpoints": true
     }
   ]
 }

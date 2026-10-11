@@ -9,6 +9,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  boolean,
   integer,
   real,
 } from 'drizzle-orm/pg-core';
@@ -24,6 +25,7 @@ const updatedAt = () => timestamp('updated_at', { withTimezone: true }).notNull(
 export const roleEnum = pgEnum('role', ['owner', 'admin', 'member', 'guest']);
 export const statusEnum = pgEnum('presence_status', ['available', 'meeting', 'focus', 'away']);
 export const workModeEnum = pgEnum('work_mode', ['office', 'remote']);
+export const districtEnum = pgEnum('district', ['commons', 'business', 'residential']);
 
 export const organizations = pgTable('organization', {
   id: id(),
@@ -109,6 +111,8 @@ export const buildings = pgTable('building', {
   width: real('width').notNull().default(24),
   depth: real('depth').notNull().default(24),
   levels: integer('levels').notNull().default(8),
+  // what the building is for; decides who may walk in (see canEnter in @kynetra/shared)
+  district: districtEnum('district').notNull().default('business'),
   // facade colour, a #rrggbb hex
   color: text('color').notNull().default('#8fb3c9'),
   createdAt: createdAt(),
@@ -199,4 +203,37 @@ export const invites = pgTable(
     createdAt: createdAt(),
   },
   t => [index('invite_org_idx').on(t.orgId)],
+);
+
+/**
+ * Every person's own place in the world, in the residential district. It exists whether or not
+ * they belong to any org. `lot` is the plot number; its position comes from homeLot() in shared.
+ */
+export const homes = pgTable(
+  'home',
+  {
+    ownerId: uuid('owner_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    lot: integer('lot').notNull(),
+    // open homes let anyone visit; closed ones only the owner and invited guests
+    open: boolean('open').notNull().default(false),
+    createdAt: createdAt(),
+  },
+  t => [uniqueIndex('home_lot_idx').on(t.lot)],
+);
+
+export const homeInvites = pgTable(
+  'home_invite',
+  {
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => homes.ownerId, { onDelete: 'cascade' }),
+    guestId: uuid('guest_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  t => [primaryKey({ columns: [t.ownerId, t.guestId] }), index('home_invite_guest_idx').on(t.guestId)],
 );

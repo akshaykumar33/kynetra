@@ -1,4 +1,5 @@
 import { northgateFloor } from '@kynetra/shared';
+import { ensureHome } from '../world/homes';
 import { eq } from 'drizzle-orm';
 import type { Db } from './client';
 import {
@@ -188,6 +189,10 @@ export async function seedNorthgate(db: Db) {
     const [you] = await tx.insert(users).values({ email: NEW_MEMBER_EMAIL, name: 'Alex Morgan' }).returning();
     await tx.insert(memberships).values({ orgId: org.id, userId: you.id, role: 'member', title: 'Designer' });
     await seedCampus(tx as unknown as Db, building.id);
+    await seedCommons(tx as unknown as Db);
+    // Everyone in the demo gets a home; Asha leaves hers open so there is one to visit.
+    for (const u of await tx.select({ id: users.id, name: users.name }).from(users))
+      await ensureHome(tx as unknown as Db, u.id, u.name, u.name === 'Asha Rao');
     return org.id;
   });
 }
@@ -284,4 +289,15 @@ async function addTenant(db: Db, buildingId: string, level: number, name: string
   await db
     .insert(floorLayouts)
     .values({ leaseId: lease.id, version: 1, layout: northgateFloor, publishedAt: new Date() });
+}
+
+// The commons: public places between the towers and the homes, open to everyone in the world.
+const COMMONS = [
+  { name: 'Town Hall', campusX: 0, campusZ: 90, width: 36, depth: 24, levels: 3, color: '#d8c3a5' },
+  { name: 'Corner Café', campusX: -42, campusZ: 92, width: 16, depth: 14, levels: 1, color: '#e0a96d' },
+  { name: 'Lounge & Library', campusX: 42, campusZ: 92, width: 20, depth: 16, levels: 2, color: '#a5c4b8' },
+];
+
+async function seedCommons(db: Db) {
+  await db.insert(buildings).values(COMMONS.map(c => ({ ...c, district: 'commons' as const })));
 }

@@ -16,11 +16,17 @@ server stores, and what it never does. Update it in the same PR as any schema ch
 | Avatar colours                                 | `membership.avatar`    | Drawing your avatar                      | Members of that organisation                            |
 | Desk assignment                                | `desk_assignment`      | Your desk on the floor                   | Members of that organisation                            |
 | Invite email, role, expiry, and token **hash** | `invite`               | Letting someone join                     | Admins of that organisation                             |
+| Home name (your first name), lot, open or not  | `home`                 | Your own place in the world              | Everyone signed in, like a name on a street             |
+| Who you invited home                           | `home_invite`          | Letting guests into your home            | You and each guest (their own invite only)              |
 
 ## Shared across companies
 
 The campus directory shows every tenant company's **name** and which floor it is on, as a real
 lobby directory board would. Nothing about a company's people is visible to other companies.
+
+The world map shows every home on the residential street with its owner's **first name**, and
+whether it is open to visitors. It shows nothing about which companies that person works for, and
+a closed home can only be entered by its owner and the people they invite.
 
 ## Never collected
 

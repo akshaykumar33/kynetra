@@ -9,6 +9,7 @@ import { AppError, registerErrorHandler } from './http/errors';
 import { registerRealtime } from './realtime/routes';
 import { registerApiRoutes } from './routes/api';
 import { registerCampusRoutes } from './routes/campus';
+import { registerWorldRoutes } from './routes/world';
 import { registerVoiceRoutes } from './routes/voice';
 
 export const CSRF_HEADER = 'x-kynetra-csrf';
@@ -41,6 +42,7 @@ export async function buildApp({ db, config }: { db: Db; config: Config }) {
   registerApiRoutes(app, db, config);
   registerVoiceRoutes(app, db, config);
   registerCampusRoutes(app, db);
+  registerWorldRoutes(app, db);
   await registerRealtime(app, db, config);
   return app;
 }
