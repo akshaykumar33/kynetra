@@ -1,5 +1,5 @@
 {
-  "name": "@knovra/web",
+  "name": "@kynetra/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@knovra/shared": "*",
+    "@kynetra/shared": "*",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@tanstack/react-query": "^5.104.1",

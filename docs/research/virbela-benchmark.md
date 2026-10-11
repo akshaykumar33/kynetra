@@ -7,7 +7,7 @@ Owner request: _"https://www.virbela.com/ this is how the features should have b
 
 ## 1. Executive Summary
 
-Virbela is the enterprise benchmark for 3D immersive virtual workplaces and events. While Knovra started with a lean, single-floor office presence model, Virbela demonstrates how spatial software becomes an indispensable daily workplace:
+Virbela is the enterprise benchmark for 3D immersive virtual workplaces and events. While Kynetra started with a lean, single-floor office presence model, Virbela demonstrates how spatial software becomes an indispensable daily workplace:
 
 1. **Rich Spatial Diversity**: Moving seamlessly between private offices, open team suites, all-hands auditoriums, expo halls, and outdoor social plazas.
 2. **In-World Presentation**: Projecting live screens, slides, and websites onto physical 3D monitors and stage boards instead of relying solely on 2D pop-up overlays.
@@ -16,13 +16,13 @@ Virbela is the enterprise benchmark for 3D immersive virtual workplaces and even
 5. **Presenter Broadcast / Megaphone**: Allowing stage speakers in large auditoriums or town halls to project their voice across the entire venue regardless of distance attenuation.
 6. **Fast-Travel Teleportation**: Instant directory-based navigation to any room, building, or colleague.
 
-This document analyzes Virbela's feature set and defines how Knovra will adopt, implement, and verify these capabilities.
+This document analyzes Virbela's feature set and defines how Kynetra will adopt, implement, and verify these capabilities.
 
 ---
 
-## 2. Virbela Feature Architecture vs. Knovra Mapping
+## 2. Virbela Feature Architecture vs. Kynetra Mapping
 
-| Feature Domain                         | Virbela Specification                                                                                                             | Knovra Current State                                                | Knovra Implementation Target                                                                                                           |
+| Feature Domain                         | Virbela Specification                                                                                                             | Kynetra Current State                                               | Kynetra Implementation Target                                                                                                          |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | **In-World Presentation Displays**     | Physical 3D presentation screens in boardrooms & auditoriums display live WebRTC screen shares, slides, and web content.          | Screen share is displayed as a floating 2D HUD window modal.        | Attach LiveKit `remoteVideoTrack` to a Three.js `VideoTexture` rendered on the physical 3D conference room & auditorium wall monitors. |
 | **Auditorium & Town Hall**             | Large-scale theater with raised stadium seating, a raised stage, podium, multiple projection screens, and audience seating.       | Single floor layout with standard 4/6 desk pods.                    | Dedicated Auditorium scene reachable via Campus / Lift, with 60+ seats, stage, podium, and presentation boards.                        |
@@ -35,7 +35,7 @@ This document analyzes Virbela's feature set and defines how Knovra will adopt, 
 
 ---
 
-## 3. Detailed Technical Blueprint for Knovra
+## 3. Detailed Technical Blueprint for Kynetra
 
 ### 3.1 In-World 3D Video Wall Screens
 

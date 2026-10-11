@@ -5,7 +5,7 @@ import type { Db } from '../db/client';
 import { sessions, users } from '../db/schema';
 import { hashToken, newToken } from './tokens';
 
-export const SESSION_COOKIE = 'knovra_sid';
+export const SESSION_COOKIE = 'kynetra_sid';
 
 export interface SessionUser {
   id: string;

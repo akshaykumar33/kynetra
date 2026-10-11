@@ -1,4 +1,4 @@
-import { northgateFloor } from '@knovra/shared';
+import { northgateFloor } from '@kynetra/shared';
 import { eq } from 'drizzle-orm';
 import type { Db } from './client';
 import {

@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 
 // The API runs separately (apps/server); in development Vite forwards these paths to it so the
 // browser sees one origin and the session cookie stays first-party.
-const api = process.env.KNOVRA_API ?? 'http://localhost:4000';
+const api = process.env.KYNETRA_API ?? 'http://localhost:4000';
 
 export default defineConfig({
   plugins: [react()],

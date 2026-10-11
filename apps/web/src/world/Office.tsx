@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Hud } from '../hud/Hud';
 import { Floor } from './Floor';
 import { Colleagues, Player } from './People';
-import { SPAWN } from '@knovra/shared';
+import { SPAWN } from '@kynetra/shared';
 import { useEffect } from 'react';
 import { connect, disconnect } from '../realtime';
 import { leaveVoice } from '../voice';

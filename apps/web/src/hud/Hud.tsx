@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { DEMO, personById, useOffice, walkTo, walkToPerson } from '../state';
 import { STATUS_COLOR } from '../world/Avatar';
 import { ScreenPanel, VoicePanel } from './Voice';
-import { zones, type Status } from '@knovra/shared';
+import { zones, type Status } from '@kynetra/shared';
 
 const STATUS_LABEL: Record<Status, string> = {
   available: 'Available',

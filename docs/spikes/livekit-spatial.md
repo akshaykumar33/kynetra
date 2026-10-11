@@ -1,6 +1,6 @@
 # Spike: LiveKit for proximity voice
 
-**Question:** can LiveKit carry Knovra's walk-up voice: everyone on a floor connected, each person
+**Question:** can LiveKit carry Kynetra's walk-up voice: everyone on a floor connected, each person
 hearing only the people within 3.2 m, with volume falling off by distance?
 
 **Timebox:** one session (2026-10-10). **Decision: GO**, with the conditions at the end.

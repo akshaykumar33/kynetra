@@ -1,4 +1,4 @@
-import type { FloorLayout, Person, Status } from '@knovra/shared';
+import type { FloorLayout, Person, Status } from '@kynetra/shared';
 
 export interface Me {
   user: { id: string; email: string; name: string };
@@ -45,7 +45,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     credentials: 'same-origin',
     headers: {
       // required by the server on every state-changing request (CSRF guard)
-      'x-knovra-csrf': '1',
+      'x-kynetra-csrf': '1',
       ...(body === undefined ? {} : { 'content-type': 'application/json' }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),

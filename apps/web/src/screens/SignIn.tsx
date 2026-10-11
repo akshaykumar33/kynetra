@@ -21,7 +21,7 @@ export function SignIn() {
   return (
     <main className="screen">
       <div className="card">
-        <p className="eyebrow">Knovra Office</p>
+        <p className="eyebrow">Kynetra Office</p>
         <h1>Come on in</h1>
         <p className="lede">Sign in with your work account to join your team's floor.</p>
 

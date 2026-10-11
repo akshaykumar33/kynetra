@@ -56,6 +56,6 @@ export function registerCampusRoutes(app: FastifyInstance, db: Db) {
       byId.get(b.id)!.floors.push({ level: r.level, tenant: r.tenant, mine: isMine });
       if (isMine) mine = { buildingId: b.id, level: r.level };
     }
-    return { name: 'Knovra IT Park', buildings: [...byId.values()], mine };
+    return { name: 'Kynetra IT Park', buildings: [...byId.values()], mine };
   });
 }

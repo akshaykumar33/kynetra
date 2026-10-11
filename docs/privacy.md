@@ -1,6 +1,6 @@
-# What Knovra Office stores
+# What Kynetra Office stores
 
-Knovra Office should feel like an office, not like being watched. This page lists everything the
+Kynetra Office should feel like an office, not like being watched. This page lists everything the
 server stores, and what it never does. Update it in the same PR as any schema change.
 
 ## Stored

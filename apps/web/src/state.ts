@@ -1,4 +1,4 @@
-import { findPath, SPAWN, type KnockState, type Person, type Status } from '@knovra/shared';
+import { findPath, SPAWN, type KnockState, type Person, type Status } from '@kynetra/shared';
 import { Vector3 } from 'three';
 import { create } from 'zustand';
 import { api, type FloorData } from './api';

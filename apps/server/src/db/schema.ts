@@ -12,7 +12,7 @@ import {
   integer,
   real,
 } from 'drizzle-orm/pg-core';
-import type { FloorLayout } from '@knovra/shared';
+import type { FloorLayout } from '@kynetra/shared';
 
 const id = () =>
   uuid('id')

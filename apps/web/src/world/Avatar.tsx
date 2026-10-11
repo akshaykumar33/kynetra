@@ -2,7 +2,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type { Group } from 'three';
-import type { Status } from '@knovra/shared';
+import type { Status } from '@kynetra/shared';
 
 const STATUS_COLOR: Record<Status, string> = {
   available: '#3fb67d',

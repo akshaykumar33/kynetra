@@ -1,6 +1,6 @@
-# Knovra Office roadmap
+# Kynetra Office roadmap
 
-Knovra Office is a virtual office where remote and hybrid teams share one floor, so working from
+Kynetra Office is a virtual office where remote and hybrid teams share one floor, so working from
 home feels like being in the office. This folder is the single source of truth for delivery: every
 session, human or agent, starts here.
 
@@ -24,7 +24,7 @@ session, human or agent, starts here.
 | Data        | Hard-coded in `src/world/layout.ts`                                        |
 | Hosting     | Local dev only                                                             |
 | Branches    | `feat/office-virtual-office-prototype` (prototype, not pushed or merged)   |
-| Archive     | Previous product at tag `archive/knovra-v1`                                |
+| Origin      | Started in the knovra repo (2026-10-10), moved to Kynetra (2026-10-11)     |
 
 ## Phases
 
@@ -82,7 +82,7 @@ timeboxed spike during Phase 03 (see the Phase 03 file).
 
 | Date       | Decision                                                                                                                                                             | Options considered                                   | Why                                                                                                                                                                               | Decided by        |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| 2026-10-10 | Reuse the knovra repo; archive v1 at tag `archive/knovra-v1`                                                                                                         | New repo / reuse                                     | Keeps one repo and history                                                                                                                                                        | Owner             |
+| 2026-10-11 | Move the office into the Kynetra repo; knovra returns to its v1 product                                                                                              | New repo / reuse                                     | Keeps one repo and history                                                                                                                                                        | Owner             |
 | 2026-10-10 | Stylised avatars built from primitives                                                                                                                               | Ready Player Me realistic / stylised                 | Warmer "home" feel, light on phones                                                                                                                                               | Owner             |
 | 2026-10-10 | Phase 01 adds A* pathfinding for walk-to (not in the original scope)                                                                                                 | Leave walk-to broken / fix now                       | The e2e gate showed walk-to got stuck on furniture; it is a bug in existing behaviour                                                                                             | Owner (free hand) |
 | 2026-10-10 | Use PGlite (Postgres in Node) for local dev and tests; real Postgres via DATABASE_URL                                                                                | Docker Postgres / hosted dev DB / PGlite             | Docker was not running and no hosted DB exists yet; PGlite runs the same migrations with zero setup                                                                               | Owner (free hand) |

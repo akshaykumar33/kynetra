@@ -39,7 +39,7 @@ export default defineConfig({
     },
     {
       // a fresh in-memory database, seeded with the Northgate demo office, on every run
-      command: 'npm run start -w @knovra/server',
+      command: 'npm run start -w @kynetra/server',
       url: `http://localhost:${API_PORT}/health`,
       reuseExistingServer: false,
       timeout: 120_000,
@@ -56,11 +56,11 @@ export default defineConfig({
       },
     },
     {
-      command: `npm run dev -w @knovra/web -- --port ${WEB_PORT} --strictPort`,
+      command: `npm run dev -w @kynetra/web -- --port ${WEB_PORT} --strictPort`,
       url: `http://localhost:${WEB_PORT}`,
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { KNOVRA_API: `http://localhost:${API_PORT}` },
+      env: { KYNETRA_API: `http://localhost:${API_PORT}` },
     },
   ],
 });

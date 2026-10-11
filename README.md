@@ -1,4 +1,4 @@
-# Knovra Office
+# Kynetra Office
 
 A virtual office for remote and hybrid teams. Everyone shares one 3D floor: you see who is in,
 walk up to someone to talk, knock on a meeting room, and grab coffee in the lounge.
@@ -34,4 +34,4 @@ the arrow keys, or click the floor. Drag to look around.
 4. Hybrid bridge: in-office check-in and an office display of the virtual floor
 5. Campus, building and city map as the outer layer
 
-The previous Knovra codebase is archived at tag `archive/knovra-v1`.
+This work started in the knovra repository on 2026-10-10 and moved here on 2026-10-11; knovra keeps its own product.

@@ -6,7 +6,7 @@
 
 ## Goal
 
-Elevate Knovra to the enterprise standard proven by Virbela: in-world 3D presentation screens, town hall auditoriums with presenter broadcast, acoustic private huddle bubbles, interactive seating, avatar emotes, and fast-travel directory teleportation.
+Elevate Kynetra to the enterprise standard proven by Virbela: in-world 3D presentation screens, town hall auditoriums with presenter broadcast, acoustic private huddle bubbles, interactive seating, avatar emotes, and fast-travel directory teleportation.
 
 ## In scope
 

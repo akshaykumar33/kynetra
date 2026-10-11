@@ -11,7 +11,7 @@ import { registerApiRoutes } from './routes/api';
 import { registerCampusRoutes } from './routes/campus';
 import { registerVoiceRoutes } from './routes/voice';
 
-export const CSRF_HEADER = 'x-knovra-csrf';
+export const CSRF_HEADER = 'x-kynetra-csrf';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** Builds the API app. Kept separate from main.ts so tests can inject requests without a port. */

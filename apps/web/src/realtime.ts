@@ -1,4 +1,4 @@
-import { INTERP_DELAY_MS, ServerMessage, TICK_MS, type MemberState, type Status } from '@knovra/shared';
+import { INTERP_DELAY_MS, ServerMessage, TICK_MS, type MemberState, type Status } from '@kynetra/shared';
 import { player, useOffice } from './state';
 
 interface Sample {

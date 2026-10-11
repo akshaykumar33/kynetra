@@ -14,7 +14,7 @@ import {
   zoneAt,
   zones,
   type Person,
-} from '@knovra/shared';
+} from '@kynetra/shared';
 import { sampleAt } from '../realtime';
 import { DEMO, followTick, player, positions, useOffice } from '../state';
 import { VideoBubble } from '../hud/Voice';

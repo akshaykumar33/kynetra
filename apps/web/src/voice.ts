@@ -1,4 +1,4 @@
-import { isInsideRoom, VOICE_PREFETCH, voiceTargets, voiceVolume } from '@knovra/shared';
+import { isInsideRoom, VOICE_PREFETCH, voiceTargets, voiceVolume } from '@kynetra/shared';
 import {
   ConnectionState,
   LocalAudioTrack,

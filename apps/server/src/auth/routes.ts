@@ -30,7 +30,7 @@ function providers(config: Config): Record<string, Provider> {
   return out;
 }
 
-const FLOW_COOKIE = 'knovra_oidc';
+const FLOW_COOKIE = 'kynetra_oidc';
 
 export function registerAuthRoutes(app: FastifyInstance, db: Db, config: Config) {
   const configured = providers(config);

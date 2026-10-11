@@ -7,7 +7,7 @@ test('arrive at the IT park, find your tower, take the lift to your floor', asyn
   await signIn(page, 'noah@northgate.test');
 
   // the campus: six towers, yours called out
-  await expect(page.getByRole('heading', { name: 'Knovra IT Park' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Kynetra IT Park' })).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('canvas')).toBeVisible();
   const towers = page.getByRole('navigation', { name: 'Towers' });
   await expect(towers.getByRole('button')).toHaveCount(6);
@@ -41,6 +41,6 @@ test('arrive at the IT park, find your tower, take the lift to your floor', asyn
   await page.getByRole('button', { name: '← Lobby' }).click();
   await expect(page.getByRole('heading', { name: 'Northgate Tower' })).toBeVisible();
   await page.getByRole('button', { name: '← Back to the campus' }).click();
-  await expect(page.getByRole('heading', { name: 'Knovra IT Park' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Kynetra IT Park' })).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -22,10 +22,10 @@ async function signIn(email: string, name = '') {
     payload: { email, name },
   });
   expect(res.statusCode).toBe(200);
-  const cookie = res.cookies.find(c => c.name === 'knovra_sid');
+  const cookie = res.cookies.find(c => c.name === 'kynetra_sid');
   expect(cookie?.httpOnly).toBe(true);
   expect(cookie?.sameSite).toBe('Lax');
-  return `knovra_sid=${cookie!.value}`;
+  return `kynetra_sid=${cookie!.value}`;
 }
 
 function call(cookie: string, method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) {

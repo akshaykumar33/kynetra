@@ -6,11 +6,11 @@
 // Prints the server's tick time percentiles from /debug/realtime (not available in production).
 import WebSocket from 'ws';
 
-const API = process.env.KNOVRA_API ?? 'http://localhost:4000';
+const API = process.env.KYNETRA_API ?? 'http://localhost:4000';
 const ORIGIN = process.env.APP_ORIGIN ?? 'http://localhost:5173';
 const BOTS = Number(process.argv[2] ?? 60);
 const SECONDS = Number(process.argv[3] ?? 60);
-const HEADERS = { 'x-knovra-csrf': '1', 'content-type': 'application/json', origin: ORIGIN };
+const HEADERS = { 'x-kynetra-csrf': '1', 'content-type': 'application/json', origin: ORIGIN };
 
 async function post(path, body, cookie) {
   let res;

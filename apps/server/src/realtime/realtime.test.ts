@@ -1,4 +1,4 @@
-import { SPAWN, type ServerMessage } from '@knovra/shared';
+import { SPAWN, type ServerMessage } from '@kynetra/shared';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
@@ -30,7 +30,7 @@ async function cookieFor(email: string) {
     headers: { [CSRF_HEADER]: '1' },
     payload: { email },
   });
-  return `knovra_sid=${res.cookies.find(c => c.name === 'knovra_sid')!.value}`;
+  return `kynetra_sid=${res.cookies.find(c => c.name === 'kynetra_sid')!.value}`;
 }
 
 /** Opens a socket and collects every message, so tests can wait for the one they expect. */

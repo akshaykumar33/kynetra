@@ -1,4 +1,4 @@
-# Knovra Office
+# Kynetra Office
 
 A virtual office where remote and hybrid teams share one floor. People see who is in,
 walk over to talk, knock on meeting rooms and meet in the lounge, so working from home
@@ -43,7 +43,7 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
 - First time: `cp apps/server/.env.example apps/server/.env.local`.
 - `npm run dev:server` (API on :4000, local PGlite in `apps/server/.data`) and `npm run dev` (web on :5173, proxies /api and /auth).
 - `npm run dev:voice`: pinned `livekit-server --dev` on :7880 (downloaded and SHA-256 checked by `scripts/get-livekit.mjs` into `.tools/`).
-- `npm run db:migrate`, `npm run db:seed`. After editing `schema.ts`: `npm run db:generate -w @knovra/server`.
+- `npm run db:migrate`, `npm run db:seed`. After editing `schema.ts`: `npm run db:generate -w @kynetra/server`.
 - `npm run check`: lint + typecheck + unit tests + build + budget. `npm run e2e`: Playwright.
 
 ## Rules
@@ -60,4 +60,10 @@ Server: Fastify (Node 22), Drizzle ORM on Postgres (PGlite locally and in tests)
 
 ## CodeGraph
 
-If `.codegraph/` exists, use `codegraph_explore` before grep or reading whole files.
+This repository is indexed by CodeGraph (`.codegraph/`).
+To minimize token consumption, prevent hallucinations, and preserve context:
+
+- **ALWAYS reach for CodeGraph FIRST** before using grep, glob, or reading raw source files.
+- Use the MCP tool `codegraph_explore` or run `codegraph explore "<symbol or question>"` to understand code, relationships, and call paths in one call.
+- Use `codegraph node <symbol>` to view exact symbol implementations and caller/callee trails.
+- Never dump or read full large files into context unless actively modifying them.

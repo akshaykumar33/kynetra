@@ -12,7 +12,7 @@ await page.evaluate(
   e =>
     fetch('/auth/dev/login', {
       method: 'POST',
-      headers: { 'x-knovra-csrf': '1', 'content-type': 'application/json' },
+      headers: { 'x-kynetra-csrf': '1', 'content-type': 'application/json' },
       body: JSON.stringify({ email: e }),
     }),
   email,

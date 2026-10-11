@@ -2,7 +2,7 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useRef } from 'react';
 import { type BufferGeometry, type Mesh, type MeshStandardMaterial } from 'three';
 import { useOffice, walkTo } from '../state';
-import { desks, FLOOR, MY_DESK, ROOM, ROOM_DOOR, zones, type Desk } from '@knovra/shared';
+import { desks, FLOOR, MY_DESK, ROOM, ROOM_DOOR, zones, type Desk } from '@kynetra/shared';
 
 const WOOD = '#d9bf98';
 const WALL = '#f4efe7';

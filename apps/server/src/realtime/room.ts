@@ -6,7 +6,7 @@ import {
   type MemberState,
   type ServerMessage,
   type Status,
-} from '@knovra/shared';
+} from '@kynetra/shared';
 import type { WebSocket } from 'ws';
 
 const MAX_BUFFERED_BYTES = 1_000_000; // a client this far behind skips snapshots instead of growing memory

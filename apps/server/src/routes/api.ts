@@ -1,4 +1,4 @@
-import type { Person } from '@knovra/shared';
+import type { Person } from '@kynetra/shared';
 import { and, desc, eq, gt, isNotNull, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
