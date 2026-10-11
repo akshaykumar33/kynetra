@@ -1,17 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { signIn } from './helpers';
 
-test('arrive at the IT park, find your tower, take the lift to your floor', async ({ page }) => {
+test('arrive in the world, find your tower, take the lift to your floor', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await signIn(page, 'noah@northgate.test');
 
-  // the campus: six towers, yours called out
-  await expect(page.getByRole('heading', { name: 'Kynetra IT Park' })).toBeVisible({ timeout: 30_000 });
+  // the world: six IT park towers, yours called out, and your own home
+  await expect(page.getByRole('heading', { name: 'Kynetra' })).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('canvas')).toBeVisible();
-  const towers = page.getByRole('navigation', { name: 'Towers' });
-  await expect(towers.getByRole('button')).toHaveCount(6);
-  await expect(page.getByText('Northgate is in Northgate Tower, floor 4')).toBeVisible();
+  const towers = page.getByRole('navigation', { name: 'Places' });
+  await expect(towers.getByRole('button', { name: /floors/ })).toHaveCount(6);
+  await expect(page.getByRole('region', { name: 'You' }).getByText(/Northgate Tower, floor 4/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Go home' })).toBeVisible();
 
   // look at another tower's directory: names only
   await towers.getByRole('button', { name: /Meridian Labs/ }).click();
@@ -40,7 +41,17 @@ test('arrive at the IT park, find your tower, take the lift to your floor', asyn
   await expect(page.getByText('Northgate · Floor 4')).toBeVisible();
   await page.getByRole('button', { name: '← Lobby' }).click();
   await expect(page.getByRole('heading', { name: 'Northgate Tower' })).toBeVisible();
-  await page.getByRole('button', { name: '← Back to the campus' }).click();
-  await expect(page.getByRole('heading', { name: 'Kynetra IT Park' })).toBeVisible();
+  await page.getByRole('button', { name: '← Back to the world' }).click();
+  await expect(page.getByRole('heading', { name: 'Kynetra' })).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('a person with no company still has a home in the world', async ({ page }) => {
+  await signIn(page, 'newcomer@solo.test');
+  await expect(page.getByRole('heading', { name: 'Kynetra' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/No company yet/)).toBeVisible();
+  // arrives looking at their own house, which is private to them
+  const card = page.getByRole('region', { name: "newcomer's home" });
+  await expect(card.getByText(/Your own place/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Walk to Northgate Tower' })).toHaveCount(0);
 });
