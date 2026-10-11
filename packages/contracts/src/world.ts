@@ -53,3 +53,9 @@ export const WorldDistrictSchema = z.object({
   floors: z.array(InnovationTowerFloorSchema).optional(),
 });
 export type WorldDistrict = z.infer<typeof WorldDistrictSchema>;
+
+export const WorldDistrictsResponseSchema = z.object({
+  districts: z.array(WorldDistrictSchema),
+  totalActiveUsers: z.number().nonnegative(),
+});
+export type WorldDistrictsResponse = z.infer<typeof WorldDistrictsResponseSchema>;

@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { WorldDistrictsResponse } from '@kynetra/contracts';
 import { INITIAL_DISTRICTS } from '../data/mock-world.js';
 
 export async function worldRoutes(app: FastifyInstance) {
-  app.get('/api/v1/world/districts', async () => {
+  app.get('/api/v1/world/districts', async (): Promise<WorldDistrictsResponse> => {
     return {
       districts: INITIAL_DISTRICTS,
       totalActiveUsers: INITIAL_DISTRICTS.reduce((sum, d) => sum + d.activeUsers, 0),

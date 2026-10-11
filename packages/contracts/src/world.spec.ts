@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WorldDistrictSchema, ServiceHealthSchema } from './index.js';
+import { WorldDistrictSchema, WorldDistrictsResponseSchema, ServiceHealthSchema } from './index.js';
 
 describe('Contracts Schema Validation', () => {
   it('validates WorldDistrict correctly', () => {
@@ -52,5 +52,18 @@ describe('Contracts Schema Validation', () => {
     const parsed = ServiceHealthSchema.parse(validHealth);
     expect(parsed.status).toBe('healthy');
     expect(parsed.uptimeSeconds).toBeGreaterThan(0);
+  });
+
+  it('rejects a districts response whose districts fail validation', () => {
+    const parsed = WorldDistrictsResponseSchema.safeParse({
+      districts: [{ id: 'broken' }],
+      totalActiveUsers: 0,
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('accepts an empty districts response', () => {
+    const parsed = WorldDistrictsResponseSchema.parse({ districts: [], totalActiveUsers: 0 });
+    expect(parsed.districts).toHaveLength(0);
   });
 });
