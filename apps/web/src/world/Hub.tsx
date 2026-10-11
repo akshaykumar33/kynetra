@@ -1,13 +1,14 @@
+import { canEnter, describe, DISTRICT_LABEL, type District, type WorldMap } from '@kynetra/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
-import { campusApi, type Campus, type CampusBuilding } from '../api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toCampus, worldApi, type Campus, type CampusBuilding } from '../api';
 import { useOffice } from '../state';
-import { CampusScene } from './Campus';
+import { WorldScene, type WorldSelection } from './Campus';
 import { LobbyScene } from './Lobby';
 import { OfficeScene } from './Office';
 
 type Place =
-  | { at: 'campus' }
+  | { at: 'world' }
   | { at: 'lobby'; buildingId: string }
   | { at: 'riding'; buildingId: string; level: number }
   | { at: 'floor' };
@@ -15,52 +16,103 @@ type Place =
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * The whole hub: the IT park campus, a tower's lobby, the lift, and your floor. You arrive on the
- * campus; your tower glows, and the lift only goes to floors your company leases.
+ * The whole world: the commons, the IT park towers and the street of homes, then a tower's lobby,
+ * the lift and your floor. You arrive in the world; your home and your company's tower glow, and
+ * the lift only goes to floors your company leases. Without a company you still have the world.
  */
-export function Hub() {
-  const orgId = useOffice(s => s.orgId);
-  const campus = useQuery({ queryKey: ['campus', orgId], queryFn: () => campusApi.get(orgId), enabled: !!orgId });
-  const [place, setPlace] = useState<Place>({ at: 'campus' });
+export function Hub({ orgId = '' }: { orgId?: string }) {
+  const world = useQuery({ queryKey: ['world'], queryFn: worldApi.get });
+  const [place, setPlace] = useState<Place>({ at: 'world' });
+  const campus = useMemo(() => (world.data ? toCampus(world.data, orgId) : null), [world.data, orgId]);
 
-  if (place.at === 'floor') {
-    const mine = campus.data?.mine;
+  if (place.at === 'floor' && orgId) {
+    const mine = campus?.mine;
     return <OfficeScene onLeave={mine ? () => setPlace({ at: 'lobby', buildingId: mine.buildingId }) : undefined} />;
   }
-  if (!campus.data)
+  if (!world.data || !campus)
     return (
       <div className="hub-loading" role="status">
-        {campus.isError ? `Couldn't load the campus: ${campus.error.message}` : 'Arriving at the hub…'}
+        {world.isError ? `Couldn't load the world: ${world.error.message}` : 'Arriving in the world…'}
       </div>
     );
-  if (place.at === 'campus') return <CampusView campus={campus.data} go={setPlace} />;
-  const building = campus.data.buildings.find(b => b.id === place.buildingId)!;
-  return <LobbyView campus={campus.data} building={building} place={place} go={setPlace} />;
+  if (place.at === 'world' || place.at === 'floor')
+    return <WorldView world={world.data} campus={campus} orgId={orgId} go={setPlace} />;
+  const building = campus.buildings.find(b => b.id === place.buildingId)!;
+  return <LobbyView campus={campus} building={building} place={place} go={setPlace} />;
 }
 
-function CampusView({ campus, go }: { campus: Campus; go: (p: Place) => void }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = campus.buildings.find(b => b.id === selectedId) ?? null;
-  const myTower = campus.buildings.find(b => b.id === campus.mine?.buildingId);
-  const orgName = useOffice(s => s.orgName);
+const DISTRICT_ORDER: District[] = ['commons', 'business', 'residential'];
+
+function WorldView({
+  world,
+  campus,
+  orgId,
+  go,
+}: {
+  world: WorldMap;
+  campus: Campus;
+  orgId: string;
+  go: (p: Place) => void;
+}) {
+  // no company yet: arrive looking at your own home
+  const [selection, setSelection] = useState<WorldSelection>(() => {
+    const home = campus.mine ? undefined : world.homes.find(h => h.mine);
+    return home ? { kind: 'home', id: home.ownerId } : null;
+  });
+  const [district, setDistrict] = useState<District>(campus.mine ? 'business' : 'residential');
+  const myHome = world.homes.find(h => h.mine) ?? null;
+  const commons = world.buildings.filter(b => b.district === 'commons');
+  const towers = campus.buildings;
+  const sceneBuildings: CampusBuilding[] = [...towers, ...commons.map(b => ({ ...b, floors: [] }))];
+  const myTower = towers.find(b => b.id === campus.mine?.buildingId);
+
+  const selBuilding = selection?.kind === 'building' ? world.buildings.find(b => b.id === selection.id) : undefined;
+  const selHome = selection?.kind === 'home' ? world.homes.find(h => h.ownerId === selection.id) : undefined;
+  const crumbs = selBuilding
+    ? describe({ district: selBuilding.district, buildingId: selBuilding.id }, { building: selBuilding.name })
+    : selHome
+      ? [DISTRICT_LABEL.residential, selHome.name]
+      : [DISTRICT_LABEL[district]];
+
+  const pick = (s: WorldSelection) => {
+    setSelection(s);
+    if (s?.kind === 'home') setDistrict('residential');
+    if (s?.kind === 'building') setDistrict(world.buildings.find(b => b.id === s.id)?.district ?? 'business');
+  };
+
   return (
     <>
-      <CampusScene campus={campus} selectedId={selectedId} onSelect={setSelectedId} />
+      <WorldScene
+        name={world.name}
+        buildings={sceneBuildings}
+        homes={world.homes}
+        mine={campus.mine}
+        selection={selection}
+        onSelect={pick}
+      />
       <div className="hud">
         <div className="hud-top">
           <header className="panel header">
             <p className="eyebrow">Welcome to</p>
-            <h1>{campus.name}</h1>
+            <h1>{world.name}</h1>
+            <nav aria-label="You are here">
+              <ol className="crumbs">
+                {crumbs.map(c => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ol>
+            </nav>
             <p className="meta">
-              <span>{campus.buildings.length} towers</span>
-              <span>{campus.buildings.reduce((n, b) => n + b.floors.length, 0)} companies</span>
-              {myTower && (
-                <span>
-                  {orgName} is in <b>{myTower.name}</b>, floor {campus.mine!.level}
-                </span>
-              )}
+              <span>{towers.length} towers</span>
+              <span>{towers.reduce((n, b) => n + b.floors.length, 0)} companies</span>
+              <span>{world.homes.length} homes</span>
             </p>
             <div className="row">
+              {myHome && (
+                <button className="btn ghost" onClick={() => pick({ kind: 'home', id: myHome.ownerId })}>
+                  Go home
+                </button>
+              )}
               {myTower && (
                 <button className="btn" onClick={() => go({ at: 'lobby', buildingId: myTower.id })}>
                   Walk to {myTower.name}
@@ -73,36 +125,174 @@ function CampusView({ campus, go }: { campus: Campus; go: (p: Place) => void }) 
               )}
             </div>
           </header>
-          <nav className="panel towers" aria-label="Towers">
-            <h2>Towers</h2>
-            <ul>
-              {campus.buildings.map(b => (
-                <li key={b.id}>
-                  <button
-                    aria-pressed={b.id === selectedId}
-                    onClick={() => setSelectedId(b.id === selectedId ? null : b.id)}
-                  >
-                    <b>{b.name}</b>
-                    <small>
-                      {b.levels} floors · {b.floors.length} {b.floors.length === 1 ? 'company' : 'companies'}
-                      {b.id === myTower?.id && ' · your office'}
-                    </small>
-                  </button>
-                </li>
+          <YouPanel world={world} activeOrgId={orgId} onFocusBuilding={id => pick({ kind: 'building', id })} />
+          <nav className="panel towers" aria-label="Places">
+            <div className="segmented" role="group" aria-label="District">
+              {DISTRICT_ORDER.map(d => (
+                <button key={d} aria-pressed={district === d} onClick={() => setDistrict(d)}>
+                  {DISTRICT_LABEL[d]}
+                </button>
               ))}
+            </div>
+            <ul>
+              {district === 'commons' &&
+                commons.map(b => (
+                  <PlaceItem
+                    key={b.id}
+                    label={b.name}
+                    detail="Open to everyone"
+                    pressed={selection?.kind === 'building' && selection.id === b.id}
+                    onClick={() => pick({ kind: 'building', id: b.id })}
+                  />
+                ))}
+              {district === 'business' &&
+                towers.map(b => (
+                  <PlaceItem
+                    key={b.id}
+                    label={b.name}
+                    detail={`${b.levels} floors · ${b.floors.length} ${b.floors.length === 1 ? 'company' : 'companies'}${b.id === myTower?.id ? ' · your office' : ''}`}
+                    pressed={selection?.kind === 'building' && selection.id === b.id}
+                    onClick={() => pick({ kind: 'building', id: b.id })}
+                  />
+                ))}
+              {district === 'residential' &&
+                world.homes.map(h => (
+                  <PlaceItem
+                    key={h.ownerId}
+                    label={h.name}
+                    detail={h.mine ? 'Your home' : h.open ? 'Open to visitors' : 'Private'}
+                    pressed={selection?.kind === 'home' && selection.id === h.ownerId}
+                    onClick={() => pick({ kind: 'home', id: h.ownerId })}
+                  />
+                ))}
             </ul>
           </nav>
         </div>
         <div className="hud-side">
-          {selected && <Directory building={selected} onEnter={() => go({ at: 'lobby', buildingId: selected.id })} />}
+          {selBuilding?.district === 'business' && (
+            <Directory
+              building={towers.find(b => b.id === selBuilding.id)!}
+              onEnter={() => go({ at: 'lobby', buildingId: selBuilding.id })}
+            />
+          )}
+          {selBuilding?.district === 'commons' && <CommonsCard name={selBuilding.name} />}
+          {selHome && <HomeCard world={world} home={selHome} />}
         </div>
         <div className="hud-bottom">
           <p className="panel hint-panel">
-            Drag to look around · scroll to zoom · click a tower to see who works there
+            Drag to look around · scroll to zoom · click a tower, hall or house to see what it is
           </p>
         </div>
       </div>
     </>
+  );
+}
+
+function PlaceItem({
+  label,
+  detail,
+  pressed,
+  onClick,
+}: {
+  label: string;
+  detail: string;
+  pressed: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <li>
+      <button aria-pressed={pressed} onClick={onClick}>
+        <b>{label}</b>
+        <small>{detail}</small>
+      </button>
+    </li>
+  );
+}
+
+const ROLE_LABEL = { owner: 'Owner', admin: 'Admin', member: 'Member', guest: 'Guest' } as const;
+
+/** Who you are in the world: one person with a home, and a place in each company you belong to. */
+function YouPanel({
+  world,
+  activeOrgId,
+  onFocusBuilding,
+}: {
+  world: WorldMap;
+  activeOrgId: string;
+  onFocusBuilding: (id: string) => void;
+}) {
+  const { you } = world;
+  return (
+    <section className="panel you" aria-label="You">
+      <p className="eyebrow">You</p>
+      <h2>{you.name}</h2>
+      {you.orgs.length === 0 ? (
+        <p className="hint">
+          No company yet. Your home is yours either way; an invite link from a company puts its office on your map.
+        </p>
+      ) : (
+        <ul>
+          {you.orgs.map(o => {
+            const tower = o.office ? world.buildings.find(b => b.id === o.office?.buildingId) : undefined;
+            return (
+              <li key={o.orgId} className={o.orgId === activeOrgId ? 'mine' : undefined}>
+                <b>{o.name}</b>
+                <small>
+                  {ROLE_LABEL[o.role]}
+                  {o.team && ` · ${o.team.name}`}
+                  {tower && o.office && ` · ${tower.name}, floor ${o.office.level}`}
+                </small>
+                {tower && (
+                  <button className="link" onClick={() => onFocusBuilding(tower.id)}>
+                    Show on map
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function CommonsCard({ name }: { name: string }) {
+  return (
+    <section className="panel directory" aria-label={name}>
+      <p className="eyebrow">{DISTRICT_LABEL.commons}</p>
+      <h2>{name}</h2>
+      <p className="hint">Open to everyone in the world, whichever company they are with, or none.</p>
+    </section>
+  );
+}
+
+const REFUSAL = {
+  'private-home': 'This home is private. Its owner can invite you in.',
+  'not-a-member': 'Only members can go in.',
+} as const;
+
+/** A house, and whether you may go in: the same canEnter rule the server uses. */
+function HomeCard({ world, home }: { world: WorldMap; home: WorldMap['homes'][number] }) {
+  const entry = canEnter(
+    {
+      userId: world.you.userId,
+      memberships: world.you.orgs.map(o => ({ orgId: o.orgId, role: o.role, teamKey: o.team?.key ?? null })),
+      invitedHomes: [],
+    },
+    { district: 'residential', homeOwnerId: home.ownerId, homeOpen: home.open },
+  );
+  const message = !entry.allowed
+    ? REFUSAL[entry.reason]
+    : entry.as === 'owner'
+      ? 'Your own place. Nobody comes in unless you invite them or open the door.'
+      : 'The door is open: visitors are welcome.';
+  return (
+    <section className="panel directory" aria-label={home.name}>
+      <p className="eyebrow">{DISTRICT_LABEL.residential}</p>
+      <h2>{home.name}</h2>
+      <p className="hint">{message}</p>
+      <p className="hint">Going inside homes comes in the next update.</p>
+    </section>
   );
 }
 
@@ -174,8 +364,8 @@ function LobbyView({
           <header className="panel header">
             <p className="eyebrow">{campus.name}</p>
             <h1>{building.name}</h1>
-            <button className="link" onClick={() => go({ at: 'campus' })}>
-              ← Back to the campus
+            <button className="link" onClick={() => go({ at: 'world' })}>
+              ← Back to the world
             </button>
           </header>
           <section className="panel lift" aria-label="Lift">

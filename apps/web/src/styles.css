@@ -877,3 +877,80 @@ fieldset {
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* ---------- the world ---------- */
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0 6px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.crumbs li + li::before {
+  content: '›';
+  margin-right: 4px;
+}
+.crumbs li:last-child {
+  color: var(--ink);
+  font-weight: 700;
+}
+.towers .segmented {
+  display: flex;
+  gap: 2px;
+  margin: 2px 4px 8px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--sky);
+}
+.towers .segmented button {
+  flex: 1;
+  align-items: center;
+  padding: 6px 4px;
+  font: 600 13px var(--display);
+  color: var(--ink-soft);
+}
+.towers .segmented button[aria-pressed='true'] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.you {
+  width: 260px;
+  padding: 12px 14px;
+}
+.you h2 {
+  margin: 0 0 6px;
+  font: 600 16px var(--display);
+}
+.you ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.you li {
+  display: grid;
+  gap: 1px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+.you li.mine {
+  background: var(--teal-soft);
+}
+.you small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.you .link {
+  justify-self: start;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .you {
+    display: none;
+  }
+}

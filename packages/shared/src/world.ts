@@ -89,7 +89,7 @@ export function describe(
 }
 
 /** The home plots: a grid of lots in the residential district, filled in order of sign-up. */
-export const HOME_LOT = { origin: [-63, 135] as const, spacing: 18, perRow: 8 };
+export const HOME_LOT = { origin: [-63, 148] as const, spacing: 18, perRow: 8 };
 
 export function homeLot(index: number): [number, number] {
   const row = Math.floor(index / HOME_LOT.perRow);

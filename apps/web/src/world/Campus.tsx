@@ -14,7 +14,10 @@ import {
   type MeshStandardMaterial,
 } from 'three';
 import type { OrbitControls as OrbitImpl } from 'three-stdlib';
-import type { Campus, CampusBuilding } from '../api';
+import type { CampusBuilding, WorldHome } from '../api';
+
+/** Anything the camera can fly to: a tower, a commons hall or a house. */
+type Focus = Pick<CampusBuilding, 'x' | 'z' | 'levels'>;
 
 const STOREY = 3.6; // metres per level
 const RING = 125; // the ring road runs around the park at this distance from the centre
@@ -313,14 +316,14 @@ function Ground() {
 }
 
 /** Flies the camera to a target smoothly, then hands control back to the orbit controls. */
-function CameraRig({ focus }: { focus: CampusBuilding | null }) {
+function CameraRig({ focus }: { focus: Focus | null }) {
   const controls = useRef<OrbitImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ pos: Vector3; target: Vector3; t: number } | null>(null);
 
   useEffect(() => {
     if (!focus) {
-      goal.current = { pos: new Vector3(190, 150, 230), target: new Vector3(0, 20, 0), t: 0 };
+      goal.current = { pos: new Vector3(190, 170, 300), target: new Vector3(0, 10, 40), t: 0 };
       return;
     }
     const h = focus.levels * STOREY;
@@ -351,7 +354,7 @@ function CameraRig({ focus }: { focus: CampusBuilding | null }) {
       makeDefault
       enableDamping
       minDistance={40}
-      maxDistance={520}
+      maxDistance={620}
       maxPolarAngle={MathUtils.degToRad(84)}
       autoRotate={!focus}
       autoRotateSpeed={0.25}
@@ -359,26 +362,128 @@ function CameraRig({ focus }: { focus: CampusBuilding | null }) {
   );
 }
 
-export function CampusScene({
-  campus,
-  selectedId,
+const HOUSE_COLORS = ['#e8d7c3', '#cfdccf', '#d9cbe0', '#f0d9b5', '#c9d8e6', '#e6c9c4'];
+const ROOF_COLORS = ['#8a4b3c', '#5b6770', '#6e5a48', '#4f6b5a'];
+
+/** One person's house on the residential street. Yours has the beacon; open houses light the porch. */
+function House({ home, selected, onSelect }: { home: WorldHome; selected: boolean; onSelect: (id: string) => void }) {
+  const [hover, setHover] = useState(false);
+  const h = hash(home.ownerId);
+  const wall = HOUSE_COLORS[h % HOUSE_COLORS.length];
+  const roof = ROOF_COLORS[(h >> 3) % ROOF_COLORS.length];
+  const lift = hover || selected ? 1.04 : 1;
+  return (
+    <group position={[home.x, 0, home.z]} scale={lift}>
+      {/* garden */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.05, 0]} receiveShadow>
+        <planeGeometry args={[15, 15]} />
+        <meshStandardMaterial color="#8fb174" roughness={1} />
+      </mesh>
+      <group
+        onClick={e => {
+          e.stopPropagation();
+          onSelect(home.ownerId);
+        }}
+        onPointerOver={e => {
+          e.stopPropagation();
+          setHover(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHover(false);
+          document.body.style.cursor = '';
+        }}
+      >
+        <mesh position={[0, 2.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[8, 5, 7]} />
+          <meshStandardMaterial color={wall} roughness={0.85} />
+        </mesh>
+        {/* pitched roof: a four-sided cone, rotated so the ridge runs along the house */}
+        <mesh position={[0, 6.6, 0]} rotation-y={Math.PI / 4} scale={[1, 1, 0.88]} castShadow>
+          <coneGeometry args={[6.4, 3.2, 4]} />
+          <meshStandardMaterial color={roof} roughness={0.7} />
+        </mesh>
+      </group>
+      {/* front door faces the street, to the north */}
+      <mesh position={[0, 1.2, -3.52]}>
+        <boxGeometry args={[1.3, 2.4, 0.1]} />
+        <meshStandardMaterial color="#5a3d2b" roughness={0.6} />
+      </mesh>
+      {home.open && (
+        <mesh position={[0, 2.9, -3.7]}>
+          <sphereGeometry args={[0.28, 12, 8]} />
+          <meshBasicMaterial color="#ffd27a" />
+        </mesh>
+      )}
+      {home.mine && <Beacon height={10} radius={7} />}
+      {(home.mine || selected || hover) && (
+        <Html position={[0, home.mine ? 13 : 10.5, 0]} center distanceFactor={120} zIndexRange={[5, 0]}>
+          <div className={`tower-tag${home.mine ? ' mine' : ''}${selected ? ' selected' : ''}`}>
+            {home.name}
+            {home.mine ? <small>Your home</small> : home.open && <small>Open to visitors</small>}
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+/** The residential street: a lane outside the ring road with the houses on its south side. */
+function Street({ homes }: { homes: WorldHome[] }) {
+  if (!homes.length) return null;
+  const xs = homes.map(h => h.x);
+  const minX = Math.min(...xs) - 14;
+  const maxX = Math.max(...xs) + 14;
+  const laneZ = Math.min(...homes.map(h => h.z)) - 10;
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[(minX + maxX) / 2, 0.03, laneZ]} receiveShadow>
+      <planeGeometry args={[maxX - minX, 7]} />
+      <meshStandardMaterial color="#4a4f55" roughness={0.95} />
+    </mesh>
+  );
+}
+
+export type WorldSelection = { kind: 'building'; id: string } | { kind: 'home'; id: string } | null;
+
+/**
+ * The whole world in one scene: the IT park towers, the commons halls among them, and the
+ * residential street beyond the ring road.
+ */
+export function WorldScene({
+  name,
+  buildings,
+  homes,
+  mine,
+  selection,
   onSelect,
 }: {
-  campus: Campus;
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
+  name: string;
+  /** Towers and commons halls, drawn the same way; commons are just short and warm. */
+  buildings: CampusBuilding[];
+  homes: WorldHome[];
+  mine: { buildingId: string; level: number } | null;
+  selection: WorldSelection;
+  onSelect: (s: WorldSelection) => void;
 }) {
-  const selected = campus.buildings.find(b => b.id === selectedId) ?? null;
+  const focus: Focus | null =
+    selection?.kind === 'building'
+      ? (buildings.find(b => b.id === selection.id) ?? null)
+      : selection?.kind === 'home'
+        ? (() => {
+            const h = homes.find(x => x.ownerId === selection.id);
+            return h ? { x: h.x, z: h.z, levels: 1 } : null;
+          })()
+        : null;
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ position: [260, 210, 320], fov: 40, near: 1, far: 2000 }}
-      aria-label={`${campus.name}, shown in 3D`}
+      camera={{ position: [260, 230, 380], fov: 40, near: 1, far: 2400 }}
+      aria-label={`${name}, shown in 3D`}
       onPointerMissed={() => onSelect(null)}
     >
       <Sky distance={4500} sunPosition={[-200, 38, -300]} turbidity={6} rayleigh={1.6} mieCoefficient={0.006} />
-      <fog attach="fog" args={['#efd2b0', 320, 1100]} />
+      <fog attach="fog" args={['#efd2b0', 360, 1200]} />
       <hemisphereLight args={['#ffe7c4', '#5d6b52', 0.75]} />
       <directionalLight
         position={[-160, 120, -120]}
@@ -386,25 +491,34 @@ export function CampusScene({
         color="#ffc98f"
         castShadow
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-180}
-        shadow-camera-right={180}
-        shadow-camera-top={180}
-        shadow-camera-bottom={-180}
-        shadow-camera-far={600}
+        shadow-camera-left={-200}
+        shadow-camera-right={200}
+        shadow-camera-top={220}
+        shadow-camera-bottom={-200}
+        shadow-camera-far={650}
       />
       <Ground />
       <Greenery />
       <Traffic />
-      {campus.buildings.map(b => (
+      <Street homes={homes} />
+      {buildings.map(b => (
         <Tower
           key={b.id}
           b={b}
-          mineLevel={campus.mine?.buildingId === b.id ? campus.mine.level : null}
-          selected={b.id === selectedId}
-          onSelect={onSelect}
+          mineLevel={mine?.buildingId === b.id ? mine.level : null}
+          selected={selection?.kind === 'building' && selection.id === b.id}
+          onSelect={id => onSelect({ kind: 'building', id })}
         />
       ))}
-      <CameraRig focus={selected} />
+      {homes.map(h => (
+        <House
+          key={h.ownerId}
+          home={h}
+          selected={selection?.kind === 'home' && selection.id === h.ownerId}
+          onSelect={id => onSelect({ kind: 'home', id })}
+        />
+      ))}
+      <CameraRig focus={focus} />
     </Canvas>
   );
 }

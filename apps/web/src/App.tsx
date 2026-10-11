@@ -55,18 +55,15 @@ function Gate() {
   if (invite.isPending) return <Notice title="Joining the office…" />;
 
   const org = me.data.orgs[0];
-  if (!org)
+  // no company yet: you still live in the world, at your own home
+  if (!org) {
+    if (invite.isError) return <Notice title="That invite didn't work" body={invite.error.message} signOut />;
     return (
-      <Notice
-        title="You're not in an office yet"
-        body={
-          invite.isError
-            ? invite.error.message
-            : 'Ask an admin at your company for an invite link, then open it while signed in.'
-        }
-        signOut
-      />
+      <Suspense fallback={<Notice title="Arriving in the world…" />}>
+        <Hub />
+      </Suspense>
     );
+  }
   return <OrgHome orgId={org.id} onboarded={org.onboarded} />;
 }
 
@@ -88,8 +85,8 @@ function OrgHome({ orgId, onboarded }: { orgId: string; onboarded: boolean }) {
     return <Notice title="Can't open the office" body={floor.error.message} retry={() => floor.refetch()} signOut />;
   if (!onboarded) return <Onboarding data={floor.data} />;
   return (
-    <Suspense fallback={<Notice title="Arriving at the hub…" />}>
-      <Hub />
+    <Suspense fallback={<Notice title="Arriving in the world…" />}>
+      <Hub orgId={orgId} />
     </Suspense>
   );
 }

@@ -1,4 +1,4 @@
-import type { FloorLayout, Person, Status } from '@kynetra/shared';
+import type { FloorLayout, Person, Status, WorldMap } from '@kynetra/shared';
 
 export interface Me {
   user: { id: string; email: string; name: string };
@@ -94,3 +94,35 @@ export interface Campus {
 export const campusApi = {
   get: (orgId: string) => request<Campus>('GET', `/api/v1/orgs/${orgId}/campus`),
 };
+
+export type WorldHome = WorldMap['homes'][number];
+
+export const worldApi = {
+  get: () => request<WorldMap>('GET', '/api/v1/world'),
+};
+
+/**
+ * The IT park part of the world, as the lobby and lift see it: business towers only, with each
+ * floor marked if it belongs to `orgId`. Empty `orgId` (no company yet) marks nothing as yours.
+ */
+export function toCampus(world: WorldMap, orgId: string): Campus {
+  let mine: Campus['mine'] = null;
+  const buildings = world.buildings
+    .filter(b => b.district === 'business')
+    .map(b => ({
+      id: b.id,
+      name: b.name,
+      x: b.x,
+      z: b.z,
+      width: b.width,
+      depth: b.depth,
+      levels: b.levels,
+      color: b.color,
+      floors: b.tenants.map(t => {
+        const isMine = !!orgId && t.orgId === orgId;
+        if (isMine) mine = { buildingId: b.id, level: t.level };
+        return { level: t.level, tenant: t.name, mine: isMine };
+      }),
+    }));
+  return { name: 'Kynetra IT Park', buildings, mine };
+}
