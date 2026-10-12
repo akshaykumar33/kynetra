@@ -35,6 +35,23 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
     const o = (window as unknown as { __office: Hook }).__office;
     return { x: o.player.pos.x, z: o.player.pos.z };
   });
+  // Record, inside Sam's page, the arrival time of the first update showing Lena moved. Reading
+  // it this way is exact even if Sam's tab is in the background, where polling timers are
+  // throttled to about once a second and would otherwise inflate the measured latency.
+  await sam.evaluate(
+    ({ id, s }) => {
+      const w = window as unknown as { __office: Hook; __seenAt?: number };
+      const map = w.__office.remotes;
+      const set = map.set.bind(map);
+      map.set = (key, buf) => {
+        const p = buf[buf.length - 1];
+        if (key === id && w.__seenAt === undefined && p && Math.hypot(p.x - s.x, p.z - s.z) > 0.05)
+          w.__seenAt = performance.timeOrigin + p.at;
+        return set(key, buf);
+      };
+    },
+    { id: lenaId, s: start },
+  );
   await lena.keyboard.down('w');
   const movedAt = await lena
     .waitForFunction(
@@ -47,15 +64,9 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
     )
     .then(h => h.jsonValue() as Promise<number>);
   const seenAt = await sam
-    .waitForFunction(
-      ({ id, s }) => {
-        const buf = (window as unknown as { __office: Hook }).__office.remotes.get(id);
-        const p = buf?.[buf.length - 1];
-        return p && Math.hypot(p.x - s.x, p.z - s.z) > 0.05 ? Date.now() : false;
-      },
-      { id: lenaId, s: start },
-      { polling: 5, timeout: 15_000 },
-    )
+    .waitForFunction(() => (window as unknown as { __seenAt?: number }).__seenAt ?? false, null, {
+      timeout: 15_000,
+    })
     .then(h => h.jsonValue() as Promise<number>);
   await lena.keyboard.up('w');
   const latency = seenAt - movedAt;
