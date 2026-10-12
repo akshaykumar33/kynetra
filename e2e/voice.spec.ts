@@ -75,9 +75,14 @@ test('walking up to someone connects real audio, and walking away ends it', asyn
   const near = await reachDistance(sam, lenaId, 3.2);
   const samHears = await audible(sam, lenaId, true);
   const lenaHears = await audible(lena, samId, true);
-  const joinMs = Math.max(samHears, lenaHears) - near;
-  console.log(`voice connect after coming into range: ${joinMs} ms`);
+  // The 1 s budget is for the person in front, as each person's own tab is in real use. Lena's tab
+  // is in the background here, where browsers throttle timers (her 150 ms voice tick and this
+  // poll) to about once a second, so hers gets that second on top.
+  const joinMs = samHears - near;
+  const backgroundJoinMs = lenaHears - near;
+  console.log(`voice connect after coming into range: ${joinMs} ms (background tab: ${backgroundJoinMs} ms)`);
   expect(joinMs).toBeLessThan(1000);
+  expect(backgroundJoinMs).toBeLessThan(2500);
   await expect(sam.getByText(/Talking with .*Arjun/)).toBeVisible();
 
   // Sam walks away: audio stops within a second of leaving range (4 m)
@@ -103,6 +108,8 @@ test('walking up to someone connects real audio, and walking away ends it', asyn
     samId,
   );
   await expect(sam.getByText('Arjun is focusing.')).toBeVisible();
+  // close both 3D pages so they stop rendering during later tests
+  await Promise.all([lena.context().close(), sam.context().close()]);
 });
 
 test('turning voice on shows a clear message when the microphone is blocked', async ({ browser }) => {
@@ -117,4 +124,5 @@ test('turning voice on shows a clear message when the microphone is blocked', as
   await page.getByRole('button', { name: 'Turn on voice' }).click();
   await expect(page.getByText(/Microphone access is blocked/)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole('button', { name: 'Turn on voice' })).toBeEnabled();
+  await ctx.close();
 });
