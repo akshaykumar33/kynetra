@@ -1,24 +1,6 @@
 name: kynetra-local
 
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: kynetra-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: kynetra_user
-      POSTGRES_PASSWORD: kynetra_password
-      POSTGRES_DB: kynetra_world
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kynetra_user -d kynetra_world"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     container_name: kynetra-redis
@@ -45,5 +27,4 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
 
 volumes:
-  postgres_data:
   redis_data:

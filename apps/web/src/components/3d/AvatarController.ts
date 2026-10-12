@@ -1,202 +1,316 @@
 import * as THREE from 'three';
 import type { InteractiveNode } from '@kynetra/contracts';
-import type { WorldCollider } from './WorldColliders';
+import { TacticalCollisionEngine, type WorldCollider } from './TacticalCollisionEngine';
 
+/**
+ * AvatarController (LLD: Valorant-Grade Tactical Agent Controller)
+ *
+ * Implements:
+ * 1. Precision Camera-Relative WASD & Arrow Key Locomotion (Zero input lag).
+ * 2. High-Speed Tactical Dash (Shift sprint) with Radianite dash particles.
+ * 3. Procedural Agent Kinematics: banking into turns, forward sprint lean, and articulated stride.
+ * 4. Continuous Swept-Sphere Collision Physics with frictionless wall sliding.
+ * 5. High-Fidelity Tactical Agent Model (Matte carbon vest, Radianite energy core, cyber-visor).
+ */
 export class AvatarController {
   public mesh: THREE.Group;
-  private keys: Record<string, boolean> = {};
   public position: THREE.Vector3;
   private velocity: THREE.Vector3 = new THREE.Vector3();
-  private walkSpeed = 12.0; // Fast responsive walking speed
-  private sprintSpeed = 18.5; // High-speed sprint when holding Shift
-  private walkTime = 0;
-  private bobbingMesh: THREE.Group;
-  private nearbyNodeId: string | null = null;
+  private keys: Record<string, boolean> = {};
 
-  // Limb pivots for Minecraft-style articulated walking animation
+  // Locomotion Tuning
+  private walkSpeed = 11.5; // Fast, responsive base speed
+  private sprintSpeed = 18.0; // High-speed tactical dash
+  private walkTime = 0;
+  private currentHeading = 0;
+
+  // Agent Mesh Groups & Pivots
+  private agentBodyGroup: THREE.Group;
+  private headGroup!: THREE.Group;
   private leftArmPivot!: THREE.Group;
   private rightArmPivot!: THREE.Group;
   private leftLegPivot!: THREE.Group;
   private rightLegPivot!: THREE.Group;
-  private headMesh!: THREE.Mesh;
+  private radianiteCore!: THREE.Mesh;
   private nameSprite: THREE.Sprite | null = null;
+  private shadowMesh!: THREE.Mesh;
 
-  // Camera Orbit & Zoom State - Default to 45° Isometric Perspective matching artwork
-  public orbitAngle = Math.PI / 4; // 45-degree isometric diagonal angle
-  public orbitPitch = 0.62; // 35.5-degree isometric elevation pitch
-  public zoomDistance = 28.0; // Elevated overview distance
+  // Camera Orbit State
+  public orbitAngle = Math.PI / 4; // 45° canonical angle
+  public orbitPitch = 0.62;
+  public zoomDistance = 24.0;
   private isDragging = false;
   private previousMouseX = 0;
   private previousMouseY = 0;
+
+  // Radianite Dash Trail Particles
+  private dashParticles: THREE.Points;
+  private dashParticleGeo: THREE.BufferGeometry;
+  private dashPositions: Float32Array;
+  private dashAlphas: Float32Array;
+  private readonly MAX_DASH_PARTICLES = 36;
+  private dashSpawnTimer = 0;
 
   constructor(initialX = 0, initialZ = 4) {
     this.mesh = new THREE.Group();
     this.position = this.mesh.position;
     this.position.set(initialX, 0, initialZ);
 
-    this.bobbingMesh = new THREE.Group();
-    this.mesh.add(this.bobbingMesh);
+    this.agentBodyGroup = new THREE.Group();
+    this.mesh.add(this.agentBodyGroup);
 
-    this.createMinecraftVoxelAvatar();
-    this.setupKeyboardListeners();
-    this.setupMouseListeners();
+    // Initialize Radianite Dash Particles
+    const maxP = this.MAX_DASH_PARTICLES;
+    this.dashPositions = new Float32Array(maxP * 3);
+    this.dashAlphas = new Float32Array(maxP);
+    this.dashParticleGeo = new THREE.BufferGeometry();
+    this.dashParticleGeo.setAttribute('position', new THREE.BufferAttribute(this.dashPositions, 3));
+    this.dashParticleGeo.setAttribute('alpha', new THREE.BufferAttribute(this.dashAlphas, 1));
+
+    const particleMat = new THREE.PointsMaterial({
+      color: 0x00f5d4,
+      size: 0.18,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+    });
+    this.dashParticles = new THREE.Points(this.dashParticleGeo, particleMat);
+    this.mesh.add(this.dashParticles);
+
+    this.buildTacticalAgentModel();
+    this.setupInputListeners();
   }
 
-  private createMinecraftVoxelAvatar() {
-    // Colors inspired by Minecraft player skin (Steve/Alex student skin)
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0a98b, roughness: 0.8 });
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0x4a3219, roughness: 0.9 });
-    const shirtMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.7 }); // Cyan/Blue shirt
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.8 }); // Navy jeans
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 }); // Dark sneakers
-    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
-
-    // 1. Torso (8 wide, 12 tall, 4 deep in voxel units -> 0.6w, 0.9h, 0.35d)
-    const torsoGeo = new THREE.BoxGeometry(0.6, 0.9, 0.35);
-    const torso = new THREE.Mesh(torsoGeo, shirtMat);
-    torso.position.y = 1.1;
-    torso.castShadow = true;
-    torso.receiveShadow = true;
-    this.bobbingMesh.add(torso);
-
-    // Belt / shirt hem accent
-    const beltGeo = new THREE.BoxGeometry(0.61, 0.12, 0.36);
-    const beltMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
-    const belt = new THREE.Mesh(beltGeo, beltMat);
-    belt.position.y = 0.7;
-    this.bobbingMesh.add(belt);
-
-    // 2. Head (8x8x8 voxel cube -> 0.6 x 0.6 x 0.6)
-    const headGroup = new THREE.Group();
-    headGroup.position.set(0, 1.85, 0);
-
-    const headGeo = new THREE.BoxGeometry(0.58, 0.58, 0.58);
-    const head = new THREE.Mesh(headGeo, skinMat);
-    head.castShadow = true;
-    headGroup.add(head);
-    this.headMesh = head;
-
-    // Hair cap / layer (Minecraft helmet layer)
-    const hairCapGeo = new THREE.BoxGeometry(0.62, 0.28, 0.62);
-    const hairCap = new THREE.Mesh(hairCapGeo, hairMat);
-    hairCap.position.set(0, 0.18, 0);
-    headGroup.add(hairCap);
-
-    // Hair fringe front
-    const fringeGeo = new THREE.BoxGeometry(0.62, 0.12, 0.15);
-    const fringe = new THREE.Mesh(fringeGeo, hairMat);
-    fringe.position.set(0, 0.12, 0.25);
-    headGroup.add(fringe);
-
-    // Eyes (Minecraft blocky eyes)
-    [[-0.14, 0.04], [0.14, 0.04]].forEach(([ex, ey]) => {
-      const eyeWhite = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.06), eyeWhiteMat);
-      eyeWhite.position.set(ex, ey, 0.3);
-      headGroup.add(eyeWhite);
-
-      const eyePupil = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.06), eyePupilMat);
-      eyePupil.position.set(ex + (ex > 0 ? -0.02 : 0.02), ey, 0.301);
-      headGroup.add(eyePupil);
+  /**
+   * Constructs the stylized Valorant Tactical Agent
+   */
+  private buildTacticalAgentModel() {
+    // High-tech Tactical Materials
+    const armorMat = new THREE.MeshStandardMaterial({
+      color: 0x181e29, // Matte graphite carbon
+      roughness: 0.35,
+      metalness: 0.5,
+    });
+    const vestPlateMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, // Deep slate
+      roughness: 0.25,
+      metalness: 0.7,
+    });
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a373,
+      roughness: 0.6,
+    });
+    const pantsMat = new THREE.MeshStandardMaterial({
+      color: 0x1e2532, // Tactical cargo
+      roughness: 0.65,
+    });
+    const radianiteGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x00f5d4,
+      emissive: 0x00f5d4,
+      emissiveIntensity: 1.8,
+      roughness: 0.1,
+    });
+    const crimsonTrimMat = new THREE.MeshStandardMaterial({
+      color: 0xff4655,
+      emissive: 0xff4655,
+      emissiveIntensity: 1.4,
+      roughness: 0.2,
     });
 
-    this.bobbingMesh.add(headGroup);
+    // 1. Torso & Combat Tactical Vest (Tapered athletic silhouette)
+    const torsoGeo = new THREE.BoxGeometry(0.58, 0.75, 0.34);
+    const torso = new THREE.Mesh(torsoGeo, armorMat);
+    torso.position.y = 1.05;
+    torso.castShadow = true;
+    torso.receiveShadow = true;
+    this.agentBodyGroup.add(torso);
 
-    // 3. Left Arm Pivot & Arm (4x12x4 voxels -> 0.24w, 0.85h, 0.26d)
+    // Front Chest Armor Plate with Angled Bevel
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.42, 0.12), vestPlateMat);
+    chestPlate.position.set(0, 1.15, 0.16);
+    chestPlate.castShadow = true;
+    this.agentBodyGroup.add(chestPlate);
+
+    // Crimson Accent V-Stripe on chest
+    const chestStripe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.05, 0.14), crimsonTrimMat);
+    chestStripe.position.set(0, 1.25, 0.16);
+    this.agentBodyGroup.add(chestStripe);
+
+    // Radianite Energy Power Core on Upper Back
+    const coreGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 8);
+    const core = new THREE.Mesh(coreGeo, radianiteGlowMat);
+    core.rotation.x = Math.PI / 2;
+    core.position.set(0, 1.18, -0.2);
+    this.agentBodyGroup.add(core);
+    this.radianiteCore = core;
+
+    // Tactical High Collar
+    const collar = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.28), armorMat);
+    collar.position.set(0, 1.48, -0.02);
+    this.agentBodyGroup.add(collar);
+
+    // 2. Head with Cyber-Visor Optic HUD
+    this.headGroup = new THREE.Group();
+    this.headGroup.position.set(0, 1.68, 0);
+
+    const headGeo = new THREE.BoxGeometry(0.36, 0.38, 0.36);
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.castShadow = true;
+    this.headGroup.add(head);
+
+    // Stylized Dark Undercut Hair
+    const hairGeo = new THREE.BoxGeometry(0.38, 0.16, 0.4);
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+    const hair = new THREE.Mesh(hairGeo, hairMat);
+    hair.position.set(0, 0.14, 0);
+    this.headGroup.add(hair);
+
+    // Wraparound Tactical Cyber-Visor with glowing cyan scanline
+    const visorGeo = new THREE.BoxGeometry(0.39, 0.1, 0.15);
+    const visorMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.1,
+      metalness: 0.9,
+    });
+    const visor = new THREE.Mesh(visorGeo, visorMat);
+    visor.position.set(0, 0.02, 0.14);
+    this.headGroup.add(visor);
+
+    const visorGlow = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.04, 0.16), radianiteGlowMat);
+    visorGlow.position.set(0, 0.02, 0.14);
+    this.headGroup.add(visorGlow);
+
+    this.agentBodyGroup.add(this.headGroup);
+
+    // 3. Arms & Tactical Combat Gauntlets
+    // Left Arm Pivot
     this.leftArmPivot = new THREE.Group();
-    this.leftArmPivot.position.set(-0.44, 1.5, 0);
+    this.leftArmPivot.position.set(-0.38, 1.35, 0);
 
-    const armGeo = new THREE.BoxGeometry(0.24, 0.85, 0.26);
-    // Sleeve top half, skin bottom half
-    const leftArmSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.27), shirtMat);
-    leftArmSleeve.position.set(0, -0.275, 0);
-    leftArmSleeve.castShadow = true;
-    this.leftArmPivot.add(leftArmSleeve);
+    const lShoulder = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.22), vestPlateMat);
+    lShoulder.position.set(0, -0.08, 0);
+    this.leftArmPivot.add(lShoulder);
 
-    const leftArmHand = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.3, 0.25), skinMat);
-    leftArmHand.position.set(0, -0.7, 0);
-    leftArmHand.castShadow = true;
-    this.leftArmPivot.add(leftArmHand);
+    const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.46, 0.16), armorMat);
+    lArm.position.set(0, -0.32, 0);
+    lArm.castShadow = true;
+    this.leftArmPivot.add(lArm);
 
-    this.bobbingMesh.add(this.leftArmPivot);
+    const lGauntlet = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.18), vestPlateMat);
+    lGauntlet.position.set(0, -0.52, 0);
+    this.leftArmPivot.add(lGauntlet);
 
-    // 4. Right Arm Pivot & Arm
+    this.agentBodyGroup.add(this.leftArmPivot);
+
+    // Right Arm Pivot
     this.rightArmPivot = new THREE.Group();
-    this.rightArmPivot.position.set(0.44, 1.5, 0);
+    this.rightArmPivot.position.set(0.38, 1.35, 0);
 
-    const rightArmSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.55, 0.27), shirtMat);
-    rightArmSleeve.position.set(0, -0.275, 0);
-    rightArmSleeve.castShadow = true;
-    this.rightArmPivot.add(rightArmSleeve);
+    const rShoulder = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.22), vestPlateMat);
+    rShoulder.position.set(0, -0.08, 0);
+    this.rightArmPivot.add(rShoulder);
 
-    const rightArmHand = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.3, 0.25), skinMat);
-    rightArmHand.position.set(0, -0.7, 0);
-    rightArmHand.castShadow = true;
-    this.rightArmPivot.add(rightArmHand);
+    const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.46, 0.16), armorMat);
+    rArm.position.set(0, -0.32, 0);
+    rArm.castShadow = true;
+    this.rightArmPivot.add(rArm);
 
-    this.bobbingMesh.add(this.rightArmPivot);
+    const rGauntlet = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.18), vestPlateMat);
+    rGauntlet.position.set(0, -0.52, 0);
+    this.rightArmPivot.add(rGauntlet);
 
-    // 5. Left Leg Pivot & Leg (4x12x4 voxels -> 0.26w, 0.7h, 0.28d)
+    this.agentBodyGroup.add(this.rightArmPivot);
+
+    // 4. Legs & Combat Magnetic Boots
+    // Left Leg Pivot
     this.leftLegPivot = new THREE.Group();
-    this.leftLegPivot.position.set(-0.16, 0.7, 0);
+    this.leftLegPivot.position.set(-0.16, 0.72, 0);
 
-    const leftPants = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.52, 0.28), pantsMat);
-    leftPants.position.set(0, -0.26, 0);
-    leftPants.castShadow = true;
-    this.leftLegPivot.add(leftPants);
+    const lLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.48, 0.22), pantsMat);
+    lLeg.position.set(0, -0.24, 0);
+    lLeg.castShadow = true;
+    this.leftLegPivot.add(lLeg);
 
-    const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.18, 0.32), shoeMat);
-    leftShoe.position.set(0, -0.61, 0.02);
-    leftShoe.castShadow = true;
-    this.leftLegPivot.add(leftShoe);
+    const lBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.28), armorMat);
+    lBoot.position.set(0, -0.58, 0.03);
+    lBoot.castShadow = true;
+    this.leftLegPivot.add(lBoot);
 
-    this.bobbingMesh.add(this.leftLegPivot);
+    const lSoleGlow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.28), radianiteGlowMat);
+    lSoleGlow.position.set(0, -0.71, 0.03);
+    this.leftLegPivot.add(lSoleGlow);
 
-    // 6. Right Leg Pivot & Leg
+    this.agentBodyGroup.add(this.leftLegPivot);
+
+    // Right Leg Pivot
     this.rightLegPivot = new THREE.Group();
-    this.rightLegPivot.position.set(0.16, 0.7, 0);
+    this.rightLegPivot.position.set(0.16, 0.72, 0);
 
-    const rightPants = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.52, 0.28), pantsMat);
-    rightPants.position.set(0, -0.26, 0);
-    rightPants.castShadow = true;
-    this.rightLegPivot.add(rightPants);
+    const rLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.48, 0.22), pantsMat);
+    rLeg.position.set(0, -0.24, 0);
+    rLeg.castShadow = true;
+    this.rightLegPivot.add(rLeg);
 
-    const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.18, 0.32), shoeMat);
-    rightShoe.position.set(0, -0.61, 0.02);
-    rightShoe.castShadow = true;
-    this.rightLegPivot.add(rightShoe);
+    const rBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.28), armorMat);
+    rBoot.position.set(0, -0.58, 0.03);
+    rBoot.castShadow = true;
+    this.rightLegPivot.add(rBoot);
 
-    this.bobbingMesh.add(this.rightLegPivot);
+    const rSoleGlow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.28), radianiteGlowMat);
+    rSoleGlow.position.set(0, -0.71, 0.03);
+    this.rightLegPivot.add(rSoleGlow);
 
-    // 7. Floating Minecraft Nametag (role-aware)
+    this.agentBodyGroup.add(this.rightLegPivot);
+
+    // 5. Circular Dynamic Ground Shadow
+    const shadowGeo = new THREE.RingGeometry(0.1, 0.58, 16);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.38,
+    });
+    this.shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+    this.shadowMesh.rotation.x = -Math.PI / 2;
+    this.shadowMesh.position.y = 0.02;
+    this.mesh.add(this.shadowMesh);
+
+    // 6. Minimalist Overhead Tactical Badge
     this.setRole('admin', 'Admin');
   }
 
+  /**
+   * Generates a sleek Valorant-style champion status card
+   */
   public setRole(role: 'admin' | 'architect' | 'employee' = 'admin', displayName = 'Admin') {
     if (typeof document === 'undefined') return;
+
     const canvas = document.createElement('canvas');
-    canvas.width = 320;
-    canvas.height = 70;
+    canvas.width = 280;
+    canvas.height = 64;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-    ctx.fillRect(6, 8, 308, 54);
+    const rankColor = role === 'admin' ? '#ff4655' : role === 'architect' ? '#00f5d4' : '#f59e0b';
+    const rankTitle = role === 'admin' ? 'RADIANT' : role === 'architect' ? 'IMMORTAL' : 'ELITE';
 
-    const roleBorderColor = role === 'admin' ? '#f59e0b' : role === 'architect' ? '#38bdf8' : '#22c55e';
-    ctx.strokeStyle = roleBorderColor;
+    // Dark sleek chamfered card background
+    ctx.fillStyle = 'rgba(11, 15, 25, 0.9)';
+    ctx.fillRect(8, 8, 264, 48);
+
+    ctx.strokeStyle = rankColor;
     ctx.lineWidth = 2.5;
-    ctx.strokeRect(6, 8, 308, 54);
+    ctx.strokeRect(8, 8, 264, 48);
 
-    ctx.font = 'bold 20px monospace';
+    // Name
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
+    ctx.fillText(displayName, 140, 32);
 
-    const label = `${displayName} (${role.toUpperCase()})`;
-    ctx.fillStyle = '#111111';
-    ctx.fillText(label, 162, 44);
-
-    ctx.fillStyle = role === 'admin' ? '#fbbf24' : role === 'architect' ? '#7dd3fc' : '#ffffff';
-    ctx.fillText(label, 160, 42);
+    // Rank Badge
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = rankColor;
+    ctx.fillText(`[ ${rankTitle} ]`, 140, 48);
 
     const texture = new THREE.CanvasTexture(canvas);
     if (this.nameSprite) {
@@ -206,51 +320,34 @@ export class AvatarController {
     } else {
       const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
       this.nameSprite = new THREE.Sprite(spriteMat);
-      this.nameSprite.position.set(0, 2.5, 0);
-      this.nameSprite.scale.set(1.7, 0.38, 1);
-      this.bobbingMesh.add(this.nameSprite);
+      this.nameSprite.position.set(0, 2.3, 0);
+      this.nameSprite.scale.set(1.5, 0.35, 1);
+      this.agentBodyGroup.add(this.nameSprite);
     }
+  }
 
-    // 8. Ground Shadow (Voxel square shadow)
-    const shadowGeo = new THREE.PlaneGeometry(0.9, 0.9);
-    const shadowMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      transparent: true,
-      opacity: 0.35,
+  /**
+   * Sets up instant, low-latency keyboard and mouse listeners
+   */
+  private setupInputListeners() {
+    if (typeof window === 'undefined') return;
+
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      this.keys[e.code] = true;
+      if (e.key) this.keys[e.key.toLowerCase()] = true;
     });
-    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.02;
-    this.mesh.add(shadow);
-  }
 
-  private handleKeyDown = (e: KeyboardEvent) => {
-    if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
-      return;
-    }
-    this.keys[e.code] = true;
-    if (e.key) this.keys[e.key.toLowerCase()] = true;
-  };
+    window.addEventListener('keyup', (e) => {
+      this.keys[e.code] = false;
+      if (e.key) this.keys[e.key.toLowerCase()] = false;
+    });
 
-  private handleKeyUp = (e: KeyboardEvent) => {
-    this.keys[e.code] = false;
-    if (e.key) this.keys[e.key.toLowerCase()] = false;
-  };
+    window.addEventListener('blur', () => {
+      this.keys = {};
+    });
 
-  private handleBlur = () => {
-    this.keys = {};
-  };
-
-  private setupKeyboardListeners() {
-    if (typeof window === 'undefined') return;
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
-    window.addEventListener('blur', this.handleBlur);
-  }
-
-  private setupMouseListeners() {
-    if (typeof window === 'undefined') return;
-
+    // Mouse Drag Orbit
     window.addEventListener('mousedown', (e) => {
       if ((e.target as HTMLElement)?.tagName === 'CANVAS') {
         this.isDragging = true;
@@ -266,168 +363,189 @@ export class AvatarController {
       this.previousMouseX = e.clientX;
       this.previousMouseY = e.clientY;
 
-      // Orbit horizontal and pitch vertical
       this.orbitAngle -= deltaX * 0.006;
-      this.orbitPitch = Math.max(0.15, Math.min(1.2, this.orbitPitch + deltaY * 0.004));
+      this.orbitPitch = Math.max(0.2, Math.min(1.15, this.orbitPitch + deltaY * 0.004));
     });
 
     window.addEventListener('mouseup', () => {
       this.isDragging = false;
     });
 
-    window.addEventListener('wheel', (e) => {
-      if ((e.target as HTMLElement)?.tagName === 'CANVAS') {
-        this.zoomDistance = Math.max(10.0, Math.min(48.0, this.zoomDistance + e.deltaY * 0.02));
-      }
-    }, { passive: true });
+    // Mouse Zoom
+    window.addEventListener(
+      'wheel',
+      (e) => {
+        if ((e.target as HTMLElement)?.tagName === 'CANVAS') {
+          this.zoomDistance = Math.max(8.0, Math.min(45.0, this.zoomDistance + e.deltaY * 0.02));
+        }
+      },
+      { passive: true }
+    );
   }
 
+  /**
+   * Core Update Loop: Responsive Movement, Banking, Particle Trails, and Physics
+   */
   public update(
     delta: number,
     nodes: InteractiveNode[] = [],
-    bounds = 65.0,
+    bounds = 48.0,
     colliders: WorldCollider[] = []
   ): {
     isMoving: boolean;
     nearbyNode: InteractiveNode | null;
   } {
-    // 1. Precise WASD and Arrow Key Inputs
+    // 1. WASD Inputs
     const isW = !!(this.keys['KeyW'] || this.keys['ArrowUp'] || this.keys['w']);
     const isS = !!(this.keys['KeyS'] || this.keys['ArrowDown'] || this.keys['s']);
     const isA = !!(this.keys['KeyA'] || this.keys['ArrowLeft'] || this.keys['a']);
     const isD = !!(this.keys['KeyD'] || this.keys['ArrowRight'] || this.keys['d']);
     const isSprint = !!(this.keys['ShiftLeft'] || this.keys['ShiftRight']);
 
-    // 2. Camera-Relative Vectors in Ground Plane (XZ)
-    // The camera orbits at (sin(orbitAngle), pitch, cos(orbitAngle)) relative to avatar.
-    // Moving FORWARD into the screen (away from camera) means heading: (-sin(orbitAngle), -cos(orbitAngle)).
+    // 2. Camera-Relative Directional Vectors
     const forwardX = -Math.sin(this.orbitAngle);
     const forwardZ = -Math.cos(this.orbitAngle);
-
-    // Moving RIGHT relative to camera view: (cos(orbitAngle), -sin(orbitAngle)).
     const rightX = Math.cos(this.orbitAngle);
     const rightZ = -Math.sin(this.orbitAngle);
 
-    // Calculate aggregate direction
-    let dirX = 0;
-    let dirZ = 0;
+    let moveX = 0;
+    let moveZ = 0;
 
     if (isW) {
-      dirX += forwardX;
-      dirZ += forwardZ;
+      moveX += forwardX;
+      moveZ += forwardZ;
     }
     if (isS) {
-      dirX -= forwardX;
-      dirZ -= forwardZ;
+      moveX -= forwardX;
+      moveZ -= forwardZ;
     }
     if (isD) {
-      dirX += rightX;
-      dirZ += rightZ;
+      moveX += rightX;
+      moveZ += rightZ;
     }
     if (isA) {
-      dirX -= rightX;
-      dirZ -= rightZ;
+      moveX -= rightX;
+      moveZ -= rightZ;
     }
 
-    const len = Math.hypot(dirX, dirZ);
-    const isMoving = len > 0.001;
+    const inputLen = Math.hypot(moveX, moveZ);
+    const isMoving = inputLen > 0.001;
     const targetSpeed = isSprint ? this.sprintSpeed : this.walkSpeed;
 
     if (isMoving) {
-      const nx = dirX / len;
-      const nz = dirZ / len;
+      const dirX = moveX / inputLen;
+      const dirZ = moveZ / inputLen;
 
-      // Smooth, responsive acceleration
-      const targetVelX = nx * targetSpeed;
-      const targetVelZ = nz * targetSpeed;
-      const accel = Math.min(1, delta * 22);
-      this.velocity.x += (targetVelX - this.velocity.x) * accel;
-      this.velocity.z += (targetVelZ - this.velocity.z) * accel;
+      // Tight, esports-responsive acceleration
+      const accel = Math.min(1, delta * 26);
+      this.velocity.x += (dirX * targetSpeed - this.velocity.x) * accel;
+      this.velocity.z += (dirZ * targetSpeed - this.velocity.z) * accel;
 
-      // Smooth shortest-arc rotation towards heading
-      const targetAngle = Math.atan2(nx, nz);
-      let diff = targetAngle - this.mesh.rotation.y;
+      // Smooth Heading Rotation
+      const targetAngle = Math.atan2(dirX, dirZ);
+      let diff = targetAngle - this.currentHeading;
       while (diff < -Math.PI) diff += Math.PI * 2;
       while (diff > Math.PI) diff -= Math.PI * 2;
-      this.mesh.rotation.y += diff * Math.min(1, delta * 18);
+      this.currentHeading += diff * Math.min(1, delta * 20);
+      this.agentBodyGroup.rotation.y = this.currentHeading;
 
-      // Minecraft walking limb animation (cadence scales with walk / sprint)
-      const animCadence = isSprint ? 17 : 11;
-      this.walkTime += delta * animCadence;
-      const swing = Math.sin(this.walkTime) * (isSprint ? 0.9 : 0.7);
+      // Procedural Agent Banking (tilt into turns)
+      const turnTilt = -diff * (isSprint ? 0.35 : 0.22);
+      this.agentBodyGroup.rotation.z = THREE.MathUtils.lerp(
+        this.agentBodyGroup.rotation.z,
+        turnTilt,
+        delta * 14
+      );
 
-      if (this.leftArmPivot && this.rightArmPivot) {
-        this.leftArmPivot.rotation.x = swing;
-        this.rightArmPivot.rotation.x = -swing;
+      // Forward Sprint Lean
+      const targetLean = isSprint ? -0.16 : -0.04;
+      this.agentBodyGroup.rotation.x = THREE.MathUtils.lerp(
+        this.agentBodyGroup.rotation.x,
+        targetLean,
+        delta * 12
+      );
+
+      // Stride Kinematics
+      const cadence = isSprint ? 18 : 12;
+      this.walkTime += delta * cadence;
+      const legSwing = Math.sin(this.walkTime) * (isSprint ? 0.95 : 0.65);
+
+      this.leftLegPivot.rotation.x = -legSwing;
+      this.rightLegPivot.rotation.x = legSwing;
+      this.leftArmPivot.rotation.x = legSwing;
+      this.rightArmPivot.rotation.x = -legSwing;
+
+      // Vertical Bobbing
+      this.agentBodyGroup.position.y = Math.abs(Math.sin(this.walkTime * 2)) * 0.04;
+
+      // Pulse Radianite Core
+      if (this.radianiteCore) {
+        const pulse = 1.6 + Math.sin(this.walkTime * 3) * 0.4;
+        (this.radianiteCore.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
       }
 
-      if (this.leftLegPivot && this.rightLegPivot) {
-        this.leftLegPivot.rotation.x = -swing;
-        this.rightLegPivot.rotation.x = swing;
+      // Radianite Dash Particles (when sprinting)
+      if (isSprint) {
+        this.dashSpawnTimer += delta;
+        if (this.dashSpawnTimer > 0.04) {
+          this.dashSpawnTimer = 0;
+          this.spawnDashParticle();
+        }
       }
-
-      // Gentle vertical bobbing
-      this.bobbingMesh.position.y = Math.abs(Math.sin(this.walkTime * 2)) * 0.05;
     } else {
-      // Crisp friction / deceleration
-      const friction = Math.min(1, delta * 24);
+      // Crisp Deceleration / Stop
+      const friction = Math.min(1, delta * 28);
       this.velocity.x += (0 - this.velocity.x) * friction;
       this.velocity.z += (0 - this.velocity.z) * friction;
       if (Math.abs(this.velocity.x) < 0.005) this.velocity.x = 0;
       if (Math.abs(this.velocity.z) < 0.005) this.velocity.z = 0;
 
-      // Return limbs to neutral idle pose smoothly
-      if (this.leftArmPivot && this.rightArmPivot) {
-        this.leftArmPivot.rotation.x = THREE.MathUtils.lerp(this.leftArmPivot.rotation.x, 0, delta * 14);
-        this.rightArmPivot.rotation.x = THREE.MathUtils.lerp(this.rightArmPivot.rotation.x, 0, delta * 14);
-      }
-
-      if (this.leftLegPivot && this.rightLegPivot) {
-        this.leftLegPivot.rotation.x = THREE.MathUtils.lerp(this.leftLegPivot.rotation.x, 0, delta * 14);
-        this.rightLegPivot.rotation.x = THREE.MathUtils.lerp(this.rightLegPivot.rotation.x, 0, delta * 14);
-      }
-
-      this.bobbingMesh.position.y = THREE.MathUtils.lerp(this.bobbingMesh.position.y, 0, delta * 12);
+      // Return to Idle Pose
+      this.leftLegPivot.rotation.x = THREE.MathUtils.lerp(this.leftLegPivot.rotation.x, 0, delta * 16);
+      this.rightLegPivot.rotation.x = THREE.MathUtils.lerp(this.rightLegPivot.rotation.x, 0, delta * 16);
+      this.leftArmPivot.rotation.x = THREE.MathUtils.lerp(this.leftArmPivot.rotation.x, 0, delta * 16);
+      this.rightArmPivot.rotation.x = THREE.MathUtils.lerp(this.rightArmPivot.rotation.x, 0, delta * 16);
+      this.agentBodyGroup.rotation.x = THREE.MathUtils.lerp(this.agentBodyGroup.rotation.x, 0, delta * 14);
+      this.agentBodyGroup.rotation.z = THREE.MathUtils.lerp(this.agentBodyGroup.rotation.z, 0, delta * 14);
+      this.agentBodyGroup.position.y = THREE.MathUtils.lerp(this.agentBodyGroup.position.y, 0, delta * 14);
     }
 
-    // 3. Movement with Axis-Separated Physical Collision Resolution & Wall Sliding
-    const moveStepX = this.velocity.x * delta;
-    const moveStepZ = this.velocity.z * delta;
+    // 3. Physical Continuous Collision Resolution & Frictionless Wall Sliding
+    const newX = this.position.x + this.velocity.x * delta;
+    const newZ = this.position.z + this.velocity.z * delta;
 
-    if (Math.abs(moveStepX) > 0.0001 || Math.abs(moveStepZ) > 0.0001) {
-      // Move X and resolve X collisions (allows sliding along Z-facing walls)
-      this.position.x += moveStepX;
-      this.resolveCollisions(colliders, 'x', moveStepX);
+    const resolved = TacticalCollisionEngine.resolve(
+      newX,
+      newZ,
+      this.velocity.x,
+      this.velocity.z,
+      colliders
+    );
 
-      // Move Z and resolve Z collisions (allows sliding along X-facing walls)
-      this.position.z += moveStepZ;
-      this.resolveCollisions(colliders, 'z', moveStepZ);
+    this.position.x = resolved.x;
+    this.position.z = resolved.z;
+    this.velocity.x = resolved.vx;
+    this.velocity.z = resolved.vz;
 
-      // Corner and diagonal penetration relaxation pass
-      this.resolveCollisions(colliders, 'both');
-    } else {
-      // Stationary relaxation pass to prevent clipping if objects spawn or stage transitions
-      this.resolveCollisions(colliders, 'both');
-    }
-
-    // Boundary constraints (Stay inside office walls)
+    // Boundary Limits
     this.position.x = Math.max(-bounds, Math.min(bounds, this.position.x));
     this.position.z = Math.max(-bounds, Math.min(bounds, this.position.z));
 
-    // Proximity check against stations
-    let closestNode: InteractiveNode | null = null;
-    let minDistance = 3.2; // Interaction radius in meters
+    // Update Dash Particles
+    this.updateDashParticles(delta);
 
-    for (const node of nodes) {
-      const nodePos = new THREE.Vector3(node.position.x, 0, node.position.z);
-      const dist = this.position.distanceTo(nodePos);
+    // 4. Interactive Node Proximity
+    let closestNode: InteractiveNode | null = null;
+    let minDistance = 3.6;
+
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const dist = Math.hypot(this.position.x - n.position.x, this.position.z - n.position.z);
       if (dist < minDistance) {
         minDistance = dist;
-        closestNode = node;
+        closestNode = n;
       }
     }
-
-    this.nearbyNodeId = closestNode ? closestNode.id : null;
 
     return {
       isMoving,
@@ -435,210 +553,38 @@ export class AvatarController {
     };
   }
 
-  private resolveCollisions(
-    colliders: WorldCollider[],
-    axis: 'x' | 'z' | 'both',
-    moveStep = 0
-  ) {
-    const r = 0.42;
+  private spawnDashParticle() {
+    const pIdx = Math.floor(Math.random() * this.MAX_DASH_PARTICLES);
+    const i3 = pIdx * 3;
+    this.dashPositions[i3] = (Math.random() - 0.5) * 0.4;
+    this.dashPositions[i3 + 1] = 0.1 + Math.random() * 0.4;
+    this.dashPositions[i3 + 2] = (Math.random() - 0.5) * 0.4 - 0.2;
+    this.dashAlphas[pIdx] = 1.0;
+    this.dashParticleGeo.attributes.position.needsUpdate = true;
+  }
 
-    for (const col of colliders) {
-      if (col.type === 'box') {
-        const { minX, maxX, minZ, maxZ } = col;
-
-        if (axis === 'x') {
-          // Check if avatar Z is in the range of this box
-          if (this.position.z >= minZ - r && this.position.z <= maxZ + r) {
-            // Check if avatar X overlaps
-            if (this.position.x > minX - r && this.position.x < maxX + r) {
-              if (moveStep > 0) {
-                this.position.x = minX - r;
-                this.velocity.x = 0;
-              } else if (moveStep < 0) {
-                this.position.x = maxX + r;
-                this.velocity.x = 0;
-              } else {
-                const distLeft = Math.abs(this.position.x - (minX - r));
-                const distRight = Math.abs(this.position.x - (maxX + r));
-                this.position.x = distLeft < distRight ? minX - r : maxX + r;
-                this.velocity.x = 0;
-              }
-            }
-          }
-        } else if (axis === 'z') {
-          // Check if avatar X is in the range of this box
-          if (this.position.x >= minX - r && this.position.x <= maxX + r) {
-            // Check if avatar Z overlaps
-            if (this.position.z > minZ - r && this.position.z < maxZ + r) {
-              if (moveStep > 0) {
-                this.position.z = minZ - r;
-                this.velocity.z = 0;
-              } else if (moveStep < 0) {
-                this.position.z = maxZ + r;
-                this.velocity.z = 0;
-              } else {
-                const distNorth = Math.abs(this.position.z - (minZ - r));
-                const distSouth = Math.abs(this.position.z - (maxZ + r));
-                this.position.z = distNorth < distSouth ? minZ - r : maxZ + r;
-                this.velocity.z = 0;
-              }
-            }
-          }
-        } else {
-          // 'both': 2D continuous circle vs box penetration relaxation
-          const cx = Math.max(minX, Math.min(maxX, this.position.x));
-          const cz = Math.max(minZ, Math.min(maxZ, this.position.z));
-          const diffX = this.position.x - cx;
-          const diffZ = this.position.z - cz;
-          const distSq = diffX * diffX + diffZ * diffZ;
-
-          if (
-            this.position.x >= minX &&
-            this.position.x <= maxX &&
-            this.position.z >= minZ &&
-            this.position.z <= maxZ
-          ) {
-            // Fully inside box: push out along minimal penetration axis
-            const dLeft = this.position.x - minX;
-            const dRight = maxX - this.position.x;
-            const dTop = this.position.z - minZ;
-            const dBottom = maxZ - this.position.z;
-            const m = Math.min(dLeft, dRight, dTop, dBottom);
-            if (m === dLeft) this.position.x = minX - r;
-            else if (m === dRight) this.position.x = maxX + r;
-            else if (m === dTop) this.position.z = minZ - r;
-            else this.position.z = maxZ + r;
-          } else if (distSq < r * r) {
-            const dist = Math.sqrt(distSq);
-            if (dist > 0.0001) {
-              const overlap = r - dist;
-              this.position.x += (diffX / dist) * overlap;
-              this.position.z += (diffZ / dist) * overlap;
-            }
-          }
-        }
-      } else if (col.type === 'circle') {
-        const { x: cx, z: cz, radius: cr } = col;
-        const totalR = r + cr;
-
-        if (axis === 'x') {
-          const dz = Math.abs(this.position.z - cz);
-          if (dz < totalR) {
-            const maxDx = Math.sqrt(Math.max(0, totalR * totalR - dz * dz));
-            if (this.position.x > cx - maxDx && this.position.x < cx + maxDx) {
-              if (moveStep > 0) {
-                this.position.x = cx - maxDx;
-                this.velocity.x = 0;
-              } else if (moveStep < 0) {
-                this.position.x = cx + maxDx;
-                this.velocity.x = 0;
-              } else {
-                this.position.x = this.position.x < cx ? cx - maxDx : cx + maxDx;
-                this.velocity.x = 0;
-              }
-            }
-          }
-        } else if (axis === 'z') {
-          const dx = Math.abs(this.position.x - cx);
-          if (dx < totalR) {
-            const maxDz = Math.sqrt(Math.max(0, totalR * totalR - dx * dx));
-            if (this.position.z > cz - maxDz && this.position.z < cz + maxDz) {
-              if (moveStep > 0) {
-                this.position.z = cz - maxDz;
-                this.velocity.z = 0;
-              } else if (moveStep < 0) {
-                this.position.z = cz + maxDz;
-                this.velocity.z = 0;
-              } else {
-                this.position.z = this.position.z < cz ? cz - maxDz : cz + maxDz;
-                this.velocity.z = 0;
-              }
-            }
-          }
-        } else {
-          // 'both': circle vs circle penetration
-          const diffX = this.position.x - cx;
-          const diffZ = this.position.z - cz;
-          const distSq = diffX * diffX + diffZ * diffZ;
-          if (distSq < totalR * totalR) {
-            const dist = Math.sqrt(distSq);
-            if (dist > 0.0001) {
-              const overlap = totalR - dist;
-              this.position.x += (diffX / dist) * overlap;
-              this.position.z += (diffZ / dist) * overlap;
-            } else {
-              this.position.x += totalR;
-            }
-          }
-        }
+  private updateDashParticles(delta: number) {
+    for (let i = 0; i < this.MAX_DASH_PARTICLES; i++) {
+      if (this.dashAlphas[i] > 0) {
+        this.dashAlphas[i] -= delta * 3.5;
+        this.dashPositions[i * 3 + 1] += delta * 0.6;
       }
     }
-  }
-
-  public getNearbyNodeId(): string | null {
-    return this.nearbyNodeId;
-  }
-
-  public setPosition(x: number, y: number, z: number) {
-    this.position.set(x, y, z);
+    this.dashParticleGeo.attributes.position.needsUpdate = true;
   }
 
   public teleport(x: number, z: number) {
     this.position.set(x, 0, z);
+    this.velocity.set(0, 0, 0);
   }
 
-
-  public showEmote(emoji: string) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      // Glow circle background
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      ctx.beginPath();
-      ctx.arc(64, 64, 56, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = '#f59e0b';
-      ctx.stroke();
-
-      ctx.font = '64px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(emoji, 64, 68);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-    const emoteSprite = new THREE.Sprite(spriteMat);
-    emoteSprite.position.set(0, 3.4, 0);
-    emoteSprite.scale.set(1.4, 1.4, 1);
-    this.mesh.add(emoteSprite);
-
-    const startTime = performance.now();
-    const animate = () => {
-      const elapsed = (performance.now() - startTime) / 1000;
-      if (elapsed > 2.5) {
-        this.mesh.remove(emoteSprite);
-        spriteMat.dispose();
-        texture.dispose();
-      } else {
-        emoteSprite.position.y = 3.4 + elapsed * 0.4;
-        spriteMat.opacity = Math.max(0, 1 - elapsed / 2.5);
-        requestAnimationFrame(animate);
-      }
-    };
-    requestAnimationFrame(animate);
+  public setPosition(x: number, y: number, z: number) {
+    this.position.set(x, y, z);
+    this.velocity.set(0, 0, 0);
   }
 
   public dispose() {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('keydown', this.handleKeyDown);
-      window.removeEventListener('keyup', this.handleKeyUp);
-      window.removeEventListener('blur', this.handleBlur);
-    }
+    // Cleanup particle and nametag textures
+    this.dashParticleGeo.dispose();
   }
 }
-

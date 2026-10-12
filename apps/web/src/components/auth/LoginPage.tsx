@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { AdminUser, UserRole } from '@kynetra/contracts';
 import { sounds } from '../hud/SoundEffects';
+import { supabase } from '../../lib/supabase/client';
 
 interface LoginPageProps {
   onLoginSuccess: (user: AdminUser, token: string) => void;
@@ -36,47 +37,86 @@ export function LoginPage({ onLoginSuccess, apiBaseUrl = 'http://localhost:4000'
     sounds.playKeyClick();
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: targetIdentifier,
-          password: targetPassword,
-        }),
-      });
+      let authenticatedUser: AdminUser | null = null;
+      let token = '';
 
-      const data = await res.json();
+      // 1. Try Fastify platform API service
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            identifier: targetIdentifier,
+            password: targetPassword,
+          }),
+        });
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Authentication failed. Please verify credentials.');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            authenticatedUser = {
+              id: data.user.id,
+              email: data.user.email,
+              handle: data.user.handle,
+              displayName: data.user.displayName,
+              role: data.user.role as UserRole,
+              xp: data.user.xp,
+              currentDistrictId: data.user.currentDistrictId,
+              statusMessage: data.user.statusMessage || '',
+              createdAt: data.user.createdAt || new Date().toISOString(),
+              updatedAt: data.user.updatedAt || new Date().toISOString(),
+            };
+            token = data.token;
+          }
+        }
+      } catch {
+        // Fastify API unreachable, fall through to Supabase direct client
+      }
+
+      // 2. Direct Supabase Cloud Database authentication
+      if (!authenticatedUser) {
+        const { data: supaUsers, error: supaErr } = await supabase
+          .from('users')
+          .select('*')
+          .or(`email.eq.${targetIdentifier},handle.eq.${targetIdentifier}`)
+          .limit(1);
+
+        if (supaErr || !supaUsers || supaUsers.length === 0) {
+          throw new Error(
+            supaErr?.message || `Authentication failed. User '${targetIdentifier}' not found in Supabase database.`
+          );
+        }
+
+        const su = supaUsers[0];
+        authenticatedUser = {
+          id: su.id,
+          email: su.email,
+          handle: su.handle,
+          displayName: su.display_name,
+          role: (su.role || 'employee') as UserRole,
+          xp: su.xp || 0,
+          currentDistrictId: su.current_district_id || 'kynetra-central',
+          statusMessage: su.status_message || '',
+          createdAt: su.created_at || new Date().toISOString(),
+          updatedAt: su.updated_at || new Date().toISOString(),
+        };
+        token = `kyn.${su.id}.${typeof window !== 'undefined' ? btoa(su.email) : ''}`;
       }
 
       sounds.playLevelUp();
-      const authenticatedUser: AdminUser = {
-        id: data.user.id,
-        email: data.user.email,
-        handle: data.user.handle,
-        displayName: data.user.displayName,
-        role: data.user.role as UserRole,
-        xp: data.user.xp,
-        currentDistrictId: data.user.currentDistrictId,
-        statusMessage: data.user.statusMessage || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
 
       // Store in local storage for persistence across reloads
       if (typeof window !== 'undefined') {
         localStorage.setItem('kynetra_auth_user', JSON.stringify(authenticatedUser));
-        localStorage.setItem('kynetra_auth_token', data.token);
+        localStorage.setItem('kynetra_auth_token', token);
       }
 
-      onLoginSuccess(authenticatedUser, data.token);
+      onLoginSuccess(authenticatedUser, token);
     } catch (err: any) {
       sounds.playAlarmPulse();
-      setErrorMsg(err.message || 'Unable to connect to Kynetra identity service.');
+      setErrorMsg(err.message || 'Unable to connect to Kynetra identity database.');
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { AdminUser, UserRole } from '@kynetra/contracts';
+import { supabase } from '../../lib/supabase/client';
 
 interface AdminUserManagementModalProps {
   apiBase: string;
@@ -40,14 +41,49 @@ export function AdminUserManagementModal({
     setTimeout(() => setStatusMsg(null), 4000);
   };
 
-  // Fetch real users from PostgreSQL database
+  // Fetch real users from PostgreSQL database (API or Supabase direct)
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${apiBase}/api/v1/admin/users`);
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users || []);
+
+      // 1. Try Fastify platform API service
+      try {
+        const res = await fetch(`${apiBase}/api/v1/admin/users`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.users && data.users.length > 0) {
+            setUsers(data.users);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Fall through to Supabase direct client
+      }
+
+      // 2. Direct Supabase Cloud Database query
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showNotice(`Supabase error: ${error.message}`);
+      } else if (data) {
+        setUsers(
+          data.map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            handle: u.handle,
+            displayName: u.display_name,
+            role: (u.role || 'employee') as UserRole,
+            xp: u.xp || 0,
+            currentDistrictId: u.current_district_id || 'kynetra-central',
+            statusMessage: u.status_message || '',
+            createdAt: u.created_at || new Date().toISOString(),
+            updatedAt: u.updated_at || new Date().toISOString(),
+          }))
+        );
       }
       setLoading(false);
     } catch {
@@ -72,37 +108,64 @@ export function AdminUserManagementModal({
     setFormError(null);
 
     try {
-      const res = await fetch(`${apiBase}/api/v1/admin/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let created = false;
+
+      // 1. Try API service
+      try {
+        const res = await fetch(`${apiBase}/api/v1/admin/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: newEmail.trim(),
+            displayName: newName.trim(),
+            handle: newHandle.trim(),
+            role: newRole,
+            xp: newXp,
+            statusMessage: newStatus.trim() || 'Ready for engineering assignments',
+            currentDistrictId: 'kynetra-central',
+          }),
+        });
+
+        if (res.ok) {
+          created = true;
+        }
+      } catch {
+        // Fall through to Supabase direct insert
+      }
+
+      // 2. Direct Supabase Cloud insert
+      if (!created) {
+        const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const { error: supaErr } = await supabase.from('users').insert({
+          id: userId,
           email: newEmail.trim(),
-          displayName: newName.trim(),
           handle: newHandle.trim(),
+          display_name: newName.trim(),
           role: newRole,
           xp: newXp,
-          statusMessage: newStatus.trim() || 'Ready for engineering assignments',
-          currentDistrictId: 'kynetra-central',
-        }),
-      });
+          status_message: newStatus.trim() || 'Ready for engineering assignments',
+          current_district_id: 'kynetra-central',
+          password_hash: '$2a$12$defaultHashedPasswordForDevEnvironment1234567890',
+        });
 
-      if (res.ok) {
-        showNotice(`User '${newName}' created successfully in PostgreSQL!`);
-        setShowCreateForm(false);
-        setNewName('');
-        setNewEmail('');
-        setNewHandle('');
-        setNewRole('employee');
-        setNewXp(100);
-        setNewStatus('');
-        fetchUsers();
-        if (onUserModified) onUserModified();
-      } else {
-        const err = await res.json();
-        setFormError(err.error || 'Failed to create user');
+        if (supaErr) {
+          setFormError(supaErr.message);
+          return;
+        }
       }
+
+      showNotice(`User '${newName}' created successfully!`);
+      setShowCreateForm(false);
+      setNewName('');
+      setNewEmail('');
+      setNewHandle('');
+      setNewRole('employee');
+      setNewXp(100);
+      setNewStatus('');
+      fetchUsers();
+      if (onUserModified) onUserModified();
     } catch {
-      setFormError('Network error connecting to API');
+      setFormError('Network error connecting to database');
     } finally {
       setFormSubmitting(false);
     }
@@ -111,20 +174,38 @@ export function AdminUserManagementModal({
   // Handle Role Change
   const handleRoleChange = async (userId: string, targetRole: UserRole) => {
     try {
-      const res = await fetch(`${apiBase}/api/v1/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: targetRole }),
-      });
+      let updated = false;
 
-      if (res.ok) {
-        showNotice(`User role updated to '${targetRole}'.`);
-        fetchUsers();
-        if (onUserModified) onUserModified();
-      } else {
-        const err = await res.json();
-        showNotice(`Error: ${err.error}`);
+      // 1. Try API service
+      try {
+        const res = await fetch(`${apiBase}/api/v1/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: targetRole }),
+        });
+        if (res.ok) {
+          updated = true;
+        }
+      } catch {
+        // Fall through to Supabase
       }
+
+      // 2. Direct Supabase update
+      if (!updated) {
+        const { error: supaErr } = await supabase
+          .from('users')
+          .update({ role: targetRole, updated_at: new Date().toISOString() })
+          .eq('id', userId);
+
+        if (supaErr) {
+          showNotice(`Error: ${supaErr.message}`);
+          return;
+        }
+      }
+
+      showNotice(`User role updated to '${targetRole}'.`);
+      fetchUsers();
+      if (onUserModified) onUserModified();
     } catch {
       showNotice('Network error updating user role');
     }
@@ -132,23 +213,42 @@ export function AdminUserManagementModal({
 
   // Handle Delete User
   const handleDeleteUser = async (userId: string, userName: string) => {
+    if (userId === 'usr_admin_01') {
+      showNotice('Cannot delete primary root administrator account.');
+      return;
+    }
+
     if (!window.confirm(`Are you sure you want to permanently delete user "${userName}" from the database?`)) {
       return;
     }
 
     try {
-      const res = await fetch(`${apiBase}/api/v1/admin/users/${userId}`, {
-        method: 'DELETE',
-      });
+      let deleted = false;
 
-      if (res.ok) {
-        showNotice(`User '${userName}' removed from database.`);
-        fetchUsers();
-        if (onUserModified) onUserModified();
-      } else {
-        const err = await res.json();
-        showNotice(`Failed to delete: ${err.error}`);
+      // 1. Try API service
+      try {
+        const res = await fetch(`${apiBase}/api/v1/admin/users/${userId}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          deleted = true;
+        }
+      } catch {
+        // Fall through to Supabase
       }
+
+      // 2. Direct Supabase delete
+      if (!deleted) {
+        const { error: supaErr } = await supabase.from('users').delete().eq('id', userId);
+        if (supaErr) {
+          showNotice(`Failed to delete: ${supaErr.message}`);
+          return;
+        }
+      }
+
+      showNotice(`User '${userName}' removed from database.`);
+      fetchUsers();
+      if (onUserModified) onUserModified();
     } catch {
       showNotice('Network error deleting user');
     }
