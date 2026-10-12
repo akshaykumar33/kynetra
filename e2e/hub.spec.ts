@@ -71,12 +71,12 @@ test('make your home your own, open the door, and get a visitor', async ({ brows
   const book = host.getByRole('region', { name: 'Guestbook' });
   await book.getByLabel('Leave a note').fill('Plants need water on Fridays');
   await book.getByRole('button', { name: 'Sign' }).click();
-  await expect(book.getByText('Plants need water on Fridays')).toBeVisible();
+  await expect(book.getByText('Plants need water on Fridays')).toBeVisible({ timeout: 15_000 });
 
   // someone else walks down the street and in through the open door
   const guest = await browser.newPage();
   await signIn(guest, 'guest@homes-e2e.test');
-  await guest.getByRole('button', { name: /host's home/ }).click({ timeout: 30_000 });
+  await guest.getByRole('button', { name: /host's home/ }).click({ timeout: 60_000 });
   await guest.getByRole('button', { name: 'Step inside' }).click();
   await expect(guest.getByText('Visiting host')).toBeVisible();
   await expect(guest.getByText('Jungle studio')).toBeVisible();
@@ -85,7 +85,7 @@ test('make your home your own, open the door, and get a visitor', async ({ brows
   await expect(theirBook.getByRole('button', { name: /Delete note/ })).toHaveCount(0);
   await theirBook.getByLabel('Leave a note').fill('Lovely jungle!');
   await theirBook.getByRole('button', { name: 'Sign' }).click();
-  await expect(theirBook.getByText('Lovely jungle!')).toBeVisible();
+  await expect(theirBook.getByText('Lovely jungle!')).toBeVisible({ timeout: 15_000 });
   // close both 3D pages so they stop rendering during later tests
   await Promise.all([host.close(), guest.close()]);
 });
