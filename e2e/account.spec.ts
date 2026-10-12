@@ -7,8 +7,13 @@ test('a new member signs in, sets up and lands on their floor', async ({ page })
   await page.getByText('Support', { exact: true }).click();
   await page.getByText('At the office').click();
   await page.getByRole('button', { name: 'Walk in' }).click();
+  // the welcome toast shows for about four seconds once the floor loads; watch for it while the
+  // floor finishes loading, so a slow runner can't miss it
+  const welcomed = expect(page.getByText(/You're in\. Your desk is by the Support team/)).toBeVisible({
+    timeout: 45_000,
+  });
   await waitForFloor(page);
-  await expect(page.getByText(/You're in\. Your desk is by the Support team/)).toBeVisible();
+  await welcomed;
   // seeded colleagues come from the database
   await expect(page.getByRole('button', { name: /Mei Lin.*Focusing/ })).toBeVisible();
 });
