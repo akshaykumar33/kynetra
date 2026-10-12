@@ -333,11 +333,11 @@ export class AvatarController {
     nearbyNode: InteractiveNode | null;
   } {
     // 1. Precise WASD and Arrow Key Inputs
-    const isW = !!(this.keys['KeyW'] || this.keys['ArrowUp'] || this.keys['w']);
-    const isS = !!(this.keys['KeyS'] || this.keys['ArrowDown'] || this.keys['s']);
-    const isA = !!(this.keys['KeyA'] || this.keys['ArrowLeft'] || this.keys['a']);
-    const isD = !!(this.keys['KeyD'] || this.keys['ArrowRight'] || this.keys['d']);
-    const isSprint = !!(this.keys['ShiftLeft'] || this.keys['ShiftRight']);
+    const isW = !!(this.keys['KeyW'] || this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']);
+    const isS = !!(this.keys['KeyS'] || this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']);
+    const isA = !!(this.keys['KeyA'] || this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']);
+    const isD = !!(this.keys['KeyD'] || this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']);
+    const isSprint = !!(this.keys['ShiftLeft'] || this.keys['ShiftRight'] || this.keys['shift'] || this.keys['Shift']);
 
     // 2. Camera-Relative Ground Projection Vectors (XZ)
     const forwardX = -Math.sin(this.orbitAngle);
@@ -436,19 +436,20 @@ export class AvatarController {
     const moveStepX = this.velocity.x * delta;
     const moveStepZ = this.velocity.z * delta;
 
-    if (Math.abs(moveStepX) > 0.0001 || Math.abs(moveStepZ) > 0.0001) {
-      const resolved = TacticalCollisionEngine.resolve(
-        this.position.x,
-        this.position.z,
-        this.velocity.x,
-        this.velocity.z,
-        colliders
-      );
-      this.position.x = resolved.x;
-      this.position.z = resolved.z;
-      this.velocity.x = resolved.vx;
-      this.velocity.z = resolved.vz;
-    }
+    const targetX = this.position.x + moveStepX;
+    const targetZ = this.position.z + moveStepZ;
+
+    const resolved = TacticalCollisionEngine.resolve(
+      targetX,
+      targetZ,
+      this.velocity.x,
+      this.velocity.z,
+      colliders
+    );
+    this.position.x = resolved.x;
+    this.position.z = resolved.z;
+    this.velocity.x = resolved.vx;
+    this.velocity.z = resolved.vz;
 
     // Boundary constraints (Stay inside room / estate bounds)
     this.position.x = Math.max(-bounds, Math.min(bounds, this.position.x));

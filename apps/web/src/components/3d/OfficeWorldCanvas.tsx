@@ -133,6 +133,7 @@ export function OfficeWorldCanvas({
   const outdoorNodesGroupRef = useRef<THREE.Group | null>(null);
   const [compassAngle, setCompassAngle] = useState(0);
   const lastCompassUpdateTimeRef = useRef(0);
+  const lastNearbyNodeIdRef = useRef<string | null>(null);
 
   // Peer meshes map
   const peerMeshesRef = useRef<Map<string, { group: THREE.Group; nametag: THREE.Sprite }>>(new Map());
@@ -1482,7 +1483,7 @@ export function OfficeWorldCanvas({
 
     const animate = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(animate);
-      const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
+      const delta = Math.min((currentTime - lastTime) / 1000, 0.05);
       lastTime = currentTime;
 
       // Drift voxel clouds slowly across the sky
@@ -1513,7 +1514,10 @@ export function OfficeWorldCanvas({
       const currentBounds = isWorkspace ? 16.8 : 62.0;
       const activeColliders = isWorkspace ? WORKSPACE_COLLIDERS : OUTDOOR_COLLIDERS;
       const { nearbyNode } = avatar.update(delta, stationsRef.current, currentBounds, activeColliders);
-      setNearbyPrompt(nearbyNode);
+      if (nearbyNode?.id !== lastNearbyNodeIdRef.current) {
+        lastNearbyNodeIdRef.current = nearbyNode?.id || null;
+        setNearbyPrompt(nearbyNode);
+      }
 
       // Pulsing alarm strobes if active incident
       if (isIncidentActiveRef.current) {
@@ -1588,10 +1592,10 @@ export function OfficeWorldCanvas({
         }
       }
 
-      // Compass needle update
-      if (currentTime - lastCompassUpdateTimeRef.current > 80) {
+      // Compass needle update (throttled to 200ms with deadband to prevent unnecessary React re-renders)
+      if (currentTime - lastCompassUpdateTimeRef.current > 200) {
         lastCompassUpdateTimeRef.current = currentTime;
-        setCompassAngle(avatar.orbitAngle);
+        setCompassAngle((prev) => (Math.abs(prev - avatar.orbitAngle) > 0.04 ? avatar.orbitAngle : prev));
       }
 
       // Spatial Position & Proximity update callback (throttled to 12Hz to eliminate CPU overhead)
