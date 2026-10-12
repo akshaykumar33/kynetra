@@ -8,3 +8,4 @@ export * from './building.js';
 export * from './simulation.js';
 export * from './gamification.js';
 export * from './ai.js';
+export * from './presence.js';

@@ -44,37 +44,33 @@ describe('Database Connection, Health & Seed Verification', () => {
     expect(orgs[0].domain).toBe('kynetra.dev');
   });
 
-  it('has 3 canonical users with distinct RBAC roles (admin, architect, employee)', async (ctx) => {
+  it('has real primary administrator user account', async (ctx) => {
     if (!isDbConnected) {
       ctx.skip();
       return;
     }
 
     const allUsers = await db.select().from(users);
-    expect(allUsers.length).toBe(3);
-
-    const roles = allUsers.map((u) => u.role).sort();
-    expect(roles).toEqual(['admin', 'architect', 'employee']);
+    expect(allUsers.length).toBeGreaterThanOrEqual(1);
 
     const admin = allUsers.find((u) => u.role === 'admin');
     expect(admin).toBeDefined();
     expect(admin?.email).toBe('admin@kynetra.dev');
     expect(admin?.handle).toBe('admin');
-    expect(admin?.xp).toBe(1000);
+    expect(admin?.displayName).toBe('Admin');
   });
 
-  it('has tenant memberships linking users to Kynetra Foundation', async (ctx) => {
+  it('has tenant memberships linking admin to Kynetra Foundation', async (ctx) => {
     if (!isDbConnected) {
       ctx.skip();
       return;
     }
 
     const memberships = await db.select().from(tenantMemberships);
-    expect(memberships.length).toBe(3);
-
-    const roles = memberships.map((m) => m.role).sort();
-    expect(roles).toEqual(['admin', 'member', 'owner']);
+    expect(memberships.length).toBeGreaterThanOrEqual(1);
+    expect(memberships.some((m) => m.userId === 'usr_admin_01')).toBe(true);
   });
+
 
   it('has 4 canonical districts seeded', async (ctx) => {
     if (!isDbConnected) {

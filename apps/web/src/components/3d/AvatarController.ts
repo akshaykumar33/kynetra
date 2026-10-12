@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import type { InteractiveNode } from '@kynetra/contracts';
+import type { WorldCollider } from './WorldColliders';
 
 export class AvatarController {
   public mesh: THREE.Group;
   private keys: Record<string, boolean> = {};
   public position: THREE.Vector3;
   private velocity: THREE.Vector3 = new THREE.Vector3();
-  private speed = 7.5; // units per second
+  private walkSpeed = 12.0; // Fast responsive walking speed
+  private sprintSpeed = 18.5; // High-speed sprint when holding Shift
   private walkTime = 0;
   private bobbingMesh: THREE.Group;
   private nearbyNodeId: string | null = null;
@@ -19,18 +21,18 @@ export class AvatarController {
   private headMesh!: THREE.Mesh;
   private nameSprite: THREE.Sprite | null = null;
 
-  // Camera Orbit & Zoom State
-  public orbitAngle = 0; // Horizontal orbit around avatar in radians
-  public orbitPitch = 0.42; // Vertical pitch
-  public zoomDistance = 9.5; // Distance from avatar
+  // Camera Orbit & Zoom State - Default to 45° Isometric Perspective matching artwork
+  public orbitAngle = Math.PI / 4; // 45-degree isometric diagonal angle
+  public orbitPitch = 0.62; // 35.5-degree isometric elevation pitch
+  public zoomDistance = 28.0; // Elevated overview distance
   private isDragging = false;
   private previousMouseX = 0;
   private previousMouseY = 0;
 
-  constructor() {
+  constructor(initialX = 0, initialZ = 4) {
     this.mesh = new THREE.Group();
     this.position = this.mesh.position;
-    this.position.set(0, 0, 4);
+    this.position.set(initialX, 0, initialZ);
 
     this.bobbingMesh = new THREE.Group();
     this.mesh.add(this.bobbingMesh);
@@ -167,10 +169,10 @@ export class AvatarController {
     this.bobbingMesh.add(this.rightLegPivot);
 
     // 7. Floating Minecraft Nametag (role-aware)
-    this.setRole('employee');
+    this.setRole('admin', 'Admin');
   }
 
-  public setRole(role: 'admin' | 'architect' | 'employee' = 'employee') {
+  public setRole(role: 'admin' | 'architect' | 'employee' = 'admin', displayName = 'Admin') {
     if (typeof document === 'undefined') return;
     const canvas = document.createElement('canvas');
     canvas.width = 320;
@@ -178,18 +180,18 @@ export class AvatarController {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
     ctx.fillRect(6, 8, 308, 54);
 
     const roleBorderColor = role === 'admin' ? '#f59e0b' : role === 'architect' ? '#38bdf8' : '#22c55e';
     ctx.strokeStyle = roleBorderColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.strokeRect(6, 8, 308, 54);
 
     ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'center';
 
-    const label = `YOU (${role.toUpperCase()})`;
+    const label = `${displayName} (${role.toUpperCase()})`;
     ctx.fillStyle = '#111111';
     ctx.fillText(label, 162, 44);
 
@@ -222,19 +224,28 @@ export class AvatarController {
     this.mesh.add(shadow);
   }
 
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+      return;
+    }
+    this.keys[e.code] = true;
+    if (e.key) this.keys[e.key.toLowerCase()] = true;
+  };
+
+  private handleKeyUp = (e: KeyboardEvent) => {
+    this.keys[e.code] = false;
+    if (e.key) this.keys[e.key.toLowerCase()] = false;
+  };
+
+  private handleBlur = () => {
+    this.keys = {};
+  };
+
   private setupKeyboardListeners() {
     if (typeof window === 'undefined') return;
-
-    window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
-        return;
-      }
-      this.keys[e.code] = true;
-    });
-
-    window.addEventListener('keyup', (e) => {
-      this.keys[e.code] = false;
-    });
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
+    window.addEventListener('blur', this.handleBlur);
   }
 
   private setupMouseListeners() {
@@ -266,42 +277,84 @@ export class AvatarController {
 
     window.addEventListener('wheel', (e) => {
       if ((e.target as HTMLElement)?.tagName === 'CANVAS') {
-        this.zoomDistance = Math.max(4.0, Math.min(22.0, this.zoomDistance + e.deltaY * 0.015));
+        this.zoomDistance = Math.max(10.0, Math.min(48.0, this.zoomDistance + e.deltaY * 0.02));
       }
     }, { passive: true });
   }
 
-  public update(delta: number, nodes: InteractiveNode[] = [], bounds = 16.0): {
+  public update(
+    delta: number,
+    nodes: InteractiveNode[] = [],
+    bounds = 65.0,
+    colliders: WorldCollider[] = []
+  ): {
     isMoving: boolean;
     nearbyNode: InteractiveNode | null;
   } {
-    const moveZ = (this.keys['KeyW'] || this.keys['ArrowUp'] ? -1 : 0) +
-                  (this.keys['KeyS'] || this.keys['ArrowDown'] ? 1 : 0);
-    const moveX = (this.keys['KeyA'] || this.keys['ArrowLeft'] ? -1 : 0) +
-                  (this.keys['KeyD'] || this.keys['ArrowRight'] ? 1 : 0);
+    // 1. Precise WASD and Arrow Key Inputs
+    const isW = !!(this.keys['KeyW'] || this.keys['ArrowUp'] || this.keys['w']);
+    const isS = !!(this.keys['KeyS'] || this.keys['ArrowDown'] || this.keys['s']);
+    const isA = !!(this.keys['KeyA'] || this.keys['ArrowLeft'] || this.keys['a']);
+    const isD = !!(this.keys['KeyD'] || this.keys['ArrowRight'] || this.keys['d']);
+    const isSprint = !!(this.keys['ShiftLeft'] || this.keys['ShiftRight']);
 
-    const isMoving = moveX !== 0 || moveZ !== 0;
+    // 2. Camera-Relative Vectors in Ground Plane (XZ)
+    // The camera orbits at (sin(orbitAngle), pitch, cos(orbitAngle)) relative to avatar.
+    // Moving FORWARD into the screen (away from camera) means heading: (-sin(orbitAngle), -cos(orbitAngle)).
+    const forwardX = -Math.sin(this.orbitAngle);
+    const forwardZ = -Math.cos(this.orbitAngle);
+
+    // Moving RIGHT relative to camera view: (cos(orbitAngle), -sin(orbitAngle)).
+    const rightX = Math.cos(this.orbitAngle);
+    const rightZ = -Math.sin(this.orbitAngle);
+
+    // Calculate aggregate direction
+    let dirX = 0;
+    let dirZ = 0;
+
+    if (isW) {
+      dirX += forwardX;
+      dirZ += forwardZ;
+    }
+    if (isS) {
+      dirX -= forwardX;
+      dirZ -= forwardZ;
+    }
+    if (isD) {
+      dirX += rightX;
+      dirZ += rightZ;
+    }
+    if (isA) {
+      dirX -= rightX;
+      dirZ -= rightZ;
+    }
+
+    const len = Math.hypot(dirX, dirZ);
+    const isMoving = len > 0.001;
+    const targetSpeed = isSprint ? this.sprintSpeed : this.walkSpeed;
 
     if (isMoving) {
-      // Move relative to camera orbit angle
-      const forward = new THREE.Vector3(Math.sin(this.orbitAngle), 0, Math.cos(this.orbitAngle)).normalize();
-      const right = new THREE.Vector3(Math.cos(this.orbitAngle), 0, -Math.sin(this.orbitAngle)).normalize();
+      const nx = dirX / len;
+      const nz = dirZ / len;
 
-      const moveDir = new THREE.Vector3()
-        .addScaledVector(forward, -moveZ)
-        .addScaledVector(right, moveX)
-        .normalize();
+      // Smooth, responsive acceleration
+      const targetVelX = nx * targetSpeed;
+      const targetVelZ = nz * targetSpeed;
+      const accel = Math.min(1, delta * 22);
+      this.velocity.x += (targetVelX - this.velocity.x) * accel;
+      this.velocity.z += (targetVelZ - this.velocity.z) * accel;
 
-      this.velocity.copy(moveDir).multiplyScalar(this.speed * delta);
-      this.position.add(this.velocity);
+      // Smooth shortest-arc rotation towards heading
+      const targetAngle = Math.atan2(nx, nz);
+      let diff = targetAngle - this.mesh.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      this.mesh.rotation.y += diff * Math.min(1, delta * 18);
 
-      // Rotate avatar towards movement heading
-      const targetAngle = Math.atan2(moveDir.x, moveDir.z);
-      this.mesh.rotation.y = targetAngle;
-
-      // Minecraft walking limb animation (arms & legs swing alternately)
-      this.walkTime += delta * 11;
-      const swing = Math.sin(this.walkTime) * 0.75;
+      // Minecraft walking limb animation (cadence scales with walk / sprint)
+      const animCadence = isSprint ? 17 : 11;
+      this.walkTime += delta * animCadence;
+      const swing = Math.sin(this.walkTime) * (isSprint ? 0.9 : 0.7);
 
       if (this.leftArmPivot && this.rightArmPivot) {
         this.leftArmPivot.rotation.x = swing;
@@ -316,18 +369,45 @@ export class AvatarController {
       // Gentle vertical bobbing
       this.bobbingMesh.position.y = Math.abs(Math.sin(this.walkTime * 2)) * 0.05;
     } else {
-      // Return limbs to idle pose smoothly
+      // Crisp friction / deceleration
+      const friction = Math.min(1, delta * 24);
+      this.velocity.x += (0 - this.velocity.x) * friction;
+      this.velocity.z += (0 - this.velocity.z) * friction;
+      if (Math.abs(this.velocity.x) < 0.005) this.velocity.x = 0;
+      if (Math.abs(this.velocity.z) < 0.005) this.velocity.z = 0;
+
+      // Return limbs to neutral idle pose smoothly
       if (this.leftArmPivot && this.rightArmPivot) {
-        this.leftArmPivot.rotation.x = THREE.MathUtils.lerp(this.leftArmPivot.rotation.x, 0, delta * 12);
-        this.rightArmPivot.rotation.x = THREE.MathUtils.lerp(this.rightArmPivot.rotation.x, 0, delta * 12);
+        this.leftArmPivot.rotation.x = THREE.MathUtils.lerp(this.leftArmPivot.rotation.x, 0, delta * 14);
+        this.rightArmPivot.rotation.x = THREE.MathUtils.lerp(this.rightArmPivot.rotation.x, 0, delta * 14);
       }
 
       if (this.leftLegPivot && this.rightLegPivot) {
-        this.leftLegPivot.rotation.x = THREE.MathUtils.lerp(this.leftLegPivot.rotation.x, 0, delta * 12);
-        this.rightLegPivot.rotation.x = THREE.MathUtils.lerp(this.rightLegPivot.rotation.x, 0, delta * 12);
+        this.leftLegPivot.rotation.x = THREE.MathUtils.lerp(this.leftLegPivot.rotation.x, 0, delta * 14);
+        this.rightLegPivot.rotation.x = THREE.MathUtils.lerp(this.rightLegPivot.rotation.x, 0, delta * 14);
       }
 
-      this.bobbingMesh.position.y = THREE.MathUtils.lerp(this.bobbingMesh.position.y, 0, delta * 10);
+      this.bobbingMesh.position.y = THREE.MathUtils.lerp(this.bobbingMesh.position.y, 0, delta * 12);
+    }
+
+    // 3. Movement with Axis-Separated Physical Collision Resolution & Wall Sliding
+    const moveStepX = this.velocity.x * delta;
+    const moveStepZ = this.velocity.z * delta;
+
+    if (Math.abs(moveStepX) > 0.0001 || Math.abs(moveStepZ) > 0.0001) {
+      // Move X and resolve X collisions (allows sliding along Z-facing walls)
+      this.position.x += moveStepX;
+      this.resolveCollisions(colliders, 'x', moveStepX);
+
+      // Move Z and resolve Z collisions (allows sliding along X-facing walls)
+      this.position.z += moveStepZ;
+      this.resolveCollisions(colliders, 'z', moveStepZ);
+
+      // Corner and diagonal penetration relaxation pass
+      this.resolveCollisions(colliders, 'both');
+    } else {
+      // Stationary relaxation pass to prevent clipping if objects spawn or stage transitions
+      this.resolveCollisions(colliders, 'both');
     }
 
     // Boundary constraints (Stay inside office walls)
@@ -355,6 +435,146 @@ export class AvatarController {
     };
   }
 
+  private resolveCollisions(
+    colliders: WorldCollider[],
+    axis: 'x' | 'z' | 'both',
+    moveStep = 0
+  ) {
+    const r = 0.42;
+
+    for (const col of colliders) {
+      if (col.type === 'box') {
+        const { minX, maxX, minZ, maxZ } = col;
+
+        if (axis === 'x') {
+          // Check if avatar Z is in the range of this box
+          if (this.position.z >= minZ - r && this.position.z <= maxZ + r) {
+            // Check if avatar X overlaps
+            if (this.position.x > minX - r && this.position.x < maxX + r) {
+              if (moveStep > 0) {
+                this.position.x = minX - r;
+                this.velocity.x = 0;
+              } else if (moveStep < 0) {
+                this.position.x = maxX + r;
+                this.velocity.x = 0;
+              } else {
+                const distLeft = Math.abs(this.position.x - (minX - r));
+                const distRight = Math.abs(this.position.x - (maxX + r));
+                this.position.x = distLeft < distRight ? minX - r : maxX + r;
+                this.velocity.x = 0;
+              }
+            }
+          }
+        } else if (axis === 'z') {
+          // Check if avatar X is in the range of this box
+          if (this.position.x >= minX - r && this.position.x <= maxX + r) {
+            // Check if avatar Z overlaps
+            if (this.position.z > minZ - r && this.position.z < maxZ + r) {
+              if (moveStep > 0) {
+                this.position.z = minZ - r;
+                this.velocity.z = 0;
+              } else if (moveStep < 0) {
+                this.position.z = maxZ + r;
+                this.velocity.z = 0;
+              } else {
+                const distNorth = Math.abs(this.position.z - (minZ - r));
+                const distSouth = Math.abs(this.position.z - (maxZ + r));
+                this.position.z = distNorth < distSouth ? minZ - r : maxZ + r;
+                this.velocity.z = 0;
+              }
+            }
+          }
+        } else {
+          // 'both': 2D continuous circle vs box penetration relaxation
+          const cx = Math.max(minX, Math.min(maxX, this.position.x));
+          const cz = Math.max(minZ, Math.min(maxZ, this.position.z));
+          const diffX = this.position.x - cx;
+          const diffZ = this.position.z - cz;
+          const distSq = diffX * diffX + diffZ * diffZ;
+
+          if (
+            this.position.x >= minX &&
+            this.position.x <= maxX &&
+            this.position.z >= minZ &&
+            this.position.z <= maxZ
+          ) {
+            // Fully inside box: push out along minimal penetration axis
+            const dLeft = this.position.x - minX;
+            const dRight = maxX - this.position.x;
+            const dTop = this.position.z - minZ;
+            const dBottom = maxZ - this.position.z;
+            const m = Math.min(dLeft, dRight, dTop, dBottom);
+            if (m === dLeft) this.position.x = minX - r;
+            else if (m === dRight) this.position.x = maxX + r;
+            else if (m === dTop) this.position.z = minZ - r;
+            else this.position.z = maxZ + r;
+          } else if (distSq < r * r) {
+            const dist = Math.sqrt(distSq);
+            if (dist > 0.0001) {
+              const overlap = r - dist;
+              this.position.x += (diffX / dist) * overlap;
+              this.position.z += (diffZ / dist) * overlap;
+            }
+          }
+        }
+      } else if (col.type === 'circle') {
+        const { x: cx, z: cz, radius: cr } = col;
+        const totalR = r + cr;
+
+        if (axis === 'x') {
+          const dz = Math.abs(this.position.z - cz);
+          if (dz < totalR) {
+            const maxDx = Math.sqrt(Math.max(0, totalR * totalR - dz * dz));
+            if (this.position.x > cx - maxDx && this.position.x < cx + maxDx) {
+              if (moveStep > 0) {
+                this.position.x = cx - maxDx;
+                this.velocity.x = 0;
+              } else if (moveStep < 0) {
+                this.position.x = cx + maxDx;
+                this.velocity.x = 0;
+              } else {
+                this.position.x = this.position.x < cx ? cx - maxDx : cx + maxDx;
+                this.velocity.x = 0;
+              }
+            }
+          }
+        } else if (axis === 'z') {
+          const dx = Math.abs(this.position.x - cx);
+          if (dx < totalR) {
+            const maxDz = Math.sqrt(Math.max(0, totalR * totalR - dx * dx));
+            if (this.position.z > cz - maxDz && this.position.z < cz + maxDz) {
+              if (moveStep > 0) {
+                this.position.z = cz - maxDz;
+                this.velocity.z = 0;
+              } else if (moveStep < 0) {
+                this.position.z = cz + maxDz;
+                this.velocity.z = 0;
+              } else {
+                this.position.z = this.position.z < cz ? cz - maxDz : cz + maxDz;
+                this.velocity.z = 0;
+              }
+            }
+          }
+        } else {
+          // 'both': circle vs circle penetration
+          const diffX = this.position.x - cx;
+          const diffZ = this.position.z - cz;
+          const distSq = diffX * diffX + diffZ * diffZ;
+          if (distSq < totalR * totalR) {
+            const dist = Math.sqrt(distSq);
+            if (dist > 0.0001) {
+              const overlap = totalR - dist;
+              this.position.x += (diffX / dist) * overlap;
+              this.position.z += (diffZ / dist) * overlap;
+            } else {
+              this.position.x += totalR;
+            }
+          }
+        }
+      }
+    }
+  }
+
   public getNearbyNodeId(): string | null {
     return this.nearbyNodeId;
   }
@@ -363,7 +583,62 @@ export class AvatarController {
     this.position.set(x, y, z);
   }
 
+  public teleport(x: number, z: number) {
+    this.position.set(x, 0, z);
+  }
+
+
+  public showEmote(emoji: string) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Glow circle background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.beginPath();
+      ctx.arc(64, 64, 56, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.stroke();
+
+      ctx.font = '64px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, 64, 68);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    const emoteSprite = new THREE.Sprite(spriteMat);
+    emoteSprite.position.set(0, 3.4, 0);
+    emoteSprite.scale.set(1.4, 1.4, 1);
+    this.mesh.add(emoteSprite);
+
+    const startTime = performance.now();
+    const animate = () => {
+      const elapsed = (performance.now() - startTime) / 1000;
+      if (elapsed > 2.5) {
+        this.mesh.remove(emoteSprite);
+        spriteMat.dispose();
+        texture.dispose();
+      } else {
+        emoteSprite.position.y = 3.4 + elapsed * 0.4;
+        spriteMat.opacity = Math.max(0, 1 - elapsed / 2.5);
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }
+
   public dispose() {
-    // Window listeners are global
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.handleKeyDown);
+      window.removeEventListener('keyup', this.handleKeyUp);
+      window.removeEventListener('blur', this.handleBlur);
+    }
   }
 }
+

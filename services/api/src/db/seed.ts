@@ -38,7 +38,7 @@ export async function seed(): Promise<void> {
       },
     });
 
-  // 2. Seed System Users & Roles
+  // 2. Seed System Users & Roles (Only Real Admin User)
   console.log('[Seed] Seeding users...');
   const seedUsers = [
     {
@@ -46,33 +46,11 @@ export async function seed(): Promise<void> {
       email: 'admin@kynetra.dev',
       passwordHash: '$2a$12$e8Yk2uRz0N9b4J1q2w3e4u5i6o7p8a9s0d1f2g3h4j5k6l7z8x9c0',
       handle: 'admin',
-      displayName: 'Platform Administrator',
+      displayName: 'Admin',
       role: 'admin',
-      xp: 1000,
+      xp: 5000,
       currentDistrictId: 'kynetra-central',
-      statusMessage: 'Overseeing Kynetra core infrastructure',
-    },
-    {
-      id: 'usr_arch_01',
-      email: 'architect@kynetra.dev',
-      passwordHash: '$2a$12$e8Yk2uRz0N9b4J1q2w3e4u5i6o7p8a9s0d1f2g3h4j5k6l7z8x9c0',
-      handle: 'architect',
-      displayName: 'Chief System Architect',
-      role: 'architect',
-      xp: 750,
-      currentDistrictId: 'kynetra-central',
-      statusMessage: 'Designing high-throughput topology and systems',
-    },
-    {
-      id: 'usr_emp_01',
-      email: 'employee@kynetra.dev',
-      passwordHash: '$2a$12$e8Yk2uRz0N9b4J1q2w3e4u5i6o7p8a9s0d1f2g3h4j5k6l7z8x9c0',
-      handle: 'employee',
-      displayName: 'Staff Software Engineer',
-      role: 'employee',
-      xp: 500,
-      currentDistrictId: 'developer-district',
-      statusMessage: 'Developing services and workstation features',
+      statusMessage: 'Root Platform Administrator',
     },
   ];
 
@@ -99,8 +77,6 @@ export async function seed(): Promise<void> {
   console.log('[Seed] Seeding tenant memberships...');
   const memberships = [
     { id: 'b0000000-0000-4000-8000-000000000001', organizationId: orgId, userId: 'usr_admin_01', role: 'owner' },
-    { id: 'b0000000-0000-4000-8000-000000000002', organizationId: orgId, userId: 'usr_arch_01', role: 'admin' },
-    { id: 'b0000000-0000-4000-8000-000000000003', organizationId: orgId, userId: 'usr_emp_01', role: 'member' },
   ];
 
   for (const m of memberships) {

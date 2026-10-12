@@ -11,6 +11,13 @@ describe('3D Simulator Avatar Controller & Audio Engine', () => {
     expect(avatar.position.z).toBe(4);
   });
 
+  it('should support spawning avatar at outdoor plot coordinates', () => {
+    const plotAvatar = new AvatarController(-24, -20);
+    expect(plotAvatar.position.x).toBe(-24);
+    expect(plotAvatar.position.y).toBe(0);
+    expect(plotAvatar.position.z).toBe(-20);
+  });
+
   it('should detect nearby interactive nodes within proximity radius', () => {
     const avatar = new AvatarController();
     avatar.setPosition(0, 0, 0);

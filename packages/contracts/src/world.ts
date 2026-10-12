@@ -38,6 +38,32 @@ export const InnovationTowerFloorSchema = z.object({
 });
 export type InnovationTowerFloor = z.infer<typeof InnovationTowerFloorSchema>;
 
+export const WorldPlotSchema = z.object({
+  id: z.string(),
+  plotNumber: z.number(),
+  name: z.string(),
+  status: z.enum(['occupied', 'available', 'reserved', 'construction']),
+  dimensions: z.object({
+    width: z.number(),
+    depth: z.number(),
+  }),
+  coordinates: z.object({
+    x: z.number(),
+    z: z.number(),
+  }),
+  ownerName: z.string(),
+  zoningType: z.enum([
+    'Commercial Enterprise',
+    'Innovation Lab',
+    'Greenfield Parcel',
+    'Cloud Data Facility',
+  ]),
+  assignedBuilding: z.string().optional(),
+  deedId: z.string(),
+  areaSquareMeters: z.number().optional(),
+});
+export type WorldPlot = z.infer<typeof WorldPlotSchema>;
+
 export const WorldDistrictSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -51,5 +77,7 @@ export const WorldDistrictSchema = z.object({
   activeUsers: z.number().default(0),
   keyLandmark: z.string(),
   floors: z.array(InnovationTowerFloorSchema).optional(),
+  plots: z.array(WorldPlotSchema).optional(),
 });
 export type WorldDistrict = z.infer<typeof WorldDistrictSchema>;
+

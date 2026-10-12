@@ -5,6 +5,9 @@ import { worldRoutes } from './routes/world.js';
 import { telemetryRoutes } from './routes/telemetry.js';
 import { aiRoutes } from './routes/ai.js';
 import { gamificationRoutes } from './routes/gamification.js';
+import { presenceRoutes } from './routes/presence.js';
+import { userAdminRoutes } from './routes/users.js';
+import { authRoutes } from './routes/auth.js';
 
 export function buildApp() {
   const app = Fastify({
@@ -29,6 +32,11 @@ export function buildApp() {
   app.register(telemetryRoutes);
   app.register(aiRoutes);
   app.register(gamificationRoutes);
+  app.register(presenceRoutes);
+  app.register(userAdminRoutes);
+  app.register(authRoutes);
 
   return app;
 }
+
+
