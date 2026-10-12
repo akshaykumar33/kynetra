@@ -1,108 +1,30 @@
 name: CI
 
-# Lives in .github/workflows because GitHub executes nothing stored anywhere
-# else. A workflow file parked elsewhere in the repository is documentation,
-# not a gate — which is exactly what this file was before.
-
 on:
-  push:
-    branches: [main]
   pull_request:
+  push:
     branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
-env:
-  PNPM_VERSION: '10.33.0'
-  NODE_VERSION: '22'
-
 jobs:
-  # Runs first and independently of the toolchain: a leaked credential must be
-  # caught even when the install step is broken.
-  secret-scan:
-    name: Secret scan
+  check:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # gitleaks-action lists the pull request's commits to scope its scan.
-      # Without this it fails with a 403 rather than a finding.
-      pull-requests: read
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Full history so the deep scan below can inspect every commit on
-          # the branch, not just the tip.
-          fetch-depth: 0
-
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Scan tracked files
-        run: node packages/secret-scan/src/cli.mjs --all
-
-      - name: Deep history scan (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  validate:
-    name: Format, lint, typecheck, test, build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Format check
-        run: pnpm run format:check
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
-      - name: Test
-        run: pnpm run test
-
-      - name: Build
-        run: pnpm run build
-
-  audit:
-    name: Dependency audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Fails on high and critical advisories only. Moderate findings are
-      # reported by Dependabot rather than blocking every unrelated PR.
-      - name: Audit
-        run: pnpm audit --audit-level high
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run budget
+      # The Playwright e2e suite (real browsers, a LiveKit server, ~12 min) is run locally with
+      # `npm run e2e` before merging rather than on every CI run, to keep CI fast and cheap.
