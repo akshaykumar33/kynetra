@@ -46,7 +46,9 @@ test('two people see each other move, focus, talk and leave', async ({ browser }
       map.set = (key, buf) => {
         const p = buf[buf.length - 1];
         if (key === id && w.__seenAt === undefined && p && Math.hypot(p.x - s.x, p.z - s.z) > 0.05)
-          w.__seenAt = performance.timeOrigin + p.at;
+          // set() runs as the update is handled, so wall-clock now is its arrival time. Not
+          // timeOrigin + at: that monotonic clock can drift seconds from Date.now() on CI VMs.
+          w.__seenAt = Date.now();
         return set(key, buf);
       };
     },
