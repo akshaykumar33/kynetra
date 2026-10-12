@@ -10,7 +10,8 @@ const STATUS_LABEL: Record<Status, string> = {
   focus: 'Focusing',
   away: 'Away',
 };
-const TEAMS = zones.filter(z => z.kind === 'team').map(z => [z.id, z.name.replace(/ team$/, '')] as const);
+// the floor's team areas, in plan order; their names come from the floor's own layout
+const TEAM_ZONE_IDS = zones.filter(z => z.kind === 'team').map(z => z.id);
 const firstName = (id: string) => personById(id)?.name.split(' ')[0] ?? 'Someone';
 
 function useClock() {
@@ -62,56 +63,59 @@ function PeopleList() {
   const statuses = useOffice(s => s.statuses);
   const nearby = useOffice(s => s.nearby);
   const [open, setOpen] = useState(() => matchMedia('(min-width: 760px)').matches);
+  const zoneNames = useOffice(s => s.zoneNames);
   return (
     <aside className="panel people" aria-label="People on this floor">
       <button className="people-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         People on this floor <span>{open ? 'Hide' : 'Show'}</span>
       </button>
       {open &&
-        TEAMS.map(([team, label]) => (
-          <section key={team}>
-            <h2>{label}</h2>
-            <ul>
-              {people
-                .filter(p => p.team === team)
-                .map(p => {
-                  const st = statuses[p.id];
-                  const near = nearby.includes(p.id);
-                  const here = DEMO || !!online[p.id];
-                  return (
-                    <li key={p.id}>
-                      <button
-                        disabled={st === 'away' || !here}
-                        onClick={() => walkToPerson(p.id)}
-                        title={
-                          !here
-                            ? `${p.name} isn't on the floor right now`
-                            : st === 'away'
-                              ? `${p.name} is away`
-                              : `Walk over to ${p.name}`
-                        }
-                      >
-                        <i className="dot" style={{ background: STATUS_COLOR[st] }} />
-                        <span className="who">
-                          <b>{p.name}</b>
-                          <small>
-                            {p.role} · {STATUS_LABEL[st]}
-                          </small>
-                        </span>
-                        {near ? (
-                          <span className="chip near">Nearby</span>
-                        ) : !here ? (
-                          <span className="chip">Offline</span>
-                        ) : (
-                          <span className={`chip ${p.where}`}>{p.where === 'office' ? 'Office' : 'Home'}</span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
-            </ul>
-          </section>
-        ))}
+        TEAM_ZONE_IDS.map(team => [team, (zoneNames[team] ?? team).replace(/ team$/, '')] as const).map(
+          ([team, label]) => (
+            <section key={team}>
+              <h2>{label}</h2>
+              <ul>
+                {people
+                  .filter(p => p.team === team)
+                  .map(p => {
+                    const st = statuses[p.id];
+                    const near = nearby.includes(p.id);
+                    const here = DEMO || !!online[p.id];
+                    return (
+                      <li key={p.id}>
+                        <button
+                          disabled={st === 'away' || !here}
+                          onClick={() => walkToPerson(p.id)}
+                          title={
+                            !here
+                              ? `${p.name} isn't on the floor right now`
+                              : st === 'away'
+                                ? `${p.name} is away`
+                                : `Walk over to ${p.name}`
+                          }
+                        >
+                          <i className="dot" style={{ background: STATUS_COLOR[st] }} />
+                          <span className="who">
+                            <b>{p.name}</b>
+                            <small>
+                              {p.role} · {STATUS_LABEL[st]}
+                            </small>
+                          </span>
+                          {near ? (
+                            <span className="chip near">Nearby</span>
+                          ) : !here ? (
+                            <span className="chip">Offline</span>
+                          ) : (
+                            <span className={`chip ${p.where}`}>{p.where === 'office' ? 'Office' : 'Home'}</span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </section>
+          ),
+        )}
     </aside>
   );
 }
@@ -129,6 +133,8 @@ function Conversation() {
   const talkable = voiceOn ? voice.hearing : nearby.filter(id => statuses[id] !== 'focus');
   const focusing = nearby.filter(id => statuses[id] === 'focus');
   const zone = zones.find(z => z.id === zoneId);
+  // the plan is shared; each company names its own areas
+  const zoneName = useOffice(s => (zoneId ? s.zoneNames[zoneId] : undefined)) ?? zone?.name;
 
   if (myStatus === 'focus') {
     return (
@@ -187,7 +193,7 @@ function Conversation() {
   if (zone?.kind === 'team')
     return (
       <div className="panel convo quiet">
-        You're in the <b>{zone.name}</b> area. You can hear the team quietly; walk up to someone to talk.
+        You're in the <b>{zoneName}</b> area. You can hear the team quietly; walk up to someone to talk.
       </div>
     );
   if (zone?.kind === 'lounge')
@@ -307,7 +313,7 @@ function Toasts() {
 
 export function Hud({ onLeave }: { onLeave?: () => void }) {
   const toast = useOffice(s => s.toast);
-  const myTeam = useOffice(s => zones.find(z => z.id === s.me?.team)?.name);
+  const myTeam = useOffice(s => (s.me?.team ? s.zoneNames[s.me.team] : undefined));
   useEffect(() => {
     const t = setTimeout(() => toast(myTeam ? `You're in. Your desk is by the ${myTeam}` : "You're in."), 900);
     return () => clearTimeout(t);

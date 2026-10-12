@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signIn } from './helpers';
+import { signIn, waitForFloor } from './helpers';
 
 test('arrive in the world, find your tower, take the lift to your floor', async ({ page }) => {
   const errors: string[] = [];
@@ -115,4 +115,15 @@ test('found a company: name it, pick a free floor, and arrive as its owner', asy
   await expect(page.getByText(`Kite Studio · Floor ${level}`, { exact: false })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Makers' })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Sellers' })).toBeVisible();
+
+  // on the floor, the company's own team names are used, not the starter plan's
+  await page.getByRole('button', { name: 'Walk in' }).click();
+  const welcomed = expect(page.getByText(/You're in\. Your desk is by the Makers/)).toBeVisible({
+    timeout: 45_000,
+  });
+  await waitForFloor(page);
+  await welcomed;
+  await expect(
+    page.getByRole('complementary', { name: 'People on this floor' }).getByRole('heading', { name: 'Makers' }),
+  ).toBeVisible();
 });

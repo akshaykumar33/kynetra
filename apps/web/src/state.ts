@@ -1,4 +1,4 @@
-import { findPath, SPAWN, type KnockState, type Person, type Status } from '@kynetra/shared';
+import { findPath, SPAWN, zones, type KnockState, type Person, type Status } from '@kynetra/shared';
 import { Vector3 } from 'three';
 import { create } from 'zustand';
 import { api, type FloorData } from './api';
@@ -83,6 +83,8 @@ interface OfficeState {
   orgId: string;
   orgName: string;
   floorName: string;
+  /** This floor's area names by zone id, from its published layout (teams name their own areas). */
+  zoneNames: Record<string, string>;
   me: Person | null;
   /** Everyone on the floor except me. */
   people: Person[];
@@ -131,6 +133,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   orgId: '',
   orgName: '',
   floorName: '',
+  zoneNames: Object.fromEntries(zones.map(z => [z.id, z.name])),
   me: null,
   people: [],
   myStatus: 'available',
@@ -169,6 +172,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
       orgId: data.org.id,
       orgName: data.org.name,
       floorName: data.floor.name,
+      zoneNames: Object.fromEntries(data.layout.zones.map(z => [z.id, z.name])),
       me,
       people,
       myStatus: me?.status ?? 'available',
