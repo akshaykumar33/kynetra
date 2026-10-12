@@ -26,11 +26,5 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run budget
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+      # The Playwright e2e suite (real browsers, a LiveKit server, ~12 min) is run locally with
+      # `npm run e2e` before merging rather than on every CI run, to keep CI fast and cheap.
